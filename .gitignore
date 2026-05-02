@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-ssr
+dist-types
+*.local
+.vite
+coverage
+.DS_Store
+*.log
+*.tsbuildinfo
+.eslintcache

@@ -1,0 +1,614 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Scenario Builder - SolarCalc India</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'tertiary-container': '#004d46',
+              'surface-tint': '#2b6954',
+              'surface-variant': '#d3e4fe',
+              'tertiary-fixed': '#89f5e7',
+              'surface-dim': '#cbdbf5',
+              'on-surface-variant': '#404944',
+              'on-secondary': '#ffffff',
+              error: '#ba1a1a',
+              'on-primary-fixed-variant': '#0b513d',
+              'primary-container': '#064e3b',
+              'on-primary': '#ffffff',
+              background: '#f8f9ff',
+              surface: '#f8f9ff',
+              primary: '#003527',
+              'on-secondary-container': '#fefcff',
+              'on-primary-container': '#80bea6',
+              secondary: '#0051d5',
+              'secondary-container': '#316bf3',
+              'on-tertiary-fixed': '#00201d',
+              'on-tertiary-container': '#53c2b5',
+              'on-tertiary-fixed-variant': '#005049',
+              tertiary: '#00342f',
+              'surface-bright': '#f8f9ff',
+              'surface-container-lowest': '#ffffff',
+              'inverse-surface': '#213145',
+              outline: '#707974',
+              'on-background': '#0b1c30',
+              'primary-fixed-dim': '#95d3ba',
+              'on-primary-fixed': '#002117',
+              'secondary-fixed-dim': '#b4c5ff',
+              'on-secondary-fixed': '#00174b',
+              'primary-fixed': '#b0f0d6',
+              'surface-container': '#e5eeff',
+              'on-error': '#ffffff',
+              'surface-container-low': '#eff4ff',
+              'surface-container-highest': '#d3e4fe',
+              'outline-variant': '#bfc9c3',
+              'inverse-on-surface': '#eaf1ff',
+              'on-error-container': '#93000a',
+              'on-surface': '#0b1c30',
+              'secondary-fixed': '#dbe1ff',
+              'on-tertiary': '#ffffff',
+              'surface-container-high': '#dce9ff',
+              'tertiary-fixed-dim': '#6bd8cb',
+              'inverse-primary': '#95d3ba',
+              'on-secondary-fixed-variant': '#003ea8',
+              'error-container': '#ffdad6',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+            spacing: {
+              xs: '4px',
+              lg: '40px',
+              base: '8px',
+              xl: '64px',
+              sm: '12px',
+              md: '24px',
+              'container-max': '1280px',
+              'touch-target': '48px',
+            },
+            fontFamily: {
+              'headline-xl': ['Inter'],
+              'body-md': ['Inter'],
+              'body-lg': ['Inter'],
+              'data-display': ['Inter'],
+              'headline-lg': ['Inter'],
+              'label-sm': ['Inter'],
+            },
+            fontSize: {
+              'headline-xl': [
+                '36px',
+                {
+                  lineHeight: '44px',
+                  letterSpacing: '-0.02em',
+                  fontWeight: '700',
+                },
+              ],
+              'body-md': [
+                '16px',
+                {
+                  lineHeight: '24px',
+                  fontWeight: '400',
+                },
+              ],
+              'body-lg': [
+                '18px',
+                {
+                  lineHeight: '28px',
+                  fontWeight: '400',
+                },
+              ],
+              'data-display': [
+                '24px',
+                {
+                  lineHeight: '32px',
+                  letterSpacing: '-0.01em',
+                  fontWeight: '600',
+                },
+              ],
+              'headline-lg': [
+                '28px',
+                {
+                  lineHeight: '36px',
+                  letterSpacing: '-0.01em',
+                  fontWeight: '600',
+                },
+              ],
+              'label-sm': [
+                '12px',
+                {
+                  lineHeight: '16px',
+                  fontWeight: '500',
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background min-h-screen pt-16 pb-24 md:pb-8 flex flex-col items-center"
+  >
+    <!-- TopAppBar -->
+    <header
+      class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-surface-container-lowest text-primary font-body-md border-b border-outline-variant shadow-sm transition-all shadow-[0_2px_10px_rgba(0,53,39,0.05)]"
+    >
+      <div class="flex items-center gap-2">
+        <span
+          class="material-symbols-outlined text-primary text-2xl"
+          data-icon="solar_power"
+          >solar_power</span
+        >
+        <span class="font-headline-lg text-headline-lg tracking-tighter text-primary"
+          >SolarCalc India</span
+        >
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="hidden md:flex gap-6">
+          <button
+            class="font-label-sm text-label-sm text-on-surface hover:text-primary transition-colors flex flex-col items-center gap-1 active:opacity-80"
+          >
+            <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+            <span>Scenarios</span>
+          </button>
+          <button
+            class="font-label-sm text-label-sm text-on-surface hover:text-primary transition-colors flex flex-col items-center gap-1 active:opacity-80"
+          >
+            <span class="material-symbols-outlined" data-icon="insights">insights</span>
+            <span>Analysis</span>
+          </button>
+          <button
+            class="font-label-sm text-label-sm text-on-surface hover:text-primary transition-colors flex flex-col items-center gap-1 active:opacity-80"
+          >
+            <span class="material-symbols-outlined" data-icon="compare_arrows"
+              >compare_arrows</span
+            >
+            <span>Compare</span>
+          </button>
+          <button
+            class="font-label-sm text-label-sm text-on-surface hover:text-primary transition-colors flex flex-col items-center gap-1 active:opacity-80"
+          >
+            <span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+            <span>Export</span>
+          </button>
+        </div>
+        <div
+          class="h-8 w-8 rounded-full bg-surface-variant flex items-center justify-center text-primary font-bold overflow-hidden"
+        >
+          <span class="material-symbols-outlined text-sm" data-icon="person">person</span>
+        </div>
+      </div>
+    </header>
+    <!-- Main Content Canvas -->
+    <main
+      class="w-full max-w-container-max px-md mx-auto flex-grow flex flex-col gap-lg mt-md"
+    >
+      <!-- Header Section -->
+      <div class="flex flex-col gap-sm">
+        <h1 class="font-headline-xl text-headline-xl text-primary">Scenario Builder</h1>
+        <p class="font-body-lg text-body-lg text-on-surface-variant">
+          Configure the foundational parameters of your renewable energy project.
+        </p>
+      </div>
+      <!-- Progress Indicator & High-Level Estimate -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-md items-start">
+        <div class="lg:col-span-1 flex flex-col gap-md sticky top-24">
+          <!-- Stepper -->
+          <nav
+            aria-label="Progress"
+            class="bg-surface-container-lowest p-md rounded-xl shadow-[0_8px_30px_rgba(0,53,39,0.04)] border border-outline-variant/30"
+          >
+            <ol class="overflow-hidden" role="list">
+              <li class="relative pb-8">
+                <div
+                  aria-hidden="true"
+                  class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-primary"
+                ></div>
+                <a aria-current="step" class="relative flex items-start group" href="#">
+                  <span class="h-9 flex items-center">
+                    <span
+                      class="relative z-10 w-8 h-8 flex items-center justify-center bg-primary rounded-full ring-2 ring-surface-container-lowest"
+                    >
+                      <span class="font-label-sm text-label-sm text-on-primary">1</span>
+                    </span>
+                  </span>
+                  <span class="ml-4 min-w-0 flex flex-col">
+                    <span
+                      class="font-label-sm text-label-sm text-primary uppercase tracking-wide"
+                      >Step 1</span
+                    >
+                    <span class="font-body-md text-body-md text-on-surface font-semibold"
+                      >Basics</span
+                    >
+                  </span>
+                </a>
+              </li>
+              <li class="relative pb-8">
+                <div
+                  aria-hidden="true"
+                  class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-surface-variant"
+                ></div>
+                <a class="relative flex items-start group" href="#">
+                  <span class="h-9 flex items-center">
+                    <span
+                      class="relative z-10 w-8 h-8 flex items-center justify-center bg-surface-container-lowest border-2 border-outline-variant rounded-full group-hover:border-primary transition-colors"
+                    >
+                      <span class="font-label-sm text-label-sm text-on-surface-variant"
+                        >2</span
+                      >
+                    </span>
+                  </span>
+                  <span class="ml-4 min-w-0 flex flex-col">
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide group-hover:text-primary transition-colors"
+                      >Step 2</span
+                    >
+                    <span
+                      class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface transition-colors"
+                      >Costs</span
+                    >
+                  </span>
+                </a>
+              </li>
+              <li class="relative pb-8">
+                <div
+                  aria-hidden="true"
+                  class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-surface-variant"
+                ></div>
+                <a class="relative flex items-start group" href="#">
+                  <span class="h-9 flex items-center">
+                    <span
+                      class="relative z-10 w-8 h-8 flex items-center justify-center bg-surface-container-lowest border-2 border-outline-variant rounded-full group-hover:border-primary transition-colors"
+                    >
+                      <span class="font-label-sm text-label-sm text-on-surface-variant"
+                        >3</span
+                      >
+                    </span>
+                  </span>
+                  <span class="ml-4 min-w-0 flex flex-col">
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide group-hover:text-primary transition-colors"
+                      >Step 3</span
+                    >
+                    <span
+                      class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface transition-colors"
+                      >Revenue</span
+                    >
+                  </span>
+                </a>
+              </li>
+              <li class="relative pb-8">
+                <div
+                  aria-hidden="true"
+                  class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-surface-variant"
+                ></div>
+                <a class="relative flex items-start group" href="#">
+                  <span class="h-9 flex items-center">
+                    <span
+                      class="relative z-10 w-8 h-8 flex items-center justify-center bg-surface-container-lowest border-2 border-outline-variant rounded-full group-hover:border-primary transition-colors"
+                    >
+                      <span class="font-label-sm text-label-sm text-on-surface-variant"
+                        >4</span
+                      >
+                    </span>
+                  </span>
+                  <span class="ml-4 min-w-0 flex flex-col">
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide group-hover:text-primary transition-colors"
+                      >Step 4</span
+                    >
+                    <span
+                      class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface transition-colors"
+                      >O&amp;M</span
+                    >
+                  </span>
+                </a>
+              </li>
+              <li class="relative">
+                <a class="relative flex items-start group" href="#">
+                  <span class="h-9 flex items-center">
+                    <span
+                      class="relative z-10 w-8 h-8 flex items-center justify-center bg-surface-container-lowest border-2 border-outline-variant rounded-full group-hover:border-primary transition-colors"
+                    >
+                      <span class="font-label-sm text-label-sm text-on-surface-variant"
+                        >5</span
+                      >
+                    </span>
+                  </span>
+                  <span class="ml-4 min-w-0 flex flex-col">
+                    <span
+                      class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wide group-hover:text-primary transition-colors"
+                      >Step 5</span
+                    >
+                    <span
+                      class="font-body-md text-body-md text-on-surface-variant group-hover:text-on-surface transition-colors"
+                      >Financing</span
+                    >
+                  </span>
+                </a>
+              </li>
+            </ol>
+          </nav>
+          <!-- Running Estimate Card -->
+          <div
+            class="bg-primary text-on-primary rounded-xl p-md shadow-[0_12px_40px_rgba(0,53,39,0.15)] flex flex-col gap-sm relative overflow-hidden"
+          >
+            <div
+              class="absolute top-0 right-0 w-32 h-32 bg-primary-fixed opacity-10 rounded-bl-full pointer-events-none"
+            ></div>
+            <span
+              class="font-label-sm text-label-sm text-primary-fixed-dim uppercase tracking-wider"
+              >Est. Total Cost</span
+            >
+            <div class="flex items-baseline gap-xs">
+              <span class="font-body-lg text-body-lg text-primary-fixed">₹</span>
+              <span class="font-headline-lg text-headline-lg tracking-tight">12.5</span>
+              <span class="font-body-md text-body-md text-primary-fixed-dim">Cr</span>
+            </div>
+            <p class="font-label-sm text-label-sm text-primary-fixed-dim/80 mt-2">
+              Dynamic preview based on current inputs. Final calculation in Step 5.
+            </p>
+          </div>
+        </div>
+        <!-- Form Canvas -->
+        <div
+          class="lg:col-span-3 flex flex-col gap-lg bg-surface-container-lowest rounded-2xl p-md lg:p-lg shadow-[0_8px_30px_rgba(0,53,39,0.04)] border border-outline-variant/30"
+        >
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <!-- Project Name -->
+            <div class="flex flex-col gap-xs md:col-span-2">
+              <label
+                class="font-label-sm text-label-sm text-on-surface font-semibold"
+                for="project_name"
+                >Project Name</label
+              >
+              <input
+                class="h-touch-target rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md placeholder-on-surface-variant/50 transition-colors"
+                id="project_name"
+                name="project_name"
+                placeholder="e.g. Bangalore Tech Park Solar Expansion"
+                type="text"
+              />
+            </div>
+            <!-- Plant Size (Slider + Input) -->
+            <div
+              class="flex flex-col gap-xs md:col-span-2 bg-surface-container-low p-md rounded-xl border border-outline-variant/20"
+            >
+              <div class="flex justify-between items-end mb-2">
+                <label
+                  class="font-label-sm text-label-sm text-on-surface font-semibold"
+                  for="plant_size"
+                  >Plant Size</label
+                >
+                <div class="relative w-32">
+                  <input
+                    class="h-10 w-full rounded-md border-outline-variant bg-surface-container-lowest text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md pr-12 text-right"
+                    id="plant_size_input"
+                    max="5.0"
+                    min="0.25"
+                    step="0.05"
+                    type="number"
+                    value="1.5"
+                  />
+                  <div
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
+                  >
+                    <span class="font-body-md text-body-md text-on-surface-variant"
+                      >MW</span
+                    >
+                  </div>
+                </div>
+              </div>
+              <div class="relative w-full h-8 flex items-center">
+                <input
+                  class="w-full h-2 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-primary"
+                  id="plant_size_slider"
+                  max="5.0"
+                  min="0.25"
+                  step="0.05"
+                  type="range"
+                  value="1.5"
+                />
+              </div>
+              <div
+                class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mt-1"
+              >
+                <span>0.25 MW</span>
+                <span>5.0 MW</span>
+              </div>
+            </div>
+            <!-- Lifespan -->
+            <div class="flex flex-col gap-xs">
+              <label
+                class="font-label-sm text-label-sm text-on-surface font-semibold"
+                for="lifespan"
+                >Lifespan</label
+              >
+              <div class="relative">
+                <input
+                  class="h-touch-target w-full rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md pr-16 text-right"
+                  id="lifespan"
+                  type="number"
+                  value="25"
+                />
+                <div
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none border-l border-outline-variant/30 pl-3 ml-2"
+                >
+                  <span class="font-body-md text-body-md text-on-surface-variant"
+                    >Yrs</span
+                  >
+                </div>
+              </div>
+            </div>
+            <!-- CUF -->
+            <div class="flex flex-col gap-xs">
+              <div class="flex items-center gap-2">
+                <label
+                  class="font-label-sm text-label-sm text-on-surface font-semibold"
+                  for="cuf"
+                  >Capacity Utilization Factor (CUF)</label
+                >
+                <button
+                  aria-label="What is this?"
+                  class="text-secondary hover:text-secondary-container transition-colors"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-sm" data-icon="help"
+                    >help</span
+                  >
+                </button>
+              </div>
+              <div class="relative">
+                <input
+                  class="h-touch-target w-full rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md pr-12 text-right"
+                  id="cuf"
+                  step="0.1"
+                  type="number"
+                  value="18"
+                />
+                <div
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"
+                >
+                  <span class="font-body-md text-body-md text-on-surface-variant">%</span>
+                </div>
+              </div>
+            </div>
+            <!-- Panel Degradation -->
+            <div class="flex flex-col gap-xs">
+              <label
+                class="font-label-sm text-label-sm text-on-surface font-semibold"
+                for="degradation"
+                >Annual Panel Degradation</label
+              >
+              <div class="relative">
+                <input
+                  class="h-touch-target w-full rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md pr-12 text-right"
+                  id="degradation"
+                  step="0.1"
+                  type="number"
+                  value="0.5"
+                />
+                <div
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"
+                >
+                  <span class="font-body-md text-body-md text-on-surface-variant">%</span>
+                </div>
+              </div>
+            </div>
+            <!-- Inflation -->
+            <div class="flex flex-col gap-xs">
+              <label
+                class="font-label-sm text-label-sm text-on-surface font-semibold"
+                for="inflation"
+                >Estimated Inflation Rate</label
+              >
+              <div class="relative">
+                <input
+                  class="h-touch-target w-full rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md pr-12 text-right"
+                  id="inflation"
+                  step="0.1"
+                  type="number"
+                  value="6.0"
+                />
+                <div
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"
+                >
+                  <span class="font-body-md text-body-md text-on-surface-variant">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Action Bar -->
+          <div class="flex justify-end pt-md border-t border-outline-variant/30 mt-sm">
+            <button
+              class="h-touch-target px-xl bg-primary hover:bg-primary-container text-on-primary font-body-md font-semibold rounded-lg shadow-sm transition-all active:scale-[0.98] flex items-center gap-2 w-full md:w-auto justify-center"
+              type="button"
+            >
+              Next: Costs
+              <span class="material-symbols-outlined text-sm" data-icon="arrow_forward"
+                >arrow_forward</span
+              >
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- BottomNavBar (Mobile Only) -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-surface-container-lowest/90 backdrop-blur-md border-t border-outline-variant/30 shadow-[0_-4px_15px_rgba(0,53,39,0.05)] rounded-t-lg"
+    >
+      <a
+        class="flex flex-col items-center justify-center bg-tertiary-fixed/30 text-on-tertiary-fixed-variant rounded-xl px-3 py-1.5 active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span
+          class="material-symbols-outlined"
+          data-icon="analytics"
+          style="font-variation-settings: 'FILL' 1"
+          >analytics</span
+        >
+        <span class="font-label-sm text-[11px] font-medium uppercase tracking-wider mt-1"
+          >Scenarios</span
+        >
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 hover:text-primary active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="insights">insights</span>
+        <span class="font-label-sm text-[11px] font-medium uppercase tracking-wider mt-1"
+          >Analysis</span
+        >
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 hover:text-primary active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="compare_arrows"
+          >compare_arrows</span
+        >
+        <span class="font-label-sm text-[11px] font-medium uppercase tracking-wider mt-1"
+          >Compare</span
+        >
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1.5 hover:text-primary active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+        <span class="font-label-sm text-[11px] font-medium uppercase tracking-wider mt-1"
+          >Export</span
+        >
+      </a>
+    </nav>
+  </body>
+</html>

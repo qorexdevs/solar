@@ -1,0 +1,446 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SolarCalc India - Export Flow</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'tertiary-container': '#004d46',
+              'surface-tint': '#2b6954',
+              'surface-variant': '#d3e4fe',
+              'tertiary-fixed': '#89f5e7',
+              'surface-dim': '#cbdbf5',
+              'on-surface-variant': '#404944',
+              'on-secondary': '#ffffff',
+              error: '#ba1a1a',
+              'on-primary-fixed-variant': '#0b513d',
+              'primary-container': '#064e3b',
+              'on-primary': '#ffffff',
+              background: '#f8f9ff',
+              surface: '#f8f9ff',
+              primary: '#003527',
+              'on-secondary-container': '#fefcff',
+              'on-primary-container': '#80bea6',
+              secondary: '#0051d5',
+              'secondary-container': '#316bf3',
+              'on-tertiary-fixed': '#00201d',
+              'on-tertiary-container': '#53c2b5',
+              'on-tertiary-fixed-variant': '#005049',
+              tertiary: '#00342f',
+              'surface-bright': '#f8f9ff',
+              'surface-container-lowest': '#ffffff',
+              'inverse-surface': '#213145',
+              outline: '#707974',
+              'on-background': '#0b1c30',
+              'primary-fixed-dim': '#95d3ba',
+              'on-primary-fixed': '#002117',
+              'secondary-fixed-dim': '#b4c5ff',
+              'on-secondary-fixed': '#00174b',
+              'primary-fixed': '#b0f0d6',
+              'surface-container': '#e5eeff',
+              'on-error': '#ffffff',
+              'surface-container-low': '#eff4ff',
+              'surface-container-highest': '#d3e4fe',
+              'outline-variant': '#bfc9c3',
+              'inverse-on-surface': '#eaf1ff',
+              'on-error-container': '#93000a',
+              'on-surface': '#0b1c30',
+              'secondary-fixed': '#dbe1ff',
+              'on-tertiary': '#ffffff',
+              'surface-container-high': '#dce9ff',
+              'tertiary-fixed-dim': '#6bd8cb',
+              'inverse-primary': '#95d3ba',
+              'on-secondary-fixed-variant': '#003ea8',
+              'error-container': '#ffdad6',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+            spacing: {
+              xs: '4px',
+              lg: '40px',
+              base: '8px',
+              xl: '64px',
+              sm: '12px',
+              md: '24px',
+              'container-max': '1280px',
+              'touch-target': '48px',
+            },
+            fontFamily: {
+              'headline-xl': ['Inter'],
+              'body-md': ['Inter'],
+              'body-lg': ['Inter'],
+              'data-display': ['Inter'],
+              'headline-lg': ['Inter'],
+              'label-sm': ['Inter'],
+            },
+            fontSize: {
+              'headline-xl': [
+                '36px',
+                { lineHeight: '44px', letterSpacing: '-0.02em', fontWeight: '700' },
+              ],
+              'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+              'body-lg': ['18px', { lineHeight: '28px', fontWeight: '400' }],
+              'data-display': [
+                '24px',
+                { lineHeight: '32px', letterSpacing: '-0.01em', fontWeight: '600' },
+              ],
+              'headline-lg': [
+                '28px',
+                { lineHeight: '36px', letterSpacing: '-0.01em', fontWeight: '600' },
+              ],
+              'label-sm': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md min-h-screen pt-16 pb-20 md:pb-0"
+  >
+    <!-- TopAppBar (Shared Component) -->
+    <header
+      class="bg-slate-50 dark:bg-slate-900 font-inter text-sm font-semibold tracking-wide border-slate-200 dark:border-slate-800 shadow-sm fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16"
+    >
+      <div class="flex items-center gap-sm">
+        <span
+          class="material-symbols-outlined text-emerald-900 dark:text-emerald-400"
+          style="font-variation-settings: 'FILL' 1"
+          >solar_power</span
+        >
+        <span
+          class="text-xl font-bold tracking-tighter text-emerald-900 dark:text-emerald-50"
+          >SolarCalc India</span
+        >
+      </div>
+      <!-- Desktop Navigation Cluster (Mandated by Semantic Shell Logic) -->
+      <nav class="hidden md:flex items-center gap-lg">
+        <a
+          class="flex items-center gap-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all px-3 py-2 rounded-lg"
+          href="#"
+        >
+          <span class="material-symbols-outlined text-[20px]">analytics</span>
+          <span>Scenarios</span>
+        </a>
+        <a
+          class="flex items-center gap-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all px-3 py-2 rounded-lg"
+          href="#"
+        >
+          <span class="material-symbols-outlined text-[20px]">insights</span>
+          <span>Analysis</span>
+        </a>
+        <a
+          class="flex items-center gap-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all px-3 py-2 rounded-lg"
+          href="#"
+        >
+          <span class="material-symbols-outlined text-[20px]">compare_arrows</span>
+          <span>Compare</span>
+        </a>
+        <!-- Active Desktop Nav -->
+        <a
+          class="flex items-center gap-xs text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2 rounded-lg"
+          href="#"
+        >
+          <span class="material-symbols-outlined text-[20px]">ios_share</span>
+          <span>Export</span>
+        </a>
+      </nav>
+      <div class="flex items-center">
+        <span
+          class="material-symbols-outlined text-emerald-900 dark:text-emerald-400 text-[28px]"
+          >account_circle</span
+        >
+      </div>
+    </header>
+    <!-- Main Content Canvas -->
+    <main
+      class="max-w-container-max mx-auto px-md md:px-lg py-md md:py-lg flex flex-col gap-lg"
+    >
+      <!-- Header -->
+      <div class="flex flex-col gap-xs">
+        <h1 class="font-headline-xl text-headline-xl text-on-background">
+          Configure Export
+        </h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">
+          Select parameters to generate your final feasibility report.
+        </p>
+      </div>
+      <!-- Layout Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-lg items-start">
+        <!-- Left Column: Settings (8 cols) -->
+        <div class="md:col-span-8 flex flex-col gap-lg">
+          <!-- Section 1: Scenario Selection -->
+          <section
+            class="bg-surface-container-lowest rounded-xl border border-outline-variant p-md shadow-[0_4px_24px_rgba(0,53,39,0.02)]"
+          >
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-sm">
+              Select Scenarios
+            </h2>
+            <p class="font-body-md text-body-md text-on-surface-variant mb-md">
+              Choose which analyses to include in the final document.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+              <!-- Active Scenario Card -->
+              <div
+                class="border-2 border-primary bg-primary-container/5 rounded-xl p-md flex items-start gap-sm cursor-pointer relative transition-all"
+              >
+                <span
+                  class="material-symbols-outlined text-primary mt-1"
+                  style="font-variation-settings: 'FILL' 1"
+                  >check_circle</span
+                >
+                <div class="flex flex-col gap-xs">
+                  <span
+                    class="font-data-display text-[18px] leading-[24px] font-semibold text-primary"
+                    >Base Case (Grid-Tied)</span
+                  >
+                  <span
+                    class="font-body-md text-[14px] leading-[20px] text-on-surface-variant"
+                    >Standard commercial rooftop assessment.</span
+                  >
+                </div>
+              </div>
+              <!-- Inactive Scenario Card -->
+              <div
+                class="border border-outline-variant bg-surface rounded-xl p-md flex items-start gap-sm cursor-pointer hover:border-outline transition-all"
+              >
+                <span class="material-symbols-outlined text-outline-variant mt-1"
+                  >radio_button_unchecked</span
+                >
+                <div class="flex flex-col gap-xs">
+                  <span
+                    class="font-data-display text-[18px] leading-[24px] font-semibold text-on-surface"
+                    >Hybrid System (Storage)</span
+                  >
+                  <span
+                    class="font-body-md text-[14px] leading-[20px] text-on-surface-variant"
+                    >Includes 50kWh BESS integration ROI.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+          <!-- Section 2: Format & Data Inclusions -->
+          <section
+            class="bg-surface-container-lowest rounded-xl border border-outline-variant p-md shadow-[0_4px_24px_rgba(0,53,39,0.02)]"
+          >
+            <h2 class="font-headline-lg text-headline-lg text-on-surface mb-sm">
+              Format &amp; Details
+            </h2>
+            <!-- Format Toggle -->
+            <div
+              class="flex bg-surface-container-low p-xs rounded-lg mb-lg border border-outline-variant/50"
+            >
+              <button
+                class="flex-1 flex justify-center items-center gap-xs py-sm bg-surface-container-lowest text-primary font-label-sm text-label-sm font-bold rounded-DEFAULT shadow-sm transition-all h-touch-target"
+              >
+                <span
+                  class="material-symbols-outlined"
+                  style="font-variation-settings: 'FILL' 1"
+                  >picture_as_pdf</span
+                >
+                PDF Report
+              </button>
+              <button
+                class="flex-1 flex justify-center items-center gap-xs py-sm text-on-surface-variant font-label-sm text-label-sm font-medium hover:text-on-surface transition-all h-touch-target"
+              >
+                <span class="material-symbols-outlined">table_view</span>
+                Excel Data
+              </button>
+            </div>
+            <!-- Toggles -->
+            <div class="flex flex-col gap-md">
+              <div
+                class="flex items-center justify-between py-xs border-b border-surface-variant/50"
+              >
+                <div class="flex flex-col">
+                  <span
+                    class="font-label-sm text-label-sm font-bold text-on-surface text-[14px]"
+                    >Executive Summary</span
+                  >
+                  <span class="font-body-md text-[13px] text-on-surface-variant"
+                    >High-level financial metrics and charts.</span
+                  >
+                </div>
+                <!-- Checked Switch -->
+                <div
+                  class="w-12 h-6 bg-primary rounded-full relative shadow-inner cursor-pointer flex-shrink-0"
+                >
+                  <div
+                    class="w-4 h-4 bg-on-primary rounded-full absolute right-1 top-1 shadow-sm"
+                  ></div>
+                </div>
+              </div>
+              <div
+                class="flex items-center justify-between py-xs border-b border-surface-variant/50"
+              >
+                <div class="flex flex-col">
+                  <span
+                    class="font-label-sm text-label-sm font-bold text-on-surface text-[14px]"
+                    >Detailed P&amp;L Table</span
+                  >
+                  <span class="font-body-md text-[13px] text-on-surface-variant"
+                    >Year-by-year cash flow and depreciation schedule.</span
+                  >
+                </div>
+                <!-- Checked Switch -->
+                <div
+                  class="w-12 h-6 bg-primary rounded-full relative shadow-inner cursor-pointer flex-shrink-0"
+                >
+                  <div
+                    class="w-4 h-4 bg-on-primary rounded-full absolute right-1 top-1 shadow-sm"
+                  ></div>
+                </div>
+              </div>
+              <div
+                class="flex items-center justify-between py-xs border-b border-surface-variant/50"
+              >
+                <div class="flex flex-col">
+                  <span
+                    class="font-label-sm text-label-sm font-bold text-on-surface text-[14px]"
+                    >Methodology &amp; Assumptions</span
+                  >
+                  <span class="font-body-md text-[13px] text-on-surface-variant"
+                    >Tariff escalation rates and derating factors used.</span
+                  >
+                </div>
+                <!-- Unchecked Switch -->
+                <div
+                  class="w-12 h-6 bg-outline-variant rounded-full relative shadow-inner cursor-pointer flex-shrink-0"
+                >
+                  <div
+                    class="w-4 h-4 bg-surface-container-lowest rounded-full absolute left-1 top-1 shadow-sm"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <!-- Right Column: Preview & Action (4 cols) -->
+        <div class="md:col-span-4 sticky top-24 flex flex-col gap-md">
+          <!-- Preview Card -->
+          <div
+            class="bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden shadow-[0_8px_30px_rgba(0,53,39,0.05)]"
+          >
+            <!-- Image Mockup -->
+            <div class="h-48 w-full bg-surface-variant relative overflow-hidden">
+              <img
+                alt="Report Cover Preview"
+                class="w-full h-full object-cover opacity-90 mix-blend-multiply"
+                data-alt="A professional corporate financial report cover page mock-up resting slightly angled on a pristine, light-colored modern desk surface. The document cover features a clean-tech aesthetic with subtle deep emerald green and soft secondary blue geometric intersecting patterns. A soft, ambient daylight illuminates the scene from the left, creating diffused drop shadows and a highly premium, authoritative feel. The overall visual style emphasizes modern corporate transparency, high utility minimalism, and absolute precision."
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkxgtQ84KfHQMhjPBYGU3U_5brCDGH2gVQdePU8cuDqjpmXToiXcrxFAST76o87ikmq0fgNu9TB756d6SUBsXeg3aYLmR8Fbd2xiwn_L0VYO45AL_z7CsIPggn6cWFAbULGd3gi7aD64dzkig7KE_O1kw-5hNxOLQPWYICIO7HI8-uIgILdtVyq1bWPIgsz5bbug4peHkLaQJMfmJiMKzGACJaOp0VnT-LV3zkl9OkrwVJlebzXB7YzTeqNP6SZ48yac6ZFGcqSPC5"
+              />
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 to-transparent flex items-end p-md"
+              >
+                <span
+                  class="font-headline-lg text-[20px] leading-[26px] text-on-primary font-semibold"
+                  >Base Case Feasibility.pdf</span
+                >
+              </div>
+            </div>
+            <!-- Summary Stats -->
+            <div class="p-md flex flex-col gap-sm bg-surface-container-lowest">
+              <div
+                class="flex justify-between items-center text-body-md text-on-surface-variant"
+              >
+                <span>Estimated Size</span>
+                <span class="font-bold text-on-surface">2.4 MB</span>
+              </div>
+              <div
+                class="flex justify-between items-center text-body-md text-on-surface-variant"
+              >
+                <span>Pages</span>
+                <span class="font-bold text-on-surface">14</span>
+              </div>
+              <div
+                class="flex justify-between items-center text-body-md text-on-surface-variant"
+              >
+                <span>Included</span>
+                <span class="font-bold text-on-surface text-right">Summary, P&amp;L</span>
+              </div>
+            </div>
+          </div>
+          <!-- Primary Action -->
+          <button
+            class="w-full h-touch-target bg-primary text-on-primary font-headline-lg text-[18px] leading-[24px] font-bold rounded-lg shadow-md hover:bg-primary/90 hover:shadow-lg transition-all flex justify-center items-center gap-sm mt-sm"
+          >
+            <span class="material-symbols-outlined">download</span>
+            Download Report
+          </button>
+          <p
+            class="text-center font-label-sm text-label-sm text-on-surface-variant mt-xs"
+          >
+            Your document will be generated securely.
+          </p>
+        </div>
+      </div>
+    </main>
+    <!-- BottomNavBar (Shared Component - Mobile Only) -->
+    <nav
+      class="md:hidden bg-white dark:bg-slate-950 font-inter text-[11px] font-medium uppercase tracking-wider docked full-width bottom-0 border-t rounded-t-lg border-slate-100 dark:border-slate-800 shadow-[0_-4px_15px_rgba(6,78,59,0.05)] active:scale-95 transition-transform duration-200 fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-white/90 backdrop-blur-md"
+    >
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 hover:text-emerald-700 dark:hover:text-emerald-300"
+        href="#"
+      >
+        <span class="material-symbols-outlined mb-1">analytics</span>
+        <span>Scenarios</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 hover:text-emerald-700 dark:hover:text-emerald-300"
+        href="#"
+      >
+        <span class="material-symbols-outlined mb-1">insights</span>
+        <span>Analysis</span>
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 hover:text-emerald-700 dark:hover:text-emerald-300"
+        href="#"
+      >
+        <span class="material-symbols-outlined mb-1">compare_arrows</span>
+        <span>Compare</span>
+      </a>
+      <!-- Active Tab -->
+      <a
+        class="flex flex-col items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-200 rounded-xl px-3 py-1.5 hover:text-emerald-700 dark:hover:text-emerald-300"
+        href="#"
+      >
+        <span
+          class="material-symbols-outlined mb-1"
+          style="font-variation-settings: 'FILL' 1"
+          >ios_share</span
+        >
+        <span>Export</span>
+      </a>
+    </nav>
+  </body>
+</html>

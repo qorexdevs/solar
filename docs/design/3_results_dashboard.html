@@ -1,0 +1,481 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SolarCalc India - Analysis</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'tertiary-container': '#004d46',
+              'surface-tint': '#2b6954',
+              'surface-variant': '#d3e4fe',
+              'tertiary-fixed': '#89f5e7',
+              'surface-dim': '#cbdbf5',
+              'on-surface-variant': '#404944',
+              'on-secondary': '#ffffff',
+              error: '#ba1a1a',
+              'on-primary-fixed-variant': '#0b513d',
+              'primary-container': '#064e3b',
+              'on-primary': '#ffffff',
+              background: '#f8f9ff',
+              surface: '#f8f9ff',
+              primary: '#003527',
+              'on-secondary-container': '#fefcff',
+              'on-primary-container': '#80bea6',
+              secondary: '#0051d5',
+              'secondary-container': '#316bf3',
+              'on-tertiary-fixed': '#00201d',
+              'on-tertiary-container': '#53c2b5',
+              'on-tertiary-fixed-variant': '#005049',
+              tertiary: '#00342f',
+              'surface-bright': '#f8f9ff',
+              'surface-container-lowest': '#ffffff',
+              'inverse-surface': '#213145',
+              outline: '#707974',
+              'on-background': '#0b1c30',
+              'primary-fixed-dim': '#95d3ba',
+              'on-primary-fixed': '#002117',
+              'secondary-fixed-dim': '#b4c5ff',
+              'on-secondary-fixed': '#00174b',
+              'primary-fixed': '#b0f0d6',
+              'surface-container': '#e5eeff',
+              'on-error': '#ffffff',
+              'surface-container-low': '#eff4ff',
+              'surface-container-highest': '#d3e4fe',
+              'outline-variant': '#bfc9c3',
+              'inverse-on-surface': '#eaf1ff',
+              'on-error-container': '#93000a',
+              'on-surface': '#0b1c30',
+              'secondary-fixed': '#dbe1ff',
+              'on-tertiary': '#ffffff',
+              'surface-container-high': '#dce9ff',
+              'tertiary-fixed-dim': '#6bd8cb',
+              'inverse-primary': '#95d3ba',
+              'on-secondary-fixed-variant': '#003ea8',
+              'error-container': '#ffdad6',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+            spacing: {
+              xs: '4px',
+              lg: '40px',
+              base: '8px',
+              xl: '64px',
+              sm: '12px',
+              md: '24px',
+              'container-max': '1280px',
+              'touch-target': '48px',
+            },
+            fontFamily: {
+              'headline-xl': ['Inter'],
+              'body-md': ['Inter'],
+              'body-lg': ['Inter'],
+              'data-display': ['Inter'],
+              'headline-lg': ['Inter'],
+              'label-sm': ['Inter'],
+            },
+            fontSize: {
+              'headline-xl': [
+                '36px',
+                { lineHeight: '44px', letterSpacing: '-0.02em', fontWeight: '700' },
+              ],
+              'body-md': ['16px', { lineHeight: '24px', fontWeight: '400' }],
+              'body-lg': ['18px', { lineHeight: '28px', fontWeight: '400' }],
+              'data-display': [
+                '24px',
+                { lineHeight: '32px', letterSpacing: '-0.01em', fontWeight: '600' },
+              ],
+              'headline-lg': [
+                '28px',
+                { lineHeight: '36px', letterSpacing: '-0.01em', fontWeight: '600' },
+              ],
+              'label-sm': ['12px', { lineHeight: '16px', fontWeight: '500' }],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      .material-symbols-outlined.fill {
+        font-variation-settings:
+          'FILL' 1,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="bg-background text-on-background font-body-md min-h-screen pb-24 md:pb-0">
+    <!-- TopAppBar -->
+    <header
+      class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm docked full-width"
+    >
+      <div class="flex items-center gap-2">
+        <span
+          class="material-symbols-outlined text-emerald-900 dark:text-emerald-400"
+          data-icon="solar_power"
+          >solar_power</span
+        >
+        <span
+          class="font-inter text-xl font-bold tracking-tighter text-emerald-900 dark:text-emerald-50"
+          >SolarCalc India</span
+        >
+      </div>
+      <div>
+        <div
+          class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden"
+        >
+          <span
+            class="material-symbols-outlined text-on-surface-variant"
+            data-icon="person"
+            >person</span
+          >
+        </div>
+      </div>
+    </header>
+    <!-- Top Nav (Desktop) -->
+    <nav
+      class="hidden md:flex fixed top-16 left-0 w-full z-40 bg-white border-b border-slate-100 px-4 h-12 items-center justify-center gap-8 shadow-sm"
+    >
+      <a
+        class="font-inter text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all px-3 py-1.5 rounded-lg flex items-center gap-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+        Scenarios
+      </a>
+      <a
+        class="font-inter text-[11px] font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-xl flex items-center gap-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined fill" data-icon="insights">insights</span>
+        Analysis
+      </a>
+      <a
+        class="font-inter text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all px-3 py-1.5 rounded-lg flex items-center gap-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="compare_arrows"
+          >compare_arrows</span
+        >
+        Compare
+      </a>
+      <a
+        class="font-inter text-[11px] font-medium uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all px-3 py-1.5 rounded-lg flex items-center gap-2"
+        href="#"
+      >
+        <span class="material-symbols-outlined" data-icon="ios_share">ios_share</span>
+        Export
+      </a>
+    </nav>
+    <!-- Main Content -->
+    <main class="pt-20 md:pt-32 px-md pb-md max-w-container-max mx-auto space-y-md">
+      <!-- Header Section -->
+      <div
+        class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4"
+      >
+        <div>
+          <p
+            class="font-label-sm text-label-sm text-outline mb-1 uppercase tracking-wider"
+          >
+            Analysis Result
+          </p>
+          <h1 class="font-headline-lg text-headline-lg text-on-surface">
+            Maharashtra Grid-Tie 3MW
+          </h1>
+          <div class="flex gap-2 mt-2">
+            <span
+              class="px-2 py-1 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm"
+              >Grid-Tie</span
+            >
+            <span
+              class="px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm"
+              >Commercial</span
+            >
+          </div>
+        </div>
+        <div class="flex gap-sm w-full md:w-auto">
+          <button
+            class="flex-1 md:flex-none h-touch-target px-md rounded-lg border border-outline text-primary font-label-sm text-label-sm flex items-center justify-center gap-2 hover:bg-surface-variant transition-colors"
+          >
+            <span class="material-symbols-outlined" data-icon="share">share</span>
+            Share with Team
+          </button>
+          <button
+            class="flex-1 md:flex-none h-touch-target px-md rounded-lg bg-primary text-on-primary font-label-sm text-label-sm flex items-center justify-center gap-2 hover:bg-primary-container transition-colors"
+          >
+            <span class="material-symbols-outlined" data-icon="download">download</span>
+            Export Report
+          </button>
+        </div>
+      </div>
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-sm">
+        <!-- IRR Card -->
+        <div
+          class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)] border-l-4 border-l-tertiary-container"
+        >
+          <div class="flex items-center gap-2 text-outline mb-2">
+            <span class="material-symbols-outlined" data-icon="trending_up"
+              >trending_up</span
+            >
+            <span class="font-label-sm text-label-sm">Internal Rate of Return (IRR)</span>
+          </div>
+          <div class="font-data-display text-data-display text-on-surface">15.5%</div>
+          <p class="font-label-sm text-label-sm text-outline mt-1">
+            Excellent Feasibility
+          </p>
+        </div>
+        <!-- Payback Card -->
+        <div
+          class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)] border-l-4 border-l-primary"
+        >
+          <div class="flex items-center gap-2 text-outline mb-2">
+            <span class="material-symbols-outlined" data-icon="update">update</span>
+            <span class="font-label-sm text-label-sm">Payback Period</span>
+          </div>
+          <div class="font-data-display text-data-display text-on-surface">6.2 yrs</div>
+          <p class="font-label-sm text-label-sm text-outline mt-1">
+            Project lifespan: 25 yrs
+          </p>
+        </div>
+        <!-- NPV Card -->
+        <div
+          class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)] border-l-4 border-l-secondary-container"
+        >
+          <div class="flex items-center gap-2 text-outline mb-2">
+            <span class="material-symbols-outlined" data-icon="account_balance"
+              >account_balance</span
+            >
+            <span class="font-label-sm text-label-sm">Net Present Value (NPV)</span>
+          </div>
+          <div class="font-data-display text-data-display text-on-surface">₹4.5 Cr</div>
+          <p class="font-label-sm text-label-sm text-outline mt-1">At 8% discount rate</p>
+        </div>
+      </div>
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-md">
+        <!-- Charts Section (Spans 2 columns on large screens) -->
+        <div class="lg:col-span-2 space-y-md">
+          <!-- Cash Flow Chart Placeholder -->
+          <div
+            class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)]"
+          >
+            <h3 class="font-body-lg text-body-lg text-on-surface mb-4">
+              Cumulative Cash Flow
+            </h3>
+            <div
+              class="h-[300px] w-full bg-surface-container rounded-lg flex items-end p-4 gap-2 relative overflow-hidden"
+            >
+              <!-- Simulated Chart Bars -->
+              <div class="flex-1 bg-error/40 rounded-t-sm h-[20%]"></div>
+              <div class="flex-1 bg-error/20 rounded-t-sm h-[10%]"></div>
+              <div class="flex-1 bg-primary-fixed-dim rounded-t-sm h-[15%]"></div>
+              <div class="flex-1 bg-primary-fixed-dim rounded-t-sm h-[30%]"></div>
+              <div class="flex-1 bg-primary-fixed-dim rounded-t-sm h-[45%]"></div>
+              <div class="flex-1 bg-primary-container rounded-t-sm h-[60%]"></div>
+              <div class="flex-1 bg-primary-container rounded-t-sm h-[75%]"></div>
+              <div class="flex-1 bg-primary-container rounded-t-sm h-[90%]"></div>
+              <!-- Break Even Line -->
+              <div
+                class="absolute left-0 right-0 bottom-[20%] border-t border-dashed border-outline-variant"
+              ></div>
+            </div>
+            <div
+              class="flex justify-between mt-2 font-label-sm text-label-sm text-outline"
+            >
+              <span>Year 0</span>
+              <span>Year 10</span>
+              <span>Year 25</span>
+            </div>
+          </div>
+          <!-- Sustainability Section -->
+          <div
+            class="bg-primary-container rounded-xl p-md text-on-primary shadow-[0_4px_15px_rgba(6,78,59,0.05)] relative overflow-hidden"
+          >
+            <div class="absolute right-[-20px] top-[-20px] opacity-10">
+              <span class="material-symbols-outlined text-[120px]" data-icon="eco"
+                >eco</span
+              >
+            </div>
+            <div class="relative z-10 flex flex-col md:flex-row items-center gap-md">
+              <div class="p-4 bg-on-primary/10 rounded-full">
+                <span class="material-symbols-outlined text-4xl" data-icon="co2"
+                  >co2</span
+                >
+              </div>
+              <div>
+                <h3 class="font-body-lg text-body-lg mb-1">Annual CO2 Offset</h3>
+                <div class="font-data-display text-data-display">4,200 Tonnes</div>
+                <p class="font-label-sm text-label-sm text-on-primary/80 mt-1">
+                  Equivalent to planting 12,000 trees annually
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Sidebar / Details (1 column) -->
+        <div class="space-y-md">
+          <!-- Cost Breakdown -->
+          <div
+            class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)]"
+          >
+            <h3 class="font-body-lg text-body-lg text-on-surface mb-4">
+              CAPEX Breakdown
+            </h3>
+            <div class="flex items-center justify-center py-4">
+              <!-- Simulated Donut Chart -->
+              <div
+                class="w-32 h-32 rounded-full border-[16px] border-primary border-r-secondary-container border-b-surface-variant transform rotate-45"
+              ></div>
+            </div>
+            <div class="space-y-3 mt-4">
+              <div class="flex justify-between items-center font-label-sm text-label-sm">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full bg-primary"></div>
+                  Modules (55%)
+                </div>
+                <div class="font-medium text-on-surface">₹2.2 Cr</div>
+              </div>
+              <div class="flex justify-between items-center font-label-sm text-label-sm">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full bg-secondary-container"></div>
+                  Inverters (25%)
+                </div>
+                <div class="font-medium text-on-surface">₹1.0 Cr</div>
+              </div>
+              <div class="flex justify-between items-center font-label-sm text-label-sm">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full bg-surface-variant"></div>
+                  BoS &amp; Install (20%)
+                </div>
+                <div class="font-medium text-on-surface">₹0.8 Cr</div>
+              </div>
+            </div>
+          </div>
+          <!-- P&L Summary Table -->
+          <div
+            class="bg-surface-container-lowest rounded-xl p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)]"
+          >
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-body-lg text-body-lg text-on-surface">P&amp;L Summary</h3>
+              <button class="text-primary font-label-sm text-label-sm flex items-center">
+                Expand
+                <span
+                  class="material-symbols-outlined text-[16px]"
+                  data-icon="expand_more"
+                  >expand_more</span
+                >
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr
+                    class="border-b border-outline-variant font-label-sm text-label-sm text-outline"
+                  >
+                    <th class="py-2 font-medium">Year</th>
+                    <th class="py-2 font-medium text-right">Revenue (₹)</th>
+                    <th class="py-2 font-medium text-right">O&amp;M (₹)</th>
+                  </tr>
+                </thead>
+                <tbody class="font-body-md text-label-sm">
+                  <tr class="border-b border-outline-variant/50">
+                    <td class="py-3 text-on-surface font-medium">Y1</td>
+                    <td class="py-3 text-right text-tertiary-container">85 L</td>
+                    <td class="py-3 text-right text-error">4.2 L</td>
+                  </tr>
+                  <tr class="border-b border-outline-variant/50">
+                    <td class="py-3 text-on-surface font-medium">Y2</td>
+                    <td class="py-3 text-right text-tertiary-container">84 L</td>
+                    <td class="py-3 text-right text-error">4.4 L</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 text-on-surface font-medium">Y3</td>
+                    <td class="py-3 text-right text-tertiary-container">83 L</td>
+                    <td class="py-3 text-right text-error">4.6 L</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- BottomNavBar (Mobile Only) -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md docked border-t border-slate-100 dark:border-slate-800 rounded-t-lg shadow-[0_-4px_15px_rgba(6,78,59,0.05)]"
+    >
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider hover:text-emerald-700 dark:hover:text-emerald-300 active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined mb-1" data-icon="analytics"
+          >analytics</span
+        >
+        Scenarios
+      </a>
+      <a
+        class="flex flex-col items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-200 rounded-xl px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider hover:text-emerald-700 dark:hover:text-emerald-300 active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined mb-1 fill" data-icon="insights"
+          >insights</span
+        >
+        Analysis
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider hover:text-emerald-700 dark:hover:text-emerald-300 active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined mb-1" data-icon="compare_arrows"
+          >compare_arrows</span
+        >
+        Compare
+      </a>
+      <a
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider hover:text-emerald-700 dark:hover:text-emerald-300 active:scale-95 transition-transform duration-200"
+        href="#"
+      >
+        <span class="material-symbols-outlined mb-1" data-icon="ios_share"
+          >ios_share</span
+        >
+        Export
+      </a>
+    </nav>
+  </body>
+</html>

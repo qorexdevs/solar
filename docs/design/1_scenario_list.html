@@ -1,0 +1,487 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SolarCalc India - Scenarios</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'tertiary-container': '#004d46',
+              'surface-tint': '#2b6954',
+              'surface-variant': '#d3e4fe',
+              'tertiary-fixed': '#89f5e7',
+              'surface-dim': '#cbdbf5',
+              'on-surface-variant': '#404944',
+              'on-secondary': '#ffffff',
+              error: '#ba1a1a',
+              'on-primary-fixed-variant': '#0b513d',
+              'primary-container': '#064e3b',
+              'on-primary': '#ffffff',
+              background: '#f8f9ff',
+              surface: '#f8f9ff',
+              primary: '#003527',
+              'on-secondary-container': '#fefcff',
+              'on-primary-container': '#80bea6',
+              secondary: '#0051d5',
+              'secondary-container': '#316bf3',
+              'on-tertiary-fixed': '#00201d',
+              'on-tertiary-container': '#53c2b5',
+              'on-tertiary-fixed-variant': '#005049',
+              tertiary: '#00342f',
+              'surface-bright': '#f8f9ff',
+              'surface-container-lowest': '#ffffff',
+              'inverse-surface': '#213145',
+              outline: '#707974',
+              'on-background': '#0b1c30',
+              'primary-fixed-dim': '#95d3ba',
+              'on-primary-fixed': '#002117',
+              'secondary-fixed-dim': '#b4c5ff',
+              'on-secondary-fixed': '#00174b',
+              'primary-fixed': '#b0f0d6',
+              'surface-container': '#e5eeff',
+              'on-error': '#ffffff',
+              'surface-container-low': '#eff4ff',
+              'surface-container-highest': '#d3e4fe',
+              'outline-variant': '#bfc9c3',
+              'inverse-on-surface': '#eaf1ff',
+              'on-error-container': '#93000a',
+              'on-surface': '#0b1c30',
+              'secondary-fixed': '#dbe1ff',
+              'on-tertiary': '#ffffff',
+              'surface-container-high': '#dce9ff',
+              'tertiary-fixed-dim': '#6bd8cb',
+              'inverse-primary': '#95d3ba',
+              'on-secondary-fixed-variant': '#003ea8',
+              'error-container': '#ffdad6',
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+            spacing: {
+              xs: '4px',
+              lg: '40px',
+              base: '8px',
+              xl: '64px',
+              sm: '12px',
+              md: '24px',
+              'container-max': '1280px',
+              'touch-target': '48px',
+            },
+            fontFamily: {
+              'headline-xl': ['Inter'],
+              'body-md': ['Inter'],
+              'body-lg': ['Inter'],
+              'data-display': ['Inter'],
+              'headline-lg': ['Inter'],
+              'label-sm': ['Inter'],
+            },
+            fontSize: {
+              'headline-xl': [
+                '36px',
+                {
+                  lineHeight: '44px',
+                  letterSpacing: '-0.02em',
+                  fontWeight: '700',
+                },
+              ],
+              'body-md': [
+                '16px',
+                {
+                  lineHeight: '24px',
+                  fontWeight: '400',
+                },
+              ],
+              'body-lg': [
+                '18px',
+                {
+                  lineHeight: '28px',
+                  fontWeight: '400',
+                },
+              ],
+              'data-display': [
+                '24px',
+                {
+                  lineHeight: '32px',
+                  letterSpacing: '-0.01em',
+                  fontWeight: '600',
+                },
+              ],
+              'headline-lg': [
+                '28px',
+                {
+                  lineHeight: '36px',
+                  letterSpacing: '-0.01em',
+                  fontWeight: '600',
+                },
+              ],
+              'label-sm': [
+                '12px',
+                {
+                  lineHeight: '16px',
+                  fontWeight: '500',
+                },
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-background font-body-md min-h-screen pb-24 md:pb-0 pt-16"
+  >
+    <!-- TopAppBar -->
+    <header
+      class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:bg-slate-100 dark:hover:bg-slate-800"
+    >
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-emerald-900 dark:text-emerald-400"
+          >solar_power</span
+        >
+        <h1
+          class="font-inter text-sm font-semibold tracking-wide text-xl font-bold tracking-tighter text-emerald-900 dark:text-emerald-50"
+        >
+          SolarCalc India
+        </h1>
+      </div>
+      <div>
+        <div
+          class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant"
+        >
+          <img
+            alt="User Profile"
+            class="w-full h-full object-cover"
+            data-alt="A professional headshot of a person looking confidently at the camera. The lighting is soft and studio-quality, set against a neutral, light-mode background. The mood is authoritative and approachable, fitting for a clean-tech professional."
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUAcEU2CPWXu5PKWfRxpb8JW26qruXBopdE2PL0Ukua5uOMwPh5vV3sels7wLLhV5TR8_qh42zpisW87l2pP6O5TFeaQOTRmAx2Z5pY44kOCqlbXfOwZn9zehKvIDfR6UDAZ9to4xk1a4CyZkoKTEK15BvGL0ewj-om-AcS0fILpNYXVYX2bWtkYJsCnlJ-dCJnVE6vuaYuGuZ64fzCMdG7H_7v98rCaYIllzPjDxksE1ckODDIrKsjcD3dRlnKk9miRyNKE4f5AHV"
+          />
+        </div>
+      </div>
+    </header>
+    <main class="max-w-container-max mx-auto px-md py-md">
+      <!-- Summary Section -->
+      <section class="mb-md">
+        <h2 class="font-headline-lg text-headline-lg mb-sm">Scenario Overview</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-sm">
+          <div
+            class="bg-surface-container-lowest rounded-lg p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)] border border-outline-variant flex flex-col justify-between"
+          >
+            <p
+              class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2"
+            >
+              Total Capacity Under Eval
+            </p>
+            <p class="font-data-display text-data-display text-primary">
+              12.5
+              <span class="font-body-md text-body-md text-on-surface-variant">MW</span>
+            </p>
+          </div>
+          <div
+            class="bg-surface-container-lowest rounded-lg p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)] border border-outline-variant flex flex-col justify-between"
+          >
+            <p
+              class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2"
+            >
+              Active Scenarios
+            </p>
+            <p class="font-data-display text-data-display text-primary">4</p>
+          </div>
+          <div
+            class="bg-surface-container-lowest rounded-lg p-md shadow-[0_4px_15px_rgba(6,78,59,0.05)] border border-outline-variant flex flex-col justify-between"
+          >
+            <p
+              class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2"
+            >
+              Avg. Projected IRR
+            </p>
+            <p class="font-data-display text-data-display text-surface-tint">13.8%</p>
+          </div>
+        </div>
+      </section>
+      <!-- Scenarios List Header -->
+      <div class="flex justify-between items-center mb-sm">
+        <h3 class="font-headline-lg text-headline-lg">Saved Scenarios</h3>
+        <button
+          class="hidden md:flex bg-primary text-on-primary px-4 py-2 rounded-lg font-body-md text-body-md items-center gap-2 hover:bg-surface-tint transition-colors h-touch-target"
+        >
+          <span
+            class="material-symbols-outlined"
+            style="font-variation-settings: 'FILL' 1"
+            >add</span
+          >
+          New Scenario
+        </button>
+      </div>
+      <!-- Scenarios Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+        <!-- Card 1 -->
+        <div
+          class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(6,78,59,0.08)] border border-outline-variant overflow-hidden flex flex-col border-l-4 border-l-primary-container"
+        >
+          <div class="p-md flex-grow">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <span
+                  class="inline-block px-2 py-1 bg-surface-container-low text-primary-container font-label-sm text-label-sm rounded mb-2"
+                  >Feasible</span
+                >
+                <h4 class="font-body-lg text-body-lg font-bold text-on-background">
+                  Rajasthan Utility
+                </h4>
+              </div>
+              <span class="material-symbols-outlined text-outline">more_vert</span>
+            </div>
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between border-b border-outline-variant pb-2">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Size</span
+                >
+                <span class="font-body-md text-body-md font-semibold">2.0 MW</span>
+              </div>
+              <div class="flex justify-between border-b border-outline-variant pb-2">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Projected IRR</span
+                >
+                <span class="font-body-md text-body-md font-semibold text-surface-tint"
+                  >14.2%</span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Type</span
+                >
+                <span class="font-body-md text-body-md font-semibold">Utility-Scale</span>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-surface-container-low p-3 flex justify-end gap-2 border-t border-outline-variant"
+          >
+            <button
+              aria-label="Delete"
+              class="p-2 text-on-surface-variant hover:text-error transition-colors rounded-full hover:bg-error-container"
+            >
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+            <button
+              aria-label="Duplicate"
+              class="p-2 text-on-surface-variant hover:text-secondary-container transition-colors rounded-full hover:bg-surface-container"
+            >
+              <span class="material-symbols-outlined">content_copy</span>
+            </button>
+            <button
+              class="px-4 py-2 bg-surface-tint text-on-primary rounded-lg font-body-md text-body-md hover:bg-primary-container transition-colors flex items-center gap-1"
+            >
+              Open
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+        <!-- Card 2 -->
+        <div
+          class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(6,78,59,0.08)] border border-outline-variant overflow-hidden flex flex-col border-l-4 border-l-surface-tint"
+        >
+          <div class="p-md flex-grow">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <span
+                  class="inline-block px-2 py-1 bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm rounded mb-2"
+                  >Draft</span
+                >
+                <h4 class="font-body-lg text-body-lg font-bold text-on-background">
+                  Gujarat C&amp;I Rooftop
+                </h4>
+              </div>
+              <span class="material-symbols-outlined text-outline">more_vert</span>
+            </div>
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between border-b border-outline-variant pb-2">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Size</span
+                >
+                <span class="font-body-md text-body-md font-semibold">500 kW</span>
+              </div>
+              <div class="flex justify-between border-b border-outline-variant pb-2">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Projected IRR</span
+                >
+                <span class="font-body-md text-body-md font-semibold text-surface-tint"
+                  >12.5%</span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Type</span
+                >
+                <span class="font-body-md text-body-md font-semibold">Commercial</span>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-surface-container-low p-3 flex justify-end gap-2 border-t border-outline-variant"
+          >
+            <button
+              aria-label="Delete"
+              class="p-2 text-on-surface-variant hover:text-error transition-colors rounded-full hover:bg-error-container"
+            >
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+            <button
+              aria-label="Duplicate"
+              class="p-2 text-on-surface-variant hover:text-secondary-container transition-colors rounded-full hover:bg-surface-container"
+            >
+              <span class="material-symbols-outlined">content_copy</span>
+            </button>
+            <button
+              class="px-4 py-2 bg-surface-tint text-on-primary rounded-lg font-body-md text-body-md hover:bg-primary-container transition-colors flex items-center gap-1"
+            >
+              Open
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+        <!-- Card 3 -->
+        <div
+          class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(6,78,59,0.08)] border border-outline-variant overflow-hidden flex flex-col border-l-4 border-l-outline"
+        >
+          <div class="p-md flex-grow">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <span
+                  class="inline-block px-2 py-1 bg-surface-container text-on-surface-variant font-label-sm text-label-sm rounded mb-2"
+                  >Review Needed</span
+                >
+                <h4 class="font-body-lg text-body-lg font-bold text-on-background">
+                  Karnataka Hybrid
+                </h4>
+              </div>
+              <span class="material-symbols-outlined text-outline">more_vert</span>
+            </div>
+            <div class="space-y-3 mb-6">
+              <div class="flex justify-between border-b border-outline-variant pb-2">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Size</span
+                >
+                <span class="font-body-md text-body-md font-semibold">10.0 MW</span>
+              </div>
+              <div class="flex justify-between border-b border-outline-variant pb-2">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Projected IRR</span
+                >
+                <span class="font-body-md text-body-md font-semibold text-surface-tint"
+                  >--</span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="font-body-md text-body-md text-on-surface-variant"
+                  >Type</span
+                >
+                <span class="font-body-md text-body-md font-semibold"
+                  >Solar + Storage</span
+                >
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-surface-container-low p-3 flex justify-end gap-2 border-t border-outline-variant"
+          >
+            <button
+              aria-label="Delete"
+              class="p-2 text-on-surface-variant hover:text-error transition-colors rounded-full hover:bg-error-container"
+            >
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+            <button
+              aria-label="Duplicate"
+              class="p-2 text-on-surface-variant hover:text-secondary-container transition-colors rounded-full hover:bg-surface-container"
+            >
+              <span class="material-symbols-outlined">content_copy</span>
+            </button>
+            <button
+              class="px-4 py-2 border border-surface-tint text-surface-tint rounded-lg font-body-md text-body-md hover:bg-surface-container-highest transition-colors flex items-center gap-1"
+            >
+              Open
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- Floating Action Button (Mobile Only) -->
+    <button
+      class="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-40 hover:bg-primary-container active:scale-95 transition-all"
+    >
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1"
+        >add</span
+      >
+    </button>
+    <!-- BottomNavBar -->
+    <nav
+      class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-white/90 backdrop-blur-md bg-white dark:bg-slate-950 border-t rounded-t-lg border-slate-100 dark:border-slate-800 shadow-[0_-4px_15px_rgba(6,78,59,0.05)] active:scale-95 transition-transform duration-200"
+    >
+      <!-- Active Tab: Scenarios -->
+      <button
+        class="flex flex-col items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-900 dark:text-emerald-200 rounded-xl px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider text-emerald-800 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+      >
+        <span
+          class="material-symbols-outlined mb-1"
+          style="font-variation-settings: 'FILL' 1"
+          >analytics</span
+        >
+        Scenarios
+      </button>
+      <button
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider text-emerald-800 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+      >
+        <span class="material-symbols-outlined mb-1">insights</span>
+        Analysis
+      </button>
+      <button
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider text-emerald-800 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+      >
+        <span class="material-symbols-outlined mb-1">compare_arrows</span>
+        Compare
+      </button>
+      <button
+        class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-500 px-3 py-1.5 font-inter text-[11px] font-medium uppercase tracking-wider text-emerald-800 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
+      >
+        <span class="material-symbols-outlined mb-1">ios_share</span>
+        Export
+      </button>
+    </nav>
+  </body>
+</html>
