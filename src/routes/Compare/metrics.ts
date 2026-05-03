@@ -1,13 +1,13 @@
 import type { ComputedResults } from '@/lib/calc';
 import {
   formatINR,
-  formatMW,
   formatPercent,
+  formatPlantCapacityKW,
   formatRate,
   formatTonnes,
   formatYears,
 } from '@/lib/format';
-import type { Scenario } from '@/types';
+import type { Estimate } from '@/types';
 
 export type MetricDir = 'higher' | 'lower';
 
@@ -15,91 +15,85 @@ export type Metric = {
   id: string;
   label: string;
   icon: string;
-  format: (r: ComputedResults, s: Scenario) => string;
-  numeric: (r: ComputedResults, s: Scenario) => number | null;
+  format: (r: ComputedResults, e: Estimate) => string;
+  numeric: (r: ComputedResults, e: Estimate) => number | null;
   dir: MetricDir;
+  /** When true, only meaningful when finance is enabled. */
+  requiresFinance?: boolean;
 };
 
 export const METRICS: Metric[] = [
   {
+    id: 'capacity',
+    label: 'Target Capacity',
+    icon: 'solar_power',
+    format: (_r, e) => formatPlantCapacityKW(e.targetCapacityKW),
+    numeric: (_r, e) => e.targetCapacityKW,
+    dir: 'higher',
+  },
+  {
     id: 'capex',
-    label: 'Initial Cost (CAPEX)',
+    label: 'Grand total (incl. GST)',
     icon: 'account_balance_wallet',
-    format: (r) => formatINR(r.capex.total),
+    format: (r) => `₹ ${formatINR(r.capex.total)}`,
     numeric: (r) => r.capex.total,
     dir: 'lower',
   },
   {
+    id: 'perKw',
+    label: 'Per kW rate',
+    icon: 'price_change',
+    format: (_r, e) => `₹ ${formatINR(e.totals.perKwRate)}`,
+    numeric: (_r, e) => e.totals.perKwRate,
+    dir: 'lower',
+  },
+  {
     id: 'irr',
-    label: 'Internal Rate of Return (IRR)',
+    label: 'IRR',
     icon: 'trending_up',
-    format: (r) => (Number.isFinite(r.irr) ? formatRate(r.irr) : '—'),
-    numeric: (r) => (Number.isFinite(r.irr) ? r.irr : null),
+    format: (r) =>
+      r.finance && Number.isFinite(r.finance.irr) ? formatRate(r.finance.irr) : '—',
+    numeric: (r) =>
+      r.finance && Number.isFinite(r.finance.irr) ? r.finance.irr : null,
     dir: 'higher',
+    requiresFinance: true,
   },
   {
     id: 'payback',
-    label: 'Payback Period',
+    label: 'Payback',
     icon: 'update',
-    format: (r) => formatYears(r.paybackYears),
-    numeric: (r) => r.paybackYears,
+    format: (r) => (r.finance ? formatYears(r.finance.paybackYears) : '—'),
+    numeric: (r) => (r.finance ? r.finance.paybackYears : null),
     dir: 'lower',
+    requiresFinance: true,
   },
   {
     id: 'npv',
-    label: 'Net Present Value (NPV)',
+    label: 'NPV',
     icon: 'functions',
-    format: (r) => formatINR(r.npv),
-    numeric: (r) => r.npv,
+    format: (r) => (r.finance ? `₹ ${formatINR(r.finance.npv)}` : '—'),
+    numeric: (r) => (r.finance ? r.finance.npv : null),
     dir: 'higher',
-  },
-  {
-    id: 'lcoe',
-    label: 'Levelized Cost (per kWh)',
-    icon: 'electric_bolt',
-    format: (r) => {
-      const totalEnergy = r.energy.reduce((a, b) => a + b, 0);
-      if (totalEnergy === 0) return '—';
-      const totalCost =
-        r.capex.total +
-        r.om.reduce((a, b) => a + b, 0) +
-        r.loan.reduce((a, l) => a + l.interest, 0);
-      return (totalCost / totalEnergy).toFixed(2);
-    },
-    numeric: (r) => {
-      const totalEnergy = r.energy.reduce((a, b) => a + b, 0);
-      if (totalEnergy === 0) return null;
-      const totalCost =
-        r.capex.total +
-        r.om.reduce((a, b) => a + b, 0) +
-        r.loan.reduce((a, l) => a + l.interest, 0);
-      return totalCost / totalEnergy;
-    },
-    dir: 'lower',
+    requiresFinance: true,
   },
   {
     id: 'co2',
     label: 'Lifetime CO₂ Offset',
     icon: 'co2',
-    format: (r) => formatTonnes(r.co2.cumulative),
-    numeric: (r) => r.co2.cumulative,
+    format: (r) => (r.finance ? formatTonnes(r.finance.co2.cumulative) : '—'),
+    numeric: (r) => (r.finance ? r.finance.co2.cumulative : null),
     dir: 'higher',
-  },
-  {
-    id: 'size',
-    label: 'Plant Size',
-    icon: 'solar_power',
-    format: (_r, s) => formatMW(s.basics.sizeMW),
-    numeric: (_r, s) => s.basics.sizeMW,
-    dir: 'higher',
+    requiresFinance: true,
   },
   {
     id: 'cuf',
     label: 'CUF',
     icon: 'speed',
-    format: (_r, s) => formatPercent(s.basics.cufPct),
-    numeric: (_r, s) => s.basics.cufPct,
+    format: (r) =>
+      r.finance ? formatPercent(r.finance.effectiveCufPct) : '—',
+    numeric: (r) => (r.finance ? r.finance.effectiveCufPct : null),
     dir: 'higher',
+    requiresFinance: true,
   },
 ];
 

@@ -1,11 +1,13 @@
-import type { ScenarioStatus } from '@/types';
+import type { EstimateStatus, TemplateStatus } from '@/types';
+
+type AnyStatus = EstimateStatus | TemplateStatus;
 
 type Props = {
-  status: ScenarioStatus;
+  status: AnyStatus;
   className?: string;
 };
 
-const STYLES: Record<ScenarioStatus, { label: string; classes: string }> = {
+const STYLES: Record<AnyStatus, { label: string; classes: string }> = {
   feasible: {
     label: 'Feasible',
     classes: 'bg-surface-container-low text-primary-container',
@@ -17,6 +19,14 @@ const STYLES: Record<ScenarioStatus, { label: string; classes: string }> = {
   review: {
     label: 'Review Needed',
     classes: 'bg-surface-container text-on-surface-variant',
+  },
+  active: {
+    label: 'Active',
+    classes: 'bg-surface-container-low text-primary-container',
+  },
+  archived: {
+    label: 'Archived',
+    classes: 'bg-surface-container text-on-surface-variant opacity-60',
   },
 };
 

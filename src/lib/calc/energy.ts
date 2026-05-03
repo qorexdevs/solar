@@ -5,6 +5,18 @@ export function annualEnergyKWh(sizeMW: number, cufPct: number): number {
   return sizeMW * 1000 * (cufPct / 100) * HOURS_PER_YEAR;
 }
 
+/**
+ * Year-1 annual energy from a yield-simulator-derived specific yield
+ * (kWh/kWp/yr). Used when a `Scenario.location` is set so financials
+ * track real irradiance instead of the flat `cufPct`.
+ */
+export function annualEnergyKWhFromYield(
+  sizeMW: number,
+  specificYieldKWhPerKWpYr: number
+): number {
+  return sizeMW * 1000 * specificYieldKWhPerKWpYr;
+}
+
 /** Yearly energy with geometric panel degradation, length = lifespanYears. */
 export function yearlyEnergy(
   lifespanYears: number,

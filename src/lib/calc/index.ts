@@ -6,16 +6,37 @@
  * by concept; see [docs/architecture.md](../../../docs/architecture.md) for
  * the data-flow tour.
  */
-export { capexBreakdown, type CapexBreakdown } from './capex';
+export {
+  capexBreakdown,
+  OTHER_SCOPE_GROUP_LABEL,
+  type CapexBreakdown,
+  type CapexCategoryGroup,
+  type CapexLineSummary,
+} from './capex';
 export { cumulativeCF, irr, npv, yearlyCashFlows } from './cashflow';
 export { CO2_FACTOR_KG_PER_KWH, co2Tonnes } from './co2';
 export {
-  computeScenario,
+  computeEstimate,
   type ComputedResults,
+  type FinanceResults,
   type PnLRow,
-  type ScenarioOverrides,
+  type EstimateOverrides,
 } from './compute';
-export { annualEnergyKWh, yearlyEnergy, yearlyRevenue } from './energy';
-export { loanAmountForScenario, loanSchedule, type LoanRow } from './loan';
+export {
+  annualEnergyKWh,
+  annualEnergyKWhFromYield,
+  yearlyEnergy,
+  yearlyRevenue,
+} from './energy';
+export { lcoeINRPerKWh } from './lcoe';
+export { loanAmountForEstimate, loanSchedule, type LoanRow } from './loan';
 export { yearlyOM } from './om';
 export { breakEvenYear, paybackYears } from './payback';
+export {
+  type Indexation,
+  type PPASolveArgs,
+  type PPASolveResult,
+  solvePPARate,
+  tariffSchedule,
+  withPPARate,
+} from './ppa';

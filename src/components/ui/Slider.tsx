@@ -110,9 +110,13 @@ export function Slider({
           }}
         />
       </div>
-      <div className="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
-        <span>{fmtBound(min)}</span>
-        <span>{fmtBound(safeMax)}</span>
+      <div className="grid grid-cols-2 gap-x-2 font-label-sm text-label-sm text-on-surface-variant min-w-0">
+        <span className="justify-self-start text-left whitespace-nowrap min-w-0">
+          {fmtBound(min)}
+        </span>
+        <span className="justify-self-end text-right whitespace-nowrap min-w-0">
+          {fmtBound(safeMax)}
+        </span>
       </div>
       {hint && (
         <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">{hint}</p>

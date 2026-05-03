@@ -1,21 +1,21 @@
 import { Link, NavLink } from 'react-router-dom';
 import { Icon } from '@/components/ui/Icon';
-import { useScenarioStore } from '@/store/scenarios';
+import { useEstimateStore } from '@/store/estimates';
 
 const NAV = [
-  { to: '/', icon: 'analytics', label: 'Scenarios' },
+  { to: '/', icon: 'analytics', label: 'Estimates' },
+  { to: '/templates', icon: 'library_books', label: 'Templates' },
   { to: '/results', icon: 'insights', label: 'Results' },
   { to: '/compare', icon: 'compare_arrows', label: 'Compare' },
-  { to: '/settings', icon: 'tune', label: 'Settings' },
   { to: '/export', icon: 'ios_share', label: 'Export' },
 ];
 
 export function TopBar() {
-  const recentId = useScenarioStore((s) => s.recentScenarioId);
+  const recentId = useEstimateStore((s) => s.recentEstimateId);
 
   function resolve(to: string): string {
-    if (to === '/results') return recentId ? `/scenarios/${recentId}` : '/';
-    if (to === '/export') return recentId ? `/scenarios/${recentId}/export` : '/';
+    if (to === '/results') return recentId ? `/estimates/${recentId}` : '/';
+    if (to === '/export') return recentId ? `/estimates/${recentId}/export` : '/';
     return to;
   }
 

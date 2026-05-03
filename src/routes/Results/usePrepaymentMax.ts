@@ -1,32 +1,30 @@
 import { useMemo } from 'react';
-import { computeScenario, type ComputedResults } from '@/lib/calc';
-import type { Scenario } from '@/types';
+import { computeEstimate, type ComputedResults } from '@/lib/calc';
+import type { Estimate } from '@/types';
 
 /**
  * Cap the monthly prepayment so no post-grace, loan-active year's Net CF
- * is pushed negative. The naive answer (baseline minCF / 12) undershoots
- * because applying extra principal retires the loan earlier — so the
- * baseline's worst year may no longer have a loan payment, and a different
- * year becomes the new bottleneck. We iterate to a fixed point: each pass
- * adds back the unused headroom until min loan-active CF ≈ 0.
+ * is pushed negative. Iterates to a fixed point. Returns 0 when the
+ * estimate has no enabled finance layer.
  */
 export function usePrepaymentMax(
-  scenario: Scenario | undefined,
+  estimate: Estimate | undefined,
   equityPctOverride: number | null
 ): number {
   return useMemo(() => {
-    if (!scenario) return 0;
+    if (!estimate || !estimate.finance?.enabled) return 0;
     const compute = (extra: number) =>
-      computeScenario(scenario, {
+      computeEstimate(estimate, {
         financedPctOverride:
           equityPctOverride !== null ? 100 - equityPctOverride : undefined,
         extraAnnualPrincipal: extra > 0 ? extra : undefined,
       });
     const minActiveCF = (r: ComputedResults) => {
+      if (!r.finance) return Infinity;
       let m = Infinity;
-      for (let i = 0; i < r.loan.length; i++) {
-        if (r.loan[i].principal > 1e-6 && r.cashflows[i] < m) {
-          m = r.cashflows[i];
+      for (let i = 0; i < r.finance.loan.length; i++) {
+        if (r.finance.loan[i].principal > 1e-6 && r.finance.cashflows[i] < m) {
+          m = r.finance.cashflows[i];
         }
       }
       return m;
@@ -42,5 +40,5 @@ export function usePrepaymentMax(
       extraAnnual += m;
     }
     return Math.max(0, Math.floor(extraAnnual / 12));
-  }, [scenario, equityPctOverride]);
+  }, [estimate, equityPctOverride]);
 }

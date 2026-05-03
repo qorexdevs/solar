@@ -16,8 +16,10 @@
   "dependencies": {
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.26.2",
     "recharts": "^2.12.7",
     "xlsx": "^0.18.5",
@@ -29,6 +31,7 @@
     "@tailwindcss/forms": "^0.5.9",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^25.6.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",

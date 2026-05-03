@@ -5,6 +5,8 @@
  * consumers can keep importing from `@/types`.
  */
 export * from './projectType';
-export * from './materials';
-export * from './catalog';
-export * from './scenario';
+export * from './irradiance';
+export * from './scenarioTemplate';
+export * from './bomLineItem';
+export * from './otherScopeItem';
+export * from './estimate';

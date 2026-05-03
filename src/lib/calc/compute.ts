@@ -1,15 +1,24 @@
 import type {
-  Scenario,
-  ScenarioBasics,
-  ScenarioFinancing,
-  ScenarioOM,
-  ScenarioRevenue,
+  Estimate,
+  EstimateBasics,
+  EstimateFinancing,
+  EstimateOM,
+  EstimateRevenue,
+  EstimateTotals,
+  FinanceLayer,
+  YieldResult,
 } from '@/types';
+import { simulateYield, snapToNearestCity } from '@/lib/irradiance';
 import { capexBreakdown, type CapexBreakdown } from './capex';
 import { cumulativeCF, irr, npv, yearlyCashFlows } from './cashflow';
 import { co2Tonnes } from './co2';
-import { annualEnergyKWh, yearlyEnergy, yearlyRevenue } from './energy';
-import { loanAmountForScenario, loanSchedule, type LoanRow } from './loan';
+import {
+  annualEnergyKWh,
+  annualEnergyKWhFromYield,
+  yearlyEnergy,
+  yearlyRevenue,
+} from './energy';
+import { loanAmountForEstimate, loanSchedule, type LoanRow } from './loan';
 import { yearlyOM } from './om';
 import { breakEvenYear, paybackYears } from './payback';
 
@@ -26,58 +35,80 @@ export type PnLRow = {
   cumulativeCashFlow: number;
 };
 
-export type ComputedResults = {
-  capex: CapexBreakdown;
+/**
+ * Optional finance outputs. Present only when the estimate has
+ * `finance.enabled === true`. The Results UI keys off `null` to hide the
+ * cashflow / IRR / NPV / yield panels.
+ */
+export type FinanceResults = {
   loanAmount: number;
   equity: number;
-  energy: number[]; // kWh per year
-  revenue: number[]; // ₹ per year
-  om: number[]; // ₹ per year
+  energy: number[];
+  revenue: number[];
+  om: number[];
   loan: LoanRow[];
-  cashflows: number[]; // post-equity, year 1..n
+  cashflows: number[];
   cumulativeCF: number[];
   npv: number;
-  irr: number; // fraction (e.g. 0.155 = 15.5%)
+  irr: number;
   paybackYears: number | null;
   breakEvenYear: number | null;
   co2: { annualYear1: number; cumulative: number; yearly: number[] };
   pnl: PnLRow[];
+  yield: YieldResult | null;
+  effectiveCufPct: number;
   meta: {
-    basics: ScenarioBasics;
-    revenue: ScenarioRevenue;
-    om: ScenarioOM;
-    financing: ScenarioFinancing;
+    basics: EstimateBasics;
+    revenue: EstimateRevenue;
+    om: EstimateOM;
+    financing: EstimateFinancing;
   };
 };
 
+export type ComputedResults = {
+  /** Always present — derived from the estimate's materialized BOM. */
+  capex: CapexBreakdown;
+  /** Always present — PRD §7 totals copied from the estimate. */
+  totals: EstimateTotals;
+  /** Present only when `estimate.finance?.enabled` is true. */
+  finance: FinanceResults | null;
+};
+
 /**
- * What-if overrides applied on top of a saved scenario without mutating it.
+ * What-if overrides applied on top of a saved estimate without mutating it.
  * Used by the Results dashboard for live sliders (equity split, prepayment).
  */
-export type ScenarioOverrides = {
-  /** If set, replaces `financing.financedPct` and ignores any manualLoanAmount. */
+export type EstimateOverrides = {
   financedPctOverride?: number;
-  /** Additional principal payment per year (post-grace). Retires loan earlier. */
   extraAnnualPrincipal?: number;
-  /**
-   * When true, dynamically computes the extra principal each post-grace year
-   * to absorb that year's full available cash flow (revenue − O&M − scheduled
-   * loan payment). Net CF in those years becomes ≈ 0 and the loan is retired
-   * as quickly as the project's surplus allows. Takes precedence over
-   * `extraAnnualPrincipal`.
-   */
+  /** Auto-absorb every year's surplus into extra principal. */
   autoAbsorbSurplus?: boolean;
 };
 
-export function computeScenario(
-  scenario: Scenario,
-  overrides: ScenarioOverrides = {}
+export function computeEstimate(
+  estimate: Estimate,
+  overrides: EstimateOverrides = {}
 ): ComputedResults {
-  const { basics, materials, revenue: rev, om: omCfg, financing } = scenario;
+  const capex = capexBreakdown(estimate.materialized);
 
-  const capex = capexBreakdown(materials);
+  if (!estimate.finance?.enabled) {
+    return { capex, totals: estimate.totals, finance: null };
+  }
 
-  const effectiveFinancing: ScenarioFinancing =
+  const finance = computeFinance(estimate, capex, estimate.finance, overrides);
+  return { capex, totals: estimate.totals, finance };
+}
+
+function computeFinance(
+  estimate: Estimate,
+  capex: CapexBreakdown,
+  layer: FinanceLayer,
+  overrides: EstimateOverrides
+): FinanceResults {
+  const { basics, revenue: rev, om: omCfg, financing } = layer;
+  const sizeMW = estimate.targetCapacityKW / 1000;
+
+  const effectiveFinancing: EstimateFinancing =
     overrides.financedPctOverride !== undefined
       ? {
           ...financing,
@@ -86,14 +117,30 @@ export function computeScenario(
         }
       : financing;
 
-  const loanAmount = loanAmountForScenario(capex.total, effectiveFinancing);
+  const loanAmount = loanAmountForEstimate(capex.total, effectiveFinancing);
   const equity = Math.max(0, capex.total - loanAmount);
 
-  const baseEnergy = annualEnergyKWh(basics.sizeMW, basics.cufPct);
+  // When a location is pinned, drive baseline energy from the yield model;
+  // otherwise fall back to the flat cufPct path so legacy estimates work.
+  let yieldResult: YieldResult | null = null;
+  let effectiveCufPct = basics.cufPct;
+  if (estimate.location) {
+    const snap = snapToNearestCity(estimate.location.lat, estimate.location.lng);
+    if (snap) {
+      yieldResult = simulateYield({
+        location: estimate.location,
+        record: snap.record,
+      });
+      effectiveCufPct = yieldResult.impliedCufPct;
+    }
+  }
+
+  const baseEnergy = yieldResult
+    ? annualEnergyKWhFromYield(sizeMW, yieldResult.annualSpecificYield)
+    : annualEnergyKWh(sizeMW, basics.cufPct);
   const energy = yearlyEnergy(basics.lifespanYears, baseEnergy, basics.degradationPct);
   const revenueArr = yearlyRevenue(energy, rev.ppaRate, rev.ppaEscalationPct);
-  // O&M Year-1 base derives from the catalog's % of CAPEX so material edits or
-  // re-pricing flow through to operating costs without a manual resync.
+
   const omBaseAnnual = (capex.total * (omCfg.percentOfCapex ?? 0)) / 100;
   const omArr = yearlyOM(
     basics.lifespanYears,
@@ -101,10 +148,7 @@ export function computeScenario(
     basics.inflationPct,
     omCfg.overrides
   );
-  // When autoAbsorbSurplus is on, simulate the loan year-by-year to derive
-  // each year's extra principal as the available surplus. We mirror the same
-  // annuity math used inside `loanSchedule` so the schedule that consumes the
-  // resulting array stays self-consistent.
+
   let extraByYear: number[] | undefined;
   if (overrides.autoAbsorbSurplus && loanAmount > 0) {
     const rate = effectiveFinancing.interestPct / 100;
@@ -123,10 +167,7 @@ export function computeScenario(
     let bal = loanAmount;
     for (let i = 0; i < basics.lifespanYears; i++) {
       const yearNum = i + 1;
-      if (yearNum <= grace) {
-        // Interest-only during grace; no extra principal allowed (matches loanSchedule).
-        continue;
-      }
+      if (yearNum <= grace) continue;
       if (yearNum > effectiveFinancing.termYears || bal <= 1e-6) break;
       const interest = bal * rate;
       const scheduled = Math.min(annuity - interest, bal);
@@ -176,7 +217,6 @@ export function computeScenario(
   }
 
   return {
-    capex,
     loanAmount,
     equity,
     energy,
@@ -195,6 +235,8 @@ export function computeScenario(
       yearly: co2.yearly,
     },
     pnl,
+    yield: yieldResult,
+    effectiveCufPct,
     meta: { basics, revenue: rev, om: omCfg, financing },
   };
 }

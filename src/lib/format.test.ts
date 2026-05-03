@@ -5,6 +5,7 @@ import {
   formatIndianGroup,
   formatKWh,
   formatPercent,
+  formatPlantCapacityKW,
   formatRate,
   formatTonnes,
   formatYears,
@@ -57,6 +58,23 @@ describe('formatPercent / formatRate / formatYears', () => {
   it('formatYears', () => {
     expect(formatYears(6.2)).toBe('6.2 yrs');
     expect(formatYears(null)).toBe('—');
+  });
+});
+
+describe('formatPlantCapacityKW', () => {
+  it('uses kW with Indian grouping below 1000 kW', () => {
+    expect(formatPlantCapacityKW(700)).toBe('700 kW');
+    expect(formatPlantCapacityKW(999)).toBe('999 kW');
+    expect(formatPlantCapacityKW(1000)).toBe('1 MW');
+  });
+  it('uses MW from 1000 kW with enough fractional precision', () => {
+    expect(formatPlantCapacityKW(1500)).toBe('1.5 MW');
+    expect(formatPlantCapacityKW(1001)).toBe('1.001 MW');
+    expect(formatPlantCapacityKW(2500)).toBe('2.5 MW');
+  });
+  it('handles invalid values', () => {
+    expect(formatPlantCapacityKW(NaN)).toBe('—');
+    expect(formatPlantCapacityKW(-1)).toBe('—');
   });
 });
 

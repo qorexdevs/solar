@@ -1,4 +1,4 @@
-import type { ScenarioFinancing } from '@/types';
+import type { EstimateFinancing } from '@/types';
 
 export type LoanRow = {
   year: number;
@@ -113,9 +113,9 @@ export function loanSchedule(
   return rows;
 }
 
-export function loanAmountForScenario(
+export function loanAmountForEstimate(
   capexTotal: number,
-  financing: ScenarioFinancing
+  financing: EstimateFinancing
 ): number {
   if (financing.manualLoanAmount !== undefined && financing.manualLoanAmount > 0) {
     return financing.manualLoanAmount;

@@ -1,10 +1,10 @@
-import type { OMOverride } from '@/types';
+type OverrideRow = { year: number; amount: number };
 
 export function yearlyOM(
   lifespanYears: number,
   baseAnnual: number,
   inflationPct: number,
-  overrides: OMOverride[]
+  overrides: OverrideRow[]
 ): number[] {
   const k = 1 + inflationPct / 100;
   const overrideMap = new Map(overrides.map((o) => [o.year, o.amount]));

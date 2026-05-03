@@ -1,12 +1,16 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
-import { ScenarioList } from '@/routes/ScenarioList';
-import { ScenarioBuilder } from '@/routes/ScenarioBuilder';
+import { EstimateList } from '@/routes/EstimateList';
+import { EstimateBuilder } from '@/routes/EstimateBuilder';
 import { Results } from '@/routes/Results';
 import { Compare } from '@/routes/Compare';
-import { Settings } from '@/routes/Settings';
+import { TemplateList } from '@/routes/Templates';
+import { PPARedirect } from '@/routes/Export/PPARedirect';
 
+const TemplateEditor = lazy(() =>
+  import('@/routes/Templates/TemplateEditor').then((m) => ({ default: m.TemplateEditor }))
+);
 const Export = lazy(() => import('@/routes/Export').then((m) => ({ default: m.Export })));
 
 function Loading() {
@@ -18,13 +22,15 @@ export default function App() {
     <AppShell>
       <Suspense fallback={<Loading />}>
         <Routes>
-          <Route path="/" element={<ScenarioList />} />
-          <Route path="/scenarios/new" element={<ScenarioBuilder mode="new" />} />
-          <Route path="/scenarios/:id/edit" element={<ScenarioBuilder mode="edit" />} />
-          <Route path="/scenarios/:id" element={<Results />} />
-          <Route path="/scenarios/:id/export" element={<Export />} />
+          <Route path="/" element={<EstimateList />} />
+          <Route path="/estimates/new" element={<EstimateBuilder mode="new" />} />
+          <Route path="/estimates/:id/edit" element={<EstimateBuilder mode="edit" />} />
+          <Route path="/estimates/:id" element={<Results />} />
+          <Route path="/estimates/:id/export" element={<Export />} />
           <Route path="/compare" element={<Compare />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/ppa" element={<PPARedirect />} />
+          <Route path="/templates" element={<TemplateList />} />
+          <Route path="/templates/:id" element={<TemplateEditor />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

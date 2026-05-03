@@ -7,7 +7,7 @@ type Props = {
 export function EstimateCard({ total }: Props) {
   const { sign, number, unit } = compactINRParts(total);
   return (
-    <div className="bg-primary text-on-primary rounded-xl p-md shadow-elevated flex flex-col gap-sm relative overflow-hidden">
+    <div className="bg-primary text-on-primary rounded-xl p-md shadow-elevated flex flex-col gap-sm relative overflow-hidden h-full">
       <div
         aria-hidden
         className="absolute top-0 right-0 w-32 h-32 bg-primary-fixed opacity-10 rounded-bl-full pointer-events-none"
@@ -22,7 +22,7 @@ export function EstimateCard({ total }: Props) {
           <span className="font-body-md text-body-md text-primary-fixed-dim">{unit}</span>
         )}
       </div>
-      <p className="font-label-sm text-label-sm text-primary-fixed-dim/80 mt-2">
+      <p className="font-label-sm text-label-sm text-primary-fixed-dim/80 mt-auto pt-2">
         Auto-derived from BOM × catalog × plant size. Save the scenario to see the full
         feasibility view.
       </p>

@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import type { ComputedResults } from '@/lib/calc';
+import type { FinanceResults } from '@/lib/calc';
 import { formatINR } from '@/lib/format';
 
-type Props = { results: ComputedResults };
+type Props = { finance: FinanceResults };
 
-export function PnLTable({ results }: Props) {
-  const rows = results.pnl;
+export function PnLTable({ finance }: Props) {
+  const rows = finance.pnl;
   const [isOpen, setIsOpen] = useState(true);
 
   // Cumulative columns shown beside each year's number, in lighter ink.

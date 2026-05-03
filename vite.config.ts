@@ -57,6 +57,7 @@ export default defineConfig({
           'vendor-charts': ['recharts'],
           'vendor-pdf': ['jspdf', 'jspdf-autotable'],
           'vendor-xlsx': ['xlsx'],
+          'vendor-leaflet': ['leaflet', 'react-leaflet'],
         },
       },
     },

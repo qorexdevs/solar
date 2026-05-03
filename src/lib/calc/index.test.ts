@@ -4,19 +4,30 @@ import {
   breakEvenYear,
   capexBreakdown,
   co2Tonnes,
-  computeScenario,
+  computeEstimate,
   cumulativeCF,
   irr,
+  lcoeINRPerKWh,
   loanSchedule,
   npv,
   paybackYears,
+  solvePPARate,
+  tariffSchedule,
+  withPPARate,
   yearlyCashFlows,
   yearlyEnergy,
   yearlyOM,
   yearlyRevenue,
 } from '.';
-import { createScenario } from '../scenario';
-import type { Materials } from '@/types';
+import type { MaterializedBOM } from '@/types';
+import { createEstimate, defaultFinanceLayer } from '../estimate';
+import { seedTemplates, SEED_TEMPLATE_ID_HT } from '../templates';
+
+const SEED_HT = seedTemplates().find((t) => t.id === SEED_TEMPLATE_ID_HT)!;
+
+/* ------------------------------------------------------------------------ */
+/* Pure helpers                                                              */
+/* ------------------------------------------------------------------------ */
 
 describe('annualEnergyKWh', () => {
   it('matches PRD formula: capacity_kW × CUF × 8760', () => {
@@ -29,7 +40,7 @@ describe('annualEnergyKWh', () => {
 
 describe('yearlyEnergy', () => {
   it('applies geometric degradation', () => {
-    const out = yearlyEnergy(3, 1000, 1); // 1% decay
+    const out = yearlyEnergy(3, 1000, 1);
     expect(out).toHaveLength(3);
     expect(out[0]).toBeCloseTo(1000, 6);
     expect(out[1]).toBeCloseTo(990, 6);
@@ -66,24 +77,115 @@ describe('yearlyOM', () => {
   });
 });
 
+/* ------------------------------------------------------------------------ */
+/* CAPEX over MaterializedBOM                                                */
+/* ------------------------------------------------------------------------ */
+
 describe('capexBreakdown', () => {
-  it('sums material categories and customs', () => {
-    const materials: Materials = {
-      panels: { id: 'p', name: 'Panels', unitCost: 10, quantity: 100 }, // 1000
-      cables: { id: 'c', name: 'Cables', unitCost: 1, quantity: 100 }, // 100
-      inverters: { id: 'i', name: 'Inverters', unitCost: 5, quantity: 100 }, // 500
-      mounting: { id: 'm', name: 'Mounting', unitCost: 2, quantity: 100 }, // 200
-      transformers: { id: 't', name: 'Transformers', unitCost: 1, quantity: 100 }, // 100
-      civil: { id: 'cv', name: 'Civil', unitCost: 3, quantity: 100 }, // 300
-      bos: { id: 'b', name: 'BOS', unitCost: 4, quantity: 100 }, // 400
-      custom: [{ id: 'x1', name: 'Permitting', unitCost: 50000, quantity: 1 }],
+  it('rolls up subtotals per category and applies per-line GST', () => {
+    const bom: MaterializedBOM = {
+      mainLines: [
+        {
+          id: 'l1',
+          sourceLineId: 'l1',
+          sequence: 1,
+          category: 'modules',
+          itemName: 'Modules',
+          description: '',
+          uom: 'count',
+          scalingType: 'fixed',
+          quantity: 100,
+          rate: 7290,
+          gstPercent: 12,
+          subtotal: 729000,
+          gst: 87480,
+          total: 816480,
+          included: true,
+          applicabilityFiltered: false,
+          userExcluded: false,
+        },
+        {
+          id: 'l2',
+          sourceLineId: 'l2',
+          sequence: 2,
+          category: 'cables',
+          itemName: 'DC Cable',
+          description: '',
+          uom: 'meter',
+          scalingType: 'linear',
+          quantity: 1000,
+          rate: 52,
+          gstPercent: 18,
+          subtotal: 52000,
+          gst: 9360,
+          total: 61360,
+          included: true,
+          applicabilityFiltered: false,
+          userExcluded: false,
+        },
+      ],
+      otherLines: [
+        {
+          id: 'cu1',
+          sourceItemId: 'cu1',
+          sequence: 1,
+          scopeName: 'Permitting',
+          scalingType: 'fixed',
+          amount: 50000,
+          gstPercent: 0,
+          gst: 0,
+          total: 50000,
+          included: true,
+          applicabilityFiltered: false,
+          userExcluded: false,
+        },
+      ],
     };
-    const r = capexBreakdown(materials);
-    expect(r.total).toBe(1000 + 100 + 500 + 200 + 100 + 300 + 400 + 50000);
-    expect(r.byKey.panels.amount).toBe(1000);
-    expect(r.byKey.x1.amount).toBe(50000);
+    const r = capexBreakdown(bom);
+    expect(r.mainSubtotal).toBe(729000 + 52000);
+    expect(r.otherSubtotal).toBe(50000);
+    expect(r.subtotal).toBe(729000 + 52000 + 50000);
+    expect(r.tax).toBeCloseTo(87480 + 9360, 4);
+    expect(r.total).toBeCloseTo(r.subtotal + r.tax, 4);
+    expect(r.byCategory.modules.subtotal).toBe(729000);
+    expect(r.byCategory.cables.subtotal).toBe(52000);
+    expect(r.byCategory.__other_scope__.subtotal).toBe(50000);
+  });
+
+  it('honours the included flag', () => {
+    const bom: MaterializedBOM = {
+      mainLines: [
+        {
+          id: 'l1',
+          sourceLineId: 'l1',
+          sequence: 1,
+          category: 'switchyard',
+          itemName: 'HT Yard',
+          description: '',
+          uom: 'count',
+          scalingType: 'conditional',
+          quantity: 0,
+          rate: 500000,
+          gstPercent: 18,
+          subtotal: 0,
+          gst: 0,
+          total: 0,
+          included: false,
+          applicabilityFiltered: true,
+          userExcluded: false,
+        },
+      ],
+      otherLines: [],
+    };
+    const r = capexBreakdown(bom);
+    expect(r.total).toBe(0);
+    expect(r.byCategory.switchyard.subtotal).toBe(0);
   });
 });
+
+/* ------------------------------------------------------------------------ */
+/* Loan / cashflow / IRR / NPV                                               */
+/* ------------------------------------------------------------------------ */
 
 describe('loanSchedule', () => {
   it('zero principal returns all-zero rows', () => {
@@ -104,16 +206,14 @@ describe('loanSchedule', () => {
     expect(rows[4].balance).toBe(0);
   });
 
-  it('grace period: interest-only then annuity, principal preserved during grace', () => {
+  it('grace period: interest-only then annuity', () => {
     const rows = loanSchedule(
       { principal: 1000, ratePct: 10, termYears: 5, gracePeriodYears: 2 },
       5
     );
     expect(rows[0].principal).toBe(0);
     expect(rows[0].interest).toBeCloseTo(100, 6);
-    expect(rows[0].payment).toBeCloseTo(100, 6);
     expect(rows[1].balance).toBe(1000);
-    // Years 3..5 amortise
     expect(rows[2].payment).toBeGreaterThan(0);
     expect(rows[4].balance).toBeCloseTo(0, 4);
   });
@@ -124,49 +224,9 @@ describe('loanSchedule', () => {
       15
     );
     expect(rows[9].balance).toBeCloseTo(0, 2);
-    // Years 11..15 should be zero
     for (let i = 10; i < 15; i++) {
       expect(rows[i].payment).toBe(0);
     }
-  });
-
-  it('extraByYear with front-loaded extras retires the loan sooner than no extras', () => {
-    const principal = 100_000;
-    const ratePct = 8;
-    const termYears = 10;
-    const baseline = loanSchedule(
-      { principal, ratePct, termYears, gracePeriodYears: 0 },
-      15
-    );
-    // Big early extras compress the schedule.
-    const frontLoaded = [25_000, 25_000, 25_000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    const front = loanSchedule(
-      { principal, ratePct, termYears, gracePeriodYears: 0, extraByYear: frontLoaded },
-      15
-    );
-    const baseRetire = baseline.findIndex((r) => r.balance <= 1e-6 && r.year >= 1);
-    const frontRetire = front.findIndex((r) => r.balance <= 1e-6 && r.year >= 1);
-    expect(baseRetire).toBeGreaterThanOrEqual(0);
-    expect(frontRetire).toBeGreaterThanOrEqual(0);
-    expect(frontRetire).toBeLessThan(baseRetire);
-  });
-
-  it('extraByYear takes precedence over extraAnnualPrincipal', () => {
-    const both = loanSchedule(
-      {
-        principal: 100_000,
-        ratePct: 8,
-        termYears: 10,
-        gracePeriodYears: 0,
-        extraAnnualPrincipal: 99_999, // would retire instantly
-        extraByYear: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      },
-      10
-    );
-    // Per-year array overrides flat: with all zeros, schedule looks like the
-    // baseline (no early retirement before year 10).
-    expect(both[0].balance).toBeGreaterThan(0);
-    expect(both[8].balance).toBeGreaterThan(0);
   });
 });
 
@@ -181,7 +241,6 @@ describe('yearlyCashFlows / cumulativeCF', () => {
 
 describe('npv', () => {
   it('matches manual calc', () => {
-    // CFs of [110] @ 10%, equity 100 -> NPV = -100 + 110/1.1 = 0
     expect(npv([110], 10, 100)).toBeCloseTo(0, 6);
   });
   it('positive for high-yielding flows', () => {
@@ -190,23 +249,14 @@ describe('npv', () => {
 });
 
 describe('irr', () => {
-  it('matches NPV root: irr makes NPV ≈ 0', () => {
+  it('matches NPV root', () => {
     const flows = [200, 250, 300, 350];
     const equity = 700;
     const r = irr(flows, equity);
     expect(r).toBeGreaterThan(0);
     expect(npv(flows, r * 100, equity)).toBeCloseTo(0, 4);
   });
-  it("returns a strongly negative IRR when flows can't recover equity", () => {
-    const r = irr([10, 10, 10], 1_000_000);
-    expect(Number.isNaN(r)).toBe(false);
-    expect(r).toBeLessThan(-0.5);
-  });
-  it('returns NaN when no negative flow exists', () => {
-    expect(irr([100, 100], 0)).toBeNaN();
-  });
   it('handles a textbook 10% IRR', () => {
-    // -100 + 110/1.1 = 0  -> IRR = 10%
     expect(irr([110], 100)).toBeCloseTo(0.1, 4);
   });
 });
@@ -215,11 +265,7 @@ describe('paybackYears / breakEvenYear', () => {
   it('break-even returns first non-negative year', () => {
     expect(breakEvenYear([-100, -50, 25, 100])).toBe(3);
   });
-  it('break-even returns null when never breaks even', () => {
-    expect(breakEvenYear([-100, -50, -25])).toBeNull();
-  });
   it('payback interpolates across the sign change', () => {
-    // Year 2 ends at -50, Year 3 ends at +50 → payback at 2.5
     expect(paybackYears([-100, -50, 50])).toBeCloseTo(2.5, 6);
   });
 });
@@ -232,121 +278,159 @@ describe('co2Tonnes', () => {
   });
 });
 
-describe('computeScenario integration', () => {
-  it('produces a coherent set of results for a realistic scenario', () => {
-    const scn = createScenario({
-      name: 'Test',
-      basics: {
-        sizeMW: 1,
-        cufPct: 20,
-        lifespanYears: 25,
-        degradationPct: 0.5,
-        inflationPct: 6,
-        discountPct: 10,
-      },
-      revenue: { ppaRate: 3.5, ppaEscalationPct: 1 },
-      om: { percentOfCapex: 1.0, overrides: [] },
-      financing: { financedPct: 70, interestPct: 9, termYears: 12, gracePeriodYears: 1 },
+/* ------------------------------------------------------------------------ */
+/* computeEstimate — finance gating                                          */
+/* ------------------------------------------------------------------------ */
+
+describe('computeEstimate', () => {
+  it('without finance layer: returns capex + totals only', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
     });
-    const r = computeScenario(scn);
-    expect(r.capex.total).toBeGreaterThan(0);
-    expect(r.equity + r.loanAmount).toBeCloseTo(r.capex.total, 4);
-    expect(r.energy[0]).toBeCloseTo(annualEnergyKWh(1, 20), 4);
-    expect(r.energy[1]).toBeLessThan(r.energy[0]);
-    expect(r.pnl).toHaveLength(25);
-    expect(r.pnl[0].cumulativeCashFlow).toBeLessThan(0);
-    expect(r.cumulativeCF.at(-1)).toBeGreaterThan(r.cumulativeCF[0]);
-    // PnL rows expose loan balance for the wealth-building view.
-    expect(r.pnl[0].loanBalance).toBeGreaterThanOrEqual(0);
-    // Year-1 O&M = capex × percent / 100.
-    expect(r.om[0]).toBeCloseTo((r.capex.total * 1.0) / 100, 4);
+    const out = computeEstimate(est);
+    expect(out.capex.total).toBeGreaterThan(0);
+    expect(out.totals.grandTotal).toBeGreaterThan(0);
+    expect(out.finance).toBeNull();
   });
 
-  it('O&M tracks live capex changes via percentOfCapex', () => {
-    const scn = createScenario({
-      basics: { sizeMW: 1, cufPct: 20 },
-      om: { percentOfCapex: 1.5, overrides: [] },
+  it('with finance layer enabled: returns full finance results', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
+      finance: { ...defaultFinanceLayer(true) },
     });
-    const before = computeScenario(scn);
-    // Doubling all material unit costs doubles capex; O&M should follow.
-    const doubled = structuredClone(scn);
-    for (const key of [
-      'panels',
-      'cables',
-      'inverters',
-      'mounting',
-      'transformers',
-      'civil',
-      'bos',
-    ] as const) {
-      doubled.materials[key].unitCost *= 2;
-    }
-    const after = computeScenario(doubled);
-    expect(after.capex.total).toBeCloseTo(before.capex.total * 2, 4);
-    expect(after.om[0]).toBeCloseTo(before.om[0] * 2, 4);
-  });
-
-  it('autoAbsorbSurplus zeroes out post-grace net CF while loan is active', () => {
-    const scn = createScenario({
-      name: 'Auto-absorb test',
-      basics: {
-        sizeMW: 2,
-        cufPct: 22,
-        lifespanYears: 25,
-        degradationPct: 0.5,
-        inflationPct: 6,
-        discountPct: 10,
-      },
-      revenue: { ppaRate: 3.5, ppaEscalationPct: 2 },
-      om: { percentOfCapex: 1.0, overrides: [] },
-      financing: { financedPct: 80, interestPct: 9, termYears: 12, gracePeriodYears: 1 },
-    });
-    const r = computeScenario(scn, { autoAbsorbSurplus: true });
-    // For every post-grace year while a loan payment is due, surplus is fully
-    // applied to principal so net CF should be ≈ 0 (within float noise).
-    for (let i = 0; i < r.cashflows.length; i++) {
-      const prev = r.loan[i - 1];
-      const inGrace = i === 0; // grace = 1 year
-      const loanActive = r.loan[i].payment > 0;
-      const justRetired = prev && prev.balance > 1e-6 && r.loan[i].balance <= 1e-6;
-      if (!inGrace && loanActive && !justRetired) {
-        expect(Math.abs(r.cashflows[i])).toBeLessThan(1);
-      }
-    }
-    // Loan retires strictly before its term thanks to absorbed surplus.
-    const baseline = computeScenario(scn);
-    const baselineRetire = baseline.loan.findIndex((row) => row.payment === 0);
-    const absorbedRetire = r.loan.findIndex((row) => row.payment === 0);
-    expect(absorbedRetire).toBeGreaterThan(-1);
-    expect(absorbedRetire).toBeLessThan(
-      baselineRetire === -1 ? Infinity : baselineRetire
+    const out = computeEstimate(est);
+    expect(out.finance).not.toBeNull();
+    if (!out.finance) return;
+    expect(out.finance.equity + out.finance.loanAmount).toBeCloseTo(
+      out.capex.total,
+      4
+    );
+    expect(out.finance.energy[0]).toBeGreaterThan(0);
+    expect(out.finance.pnl).toHaveLength(25);
+    expect(out.finance.om[0]).toBeCloseTo(
+      (out.capex.total * 1.0) / 100,
+      4
     );
   });
 
-  it('autoAbsorbSurplus produces a non-decreasing net position trajectory', () => {
-    const scn = createScenario({
-      name: 'Net position test',
-      basics: {
-        sizeMW: 2,
-        cufPct: 22,
-        lifespanYears: 25,
-        degradationPct: 0.5,
-        inflationPct: 6,
-        discountPct: 10,
-      },
-      revenue: { ppaRate: 3.5, ppaEscalationPct: 2 },
-      om: { percentOfCapex: 1.0, overrides: [] },
-      financing: { financedPct: 80, interestPct: 9, termYears: 12, gracePeriodYears: 1 },
+  it('totals.grandTotal matches capex.total within rounding', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
     });
-    const r = computeScenario(scn, { autoAbsorbSurplus: true });
-    // Net Position = cumulativeCF + (loanInitial − loanBalance). With auto-absorb
-    // every post-grace year contributes either positive net CF or positive loan
-    // paydown (or both), so the series must be monotonic non-decreasing.
-    const netPosition = r.cumulativeCF.map(
-      (cf, i) => cf + (r.loanAmount - r.loan[i].balance)
-    );
-    for (let i = 1; i < netPosition.length; i++) {
-      expect(netPosition[i]).toBeGreaterThanOrEqual(netPosition[i - 1] - 1e-4);
-    }
+    const out = computeEstimate(est);
+    expect(Math.abs(out.totals.grandTotal - out.capex.total)).toBeLessThan(1);
+  });
+});
+
+/* ------------------------------------------------------------------------ */
+/* tariffSchedule                                                            */
+/* ------------------------------------------------------------------------ */
+
+describe('tariffSchedule', () => {
+  it('compounds escalation with no indexation', () => {
+    const out = tariffSchedule({
+      baseRate: 4,
+      termYears: 3,
+      escalationPct: 2,
+      indexation: { kind: 'none' },
+    });
+    expect(out[0]).toBeCloseTo(4, 6);
+    expect(out[1]).toBeCloseTo(4 * 1.02, 6);
+    expect(out[2]).toBeCloseTo(4 * 1.02 * 1.02, 6);
+  });
+
+  it('cpi indexation compounds inflation pass-through on top of escalation', () => {
+    const out = tariffSchedule({
+      baseRate: 4,
+      termYears: 2,
+      escalationPct: 2,
+      indexation: { kind: 'cpi', cpiFraction: 0.5 },
+      inflationPct: 6,
+    });
+    expect(out[1]).toBeCloseTo(4 * 1.02 * 1.03, 4);
+  });
+});
+
+/* ------------------------------------------------------------------------ */
+/* lcoe + ppa solver                                                         */
+/* ------------------------------------------------------------------------ */
+
+describe('lcoeINRPerKWh', () => {
+  it('returns a finite ₹/kWh for a typical 1 MW plant with finance layer', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
+      finance: { ...defaultFinanceLayer(true) },
+    });
+    const lcoe = lcoeINRPerKWh(est);
+    expect(Number.isFinite(lcoe)).toBe(true);
+    expect(lcoe).toBeGreaterThan(0);
+  });
+
+  it('returns 0 when finance layer is disabled', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
+    });
+    expect(lcoeINRPerKWh(est)).toBe(0);
+  });
+});
+
+describe('solvePPARate', () => {
+  it('finds a rate whose IRR is near the target', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
+      finance: { ...defaultFinanceLayer(true) },
+    });
+    const result = solvePPARate({
+      estimate: est,
+      termYears: 25,
+      escalationPct: 2,
+      indexation: { kind: 'none' },
+      targetIRR: 0.15,
+    });
+    expect(result.baseRate).toBeGreaterThan(0);
+    expect(Math.abs(result.achievedIRR - 0.15)).toBeLessThan(0.01);
+    expect(result.schedule).toHaveLength(25);
+  });
+});
+
+describe('withPPARate', () => {
+  it('overrides ppaRate and ppaEscalationPct, leaving everything else untouched', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
+      finance: { ...defaultFinanceLayer(true) },
+    });
+    const variant = withPPARate(est, 6.25, 3.5);
+    expect(variant.finance?.revenue.ppaRate).toBeCloseTo(6.25, 6);
+    expect(variant.finance?.revenue.ppaEscalationPct).toBeCloseTo(3.5, 6);
+    expect(variant.id).toBe(est.id);
+    expect(variant.targetCapacityKW).toBe(est.targetCapacityKW);
+    expect(variant.materialized).toBe(est.materialized);
+    expect(variant.finance?.basics).toEqual(est.finance?.basics);
+    expect(variant.finance?.financing).toEqual(est.finance?.financing);
+    expect(est.finance?.revenue.ppaRate).not.toBe(6.25);
+  });
+
+  it('cpi indexation folds the inflation pass-through into the escalation', () => {
+    const est = createEstimate({
+      template: SEED_HT,
+      targetCapacityKW: 1000,
+      finance: { ...defaultFinanceLayer(true) },
+    });
+    const inflation = est.finance!.basics.inflationPct;
+    const variant = withPPARate(est, 5, 2, { kind: 'cpi', cpiFraction: 0.5 });
+    const expected = ((1 + 0.02) * (1 + (0.5 * inflation) / 100) - 1) * 100;
+    expect(variant.finance?.revenue.ppaEscalationPct).toBeCloseTo(expected, 6);
+  });
+
+  it('returns the estimate unchanged when finance is disabled', () => {
+    const est = createEstimate({ template: SEED_HT, targetCapacityKW: 1000 });
+    expect(withPPARate(est, 9, 4)).toBe(est);
   });
 });

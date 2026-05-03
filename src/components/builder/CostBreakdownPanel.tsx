@@ -1,431 +1,267 @@
-import { Link } from 'react-router-dom';
-import type { LineItem, ManualMaterialOverrides, MaterialKey, Scenario } from '@/types';
+import { Fragment, useMemo } from 'react';
 import {
-  MATERIAL_KEYS,
-  MATERIAL_LABELS,
-  MATERIAL_UNIT_LABELS,
-  PROJECT_TYPE_LABELS,
+  BOM_CATEGORIES,
+  BOM_UOM_LABELS,
+  type BOMCategory,
+  type MaterializedBOM,
+  type MaterializedLine,
+  type MaterializedScopeLine,
 } from '@/types';
-import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
-import { uid } from '@/lib/uid';
-import { capexBreakdown } from '@/lib/calc';
-import { deriveMaterials, resolveCatalog } from '@/lib/catalog';
-import { formatINR, formatIndianGroup } from '@/lib/format';
-import { useSettingsStore, selectActiveCatalog } from '@/store/settings';
+import { formatINR, formatIndianGroup, formatPercent } from '@/lib/format';
+import { capexBreakdown, OTHER_SCOPE_GROUP_LABEL } from '@/lib/calc';
 
 type Props = {
-  scenario: Scenario;
-  onChange: (next: Scenario) => void;
+  materialized: MaterializedBOM;
 };
 
+const PLACEHOLDER = '—';
+
 /**
- * Auto-derived cost breakdown panel.
+ * Read-only cost breakdown for a materialized estimate BOM. Edits live on
+ * the template (`/templates/:id`), not on the estimate itself; the estimate
+ * builder controls inclusion via the optional-line toggles + target
+ * capacity slider.
  *
- * Reads BOM + catalog from the settings store, so a scenario's `materials`
- * stays in sync with whatever is currently active. Per-row manual overrides
- * (tracked under `scenario.manualOverrides.materials`) escape the auto-derive
- * loop until the user resets the row.
+ * Lines hidden by sync gating ("conditional") show greyed; user-excluded
+ * optional lines also show greyed.
  */
-export function CostBreakdownPanel({ scenario, onChange }: Props) {
-  const catalogs = useSettingsStore((s) => s.catalogs);
-  const activeCatalogId = useSettingsStore((s) => s.activeCatalogId);
-  const activeCatalog = useSettingsStore(selectActiveCatalog);
-  const bomByType = useSettingsStore((s) => s.bomByProjectType);
+export function CostBreakdownPanel({ materialized }: Props) {
+  const breakdown = capexBreakdown(materialized);
 
-  const referencedCatalog = resolveCatalog(
-    catalogs,
-    scenario.catalogVersionId,
-    activeCatalogId
-  );
-  const isOnLatestCatalog = referencedCatalog.id === activeCatalog.id;
-  const bom = bomByType[scenario.projectType];
-
-  const { materials } = scenario;
-  const breakdown = capexBreakdown(materials);
-  const materialFlags: ManualMaterialOverrides =
-    scenario.manualOverrides?.materials ?? {};
-
-  function setMaterialOverride(
-    key: MaterialKey,
-    field: 'unitCost' | 'quantity',
-    flag: boolean
-  ): ManualMaterialOverrides {
-    const existing = materialFlags[key] ?? {};
-    return { ...materialFlags, [key]: { ...existing, [field]: flag } };
-  }
-
-  function updateMaterial(key: MaterialKey, patch: Partial<LineItem>) {
-    const fields = (Object.keys(patch) as Array<keyof LineItem>).filter(
-      (k) => k === 'unitCost' || k === 'quantity'
-    ) as Array<'unitCost' | 'quantity'>;
-    let nextFlags: ManualMaterialOverrides = materialFlags;
-    for (const f of fields) nextFlags = setMaterialOverride(key, f, true);
-
-    onChange({
-      ...scenario,
-      materials: { ...materials, [key]: { ...materials[key], ...patch } },
-      manualOverrides: { ...scenario.manualOverrides, materials: nextFlags },
-    });
-  }
-
-  function resetMaterialRow(key: MaterialKey) {
-    const stripped: ManualMaterialOverrides = { ...materialFlags };
-    delete stripped[key];
-    const next = deriveMaterials({
-      sizeMW: scenario.basics.sizeMW,
-      bom,
-      catalog: referencedCatalog,
-      previous: materials,
-      overrides: { ...scenario.manualOverrides, materials: stripped },
-    });
-    onChange({
-      ...scenario,
-      materials: { ...materials, [key]: next[key] },
-      manualOverrides: { ...scenario.manualOverrides, materials: stripped },
-    });
-  }
-
-  function repriceToLatest() {
-    if (isOnLatestCatalog) return;
-    const ok = window.confirm(
-      `Re-price this scenario from "${referencedCatalog.label}" to the latest catalog "${activeCatalog.label}"? Manually overridden rows will keep their values.`
+  const orderedCategories = useMemo<string[]>(() => {
+    const cats: string[] = BOM_CATEGORIES.filter(
+      (c): c is BOMCategory => !!breakdown.byCategory[c]
     );
-    if (!ok) return;
-    const next = deriveMaterials({
-      sizeMW: scenario.basics.sizeMW,
-      bom,
-      catalog: activeCatalog,
-      previous: materials,
-      overrides: scenario.manualOverrides,
-    });
-    onChange({ ...scenario, materials: next, catalogVersionId: activeCatalog.id });
-  }
+    if (breakdown.byCategory['__other_scope__']) cats.push('__other_scope__');
+    return cats;
+  }, [breakdown]);
 
-  function updateCustom(id: string, patch: Partial<LineItem>) {
-    onChange({
-      ...scenario,
-      materials: {
-        ...materials,
-        custom: materials.custom.map((c) => (c.id === id ? { ...c, ...patch } : c)),
-      },
-    });
-  }
-
-  function addCustom() {
-    onChange({
-      ...scenario,
-      materials: {
-        ...materials,
-        custom: [
-          ...materials.custom,
-          { id: uid('li'), name: 'Custom item', unitCost: 1000, quantity: 1 },
-        ],
-      },
-    });
-  }
-
-  function removeCustom(id: string) {
-    onChange({
-      ...scenario,
-      materials: { ...materials, custom: materials.custom.filter((c) => c.id !== id) },
-    });
-  }
+  const linesByCategory = useMemo(() => {
+    const main = new Map<BOMCategory, MaterializedLine[]>();
+    for (const line of materialized.mainLines) {
+      const arr = main.get(line.category) ?? [];
+      arr.push(line);
+      main.set(line.category, arr);
+    }
+    return main;
+  }, [materialized]);
 
   return (
     <div className="flex flex-col gap-md">
-      <header className="rounded-xl border border-outline-variant/30 bg-surface-container-low/50 p-md flex flex-col md:flex-row md:items-center md:justify-between gap-sm">
-        <div className="flex flex-col gap-1 min-w-0">
-          <p className="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">
-            Cost source
-          </p>
-          <p className="font-body-md text-body-md text-on-surface">
-            <strong className="font-semibold">
-              {PROJECT_TYPE_LABELS[scenario.projectType]}
-            </strong>{' '}
-            BOM × <strong className="font-semibold">{referencedCatalog.label}</strong>
-          </p>
-          <p className="font-label-sm text-label-sm text-on-surface-variant">
-            Quantities derive from plant size ({scenario.basics.sizeMW.toFixed(2)} MW) and
-            the BOM template. Unit prices come from the catalog.
-            {!isOnLatestCatalog && (
-              <> A newer catalog "{activeCatalog.label}" is available.</>
-            )}
-          </p>
+      <div className="rounded-xl border border-outline-variant/30 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-body-md">
+            <thead>
+              <tr className="text-left text-on-surface-variant bg-surface-container-low/20 border-b border-outline-variant/30">
+                <th className="px-3 py-2">Item</th>
+                <th className="px-3 py-2 text-right">Qty</th>
+                <th className="px-3 py-2 text-right">Rate (₹)</th>
+                <th className="px-3 py-2 text-right">GST</th>
+                <th className="px-3 py-2 text-right">Subtotal</th>
+                <th className="px-3 py-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orderedCategories.map((cat) => {
+                const group = breakdown.byCategory[cat];
+                if (!group) return null;
+                const isScope = cat === '__other_scope__';
+                const mainLines = isScope
+                  ? ([] as MaterializedLine[])
+                  : (linesByCategory.get(cat as BOMCategory) ?? []);
+                const includedCount = group.lines.filter((l) => !l.excluded).length;
+                const label = isScope ? OTHER_SCOPE_GROUP_LABEL : group.label;
+                return (
+                  <Fragment key={cat}>
+                    <tr className="bg-surface-container-low/40 border-b border-outline-variant/30">
+                      <td colSpan={6} className="px-md py-sm">
+                        <div className="flex items-center justify-between gap-sm flex-wrap">
+                          <div className="flex items-center gap-sm flex-wrap">
+                            <span className="font-body-md font-semibold text-on-surface">
+                              {label}
+                            </span>
+                            <span className="font-label-sm text-label-sm text-on-surface-variant">
+                              ({includedCount}/{group.lines.length})
+                            </span>
+                          </div>
+                          <span className="font-data-display text-on-surface">
+                            ₹ {formatINR(group.total)}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    {isScope
+                      ? materialized.otherLines.map((item) => (
+                          <ScopeBodyRow key={item.id} item={item} />
+                        ))
+                      : mainLines.map((line) => (
+                          <MainBodyRow key={line.id} line={line} />
+                        ))}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <div className="flex flex-wrap gap-sm">
-          {!isOnLatestCatalog && (
-            <Button
-              variant="primary"
-              iconLeft={<Icon name="autorenew" />}
-              onClick={repriceToLatest}
-            >
-              Re-price to latest
-            </Button>
-          )}
-          <Link to="/settings">
-            <Button variant="ghost" iconLeft={<Icon name="tune" />}>
-              Manage catalog
-            </Button>
-          </Link>
-        </div>
-      </header>
-
-      <div className="overflow-x-auto rounded-xl border border-outline-variant/30">
-        <table className="w-full text-body-md">
-          <thead>
-            <tr className="text-left text-on-surface-variant bg-surface-container-low/40 border-b border-outline-variant/30">
-              <th className="px-3 py-2">Material</th>
-              <th className="px-3 py-2 text-right">Quantity</th>
-              <th className="px-3 py-2 text-right">Unit price (₹)</th>
-              <th className="px-3 py-2 text-right">Subtotal</th>
-              <th className="px-3 py-2"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {MATERIAL_KEYS.map((key) => {
-              const item = materials[key];
-              const subtotal = breakdown.byKey[key]?.amount ?? 0;
-              const flags = materialFlags[key];
-              const rule = bom[key];
-              const unit = rule?.unit ?? 'lot';
-              const isOverridden = !!(flags?.unitCost || flags?.quantity);
-              return (
-                <MaterialDerivedRow
-                  key={key}
-                  label={MATERIAL_LABELS[key]}
-                  item={item}
-                  subtotal={subtotal}
-                  unitLabel={MATERIAL_UNIT_LABELS[unit]}
-                  flags={flags}
-                  isOverridden={isOverridden}
-                  onUnitCost={(v) => updateMaterial(key, { unitCost: v })}
-                  onQty={(v) => updateMaterial(key, { quantity: v })}
-                  onReset={() => resetMaterialRow(key)}
-                />
-              );
-            })}
-          </tbody>
-        </table>
       </div>
 
-      <div className="border-t border-outline-variant/40 pt-md flex flex-col gap-sm">
+      <div className="bg-surface-container-low rounded-xl p-md flex flex-col gap-1 border border-outline-variant/30">
         <div className="flex justify-between items-center">
-          <h3 className="font-body-lg text-body-lg font-semibold text-on-surface">
-            Custom line items
-          </h3>
-          <Button
-            variant="ghost"
-            iconLeft={<Icon name="add" />}
-            onClick={addCustom}
-            size="md"
-          >
-            Add item
-          </Button>
+          <span className="font-body-md text-on-surface-variant">
+            Main BOM subtotal
+          </span>
+          <span className="font-body-md text-on-surface">
+            ₹ {formatINR(breakdown.mainSubtotal)}
+          </span>
         </div>
-        <p className="font-label-sm text-label-sm text-on-surface-variant">
-          Use these for one-offs that aren't part of the standard BOM (permits, land
-          lease, contingency, …).
-        </p>
-        {materials.custom.length === 0 ? (
-          <p className="font-body-md text-on-surface-variant italic">
-            No custom items yet.
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-sm">
-            {materials.custom.map((item) => (
-              <CustomCostRow
-                key={item.id}
-                item={item}
-                subtotal={breakdown.byKey[item.id]?.amount ?? 0}
-                onName={(v) => updateCustom(item.id, { name: v })}
-                onUnitCost={(v) => updateCustom(item.id, { unitCost: v })}
-                onQty={(v) => updateCustom(item.id, { quantity: v })}
-                onRemove={() => removeCustom(item.id)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="bg-surface-container-low rounded-xl p-md flex justify-between items-center border border-outline-variant/30">
-        <span className="font-body-md text-on-surface-variant">Total CAPEX</span>
-        <span className="font-data-display text-data-display text-primary">
-          {formatINR(breakdown.total)}
-        </span>
+        <div className="flex justify-between items-center">
+          <span className="font-body-md text-on-surface-variant">
+            Main BOM GST
+          </span>
+          <span className="font-body-md text-on-surface">
+            ₹ {formatINR(breakdown.mainTax)}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="font-body-md text-on-surface-variant">
+            Other Scope subtotal
+          </span>
+          <span className="font-body-md text-on-surface">
+            ₹ {formatINR(breakdown.otherSubtotal)}
+          </span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="font-body-md text-on-surface-variant">
+            Other Scope GST
+          </span>
+          <span className="font-body-md text-on-surface">
+            ₹ {formatINR(breakdown.otherTax)}
+          </span>
+        </div>
+        <div className="flex justify-between items-center pt-1 border-t border-outline-variant/30 mt-1">
+          <span className="font-body-md text-on-surface">Grand total</span>
+          <span className="font-data-display text-data-display text-primary">
+            ₹ {formatINR(breakdown.total)}
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
-type DerivedRowProps = {
-  label: string;
-  item: LineItem;
-  subtotal: number;
-  unitLabel: string;
-  flags: ManualMaterialOverrides[MaterialKey];
-  isOverridden: boolean;
-  onUnitCost: (n: number) => void;
-  onQty: (n: number) => void;
-  onReset: () => void;
-};
-
-function MaterialDerivedRow({
-  label,
-  item,
-  subtotal,
-  unitLabel,
-  flags,
-  isOverridden,
-  onUnitCost,
-  onQty,
-  onReset,
-}: DerivedRowProps) {
+function MainBodyRow({ line }: { line: MaterializedLine }) {
   return (
-    <tr className="border-b border-outline-variant/20 last:border-b-0 align-top">
-      <td className="px-3 py-3">
-        <div className="font-body-md text-body-md font-semibold text-on-surface">
-          {label}
+    <tr
+      className={`border-b border-outline-variant/20 align-top ${
+        line.included ? '' : 'opacity-40'
+      }`}
+    >
+      <td className="px-3 py-3 max-w-[280px]">
+        <div className="font-body-md font-semibold text-on-surface">
+          {line.itemName}
         </div>
-        {isOverridden && (
-          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">
-            <Icon name="edit" className="text-[12px]" />
-            Manual
-          </span>
+        {line.make && (
+          <div className="font-label-sm text-on-surface-variant">{line.make}</div>
         )}
-      </td>
-      <td className="px-3 py-3 text-right">
-        <input
-          type="number"
-          inputMode="decimal"
-          step={1}
-          min={0}
-          value={item.quantity}
-          onChange={(e) => onQty(Number(e.target.value))}
-          className={`h-9 w-28 rounded-md border bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-right ${
-            flags?.quantity ? 'border-tertiary' : 'border-outline-variant'
-          }`}
-        />
-        <div className="font-label-sm text-label-sm text-on-surface-variant mt-1">
-          {item.quantity
-            ? `${formatIndianGroup(Math.round(item.quantity))} ${unitLabel}`
-            : '—'}
+        <div className="flex flex-wrap gap-1 mt-1">
+          <ScalingBadge line={line} />
+          {line.applicabilityFiltered && (
+            <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
+              Sync gated
+            </span>
+          )}
+          {line.userExcluded && (
+            <span className="px-2 py-0.5 rounded bg-error-container/40 text-on-error-container font-label-sm">
+              User excluded
+            </span>
+          )}
         </div>
       </td>
       <td className="px-3 py-3 text-right">
-        <input
-          type="number"
-          inputMode="decimal"
-          step={100}
-          min={0}
-          value={item.unitCost}
-          onChange={(e) => onUnitCost(Number(e.target.value))}
-          className={`h-9 w-32 rounded-md border bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-right ${
-            flags?.unitCost ? 'border-tertiary' : 'border-outline-variant'
-          }`}
-        />
+        <div className="font-body-md text-on-surface">
+          {formatIndianGroup(Math.round(line.quantity))} {BOM_UOM_LABELS[line.uom]}
+        </div>
+      </td>
+      <td className="px-3 py-3 text-right text-on-surface">
+        ₹ {formatINR(line.rate)}
+      </td>
+      <td className="px-3 py-3 text-right text-on-surface-variant">
+        {formatPercent(line.gstPercent)}
+      </td>
+      <td className="px-3 py-3 text-right text-on-surface">
+        ₹ {formatINR(line.subtotal)}
       </td>
       <td className="px-3 py-3 text-right font-data-display text-on-surface">
-        {formatINR(subtotal)}
-      </td>
-      <td className="px-3 py-3 text-right">
-        {isOverridden ? (
-          <button
-            type="button"
-            onClick={onReset}
-            className="text-primary font-label-sm text-label-sm flex items-center gap-1 ml-auto"
-          >
-            <Icon name="restart_alt" className="text-[16px]" />
-            Reset
-          </button>
-        ) : (
-          <span className="font-label-sm text-label-sm text-on-surface-variant">
-            Auto
-          </span>
-        )}
+        ₹ {formatINR(line.total)}
       </td>
     </tr>
   );
 }
 
-type CustomRowProps = {
-  item: LineItem;
-  subtotal: number;
-  onName: (v: string) => void;
-  onUnitCost: (n: number) => void;
-  onQty: (n: number) => void;
-  onRemove: () => void;
-};
-
-function CustomCostRow({
-  item,
-  subtotal,
-  onName,
-  onUnitCost,
-  onQty,
-  onRemove,
-}: CustomRowProps) {
+function ScopeBodyRow({ item }: { item: MaterializedScopeLine }) {
   return (
-    <div className="bg-surface-container-low/40 p-sm rounded-lg border border-outline-variant/30 flex flex-col gap-sm">
-      <div className="flex items-end justify-between gap-sm">
-        <div className="flex flex-col gap-xs flex-1 min-w-0">
-          <label className="font-label-sm text-label-sm text-on-surface font-semibold">
-            Item name
-          </label>
-          <input
-            type="text"
-            value={item.name}
-            onChange={(e) => onName(e.target.value)}
-            className="h-touch-target rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md"
-          />
+    <tr
+      className={`border-b border-outline-variant/20 align-top ${
+        item.included ? '' : 'opacity-40'
+      }`}
+    >
+      <td className="px-3 py-3 max-w-[280px]">
+        <div className="font-body-md font-semibold text-on-surface">
+          {item.scopeName}
         </div>
-        <div className="text-right shrink-0">
-          <span className="font-label-sm text-label-sm text-on-surface-variant block">
-            Subtotal
+        <div className="flex flex-wrap gap-1 mt-1">
+          <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
+            {item.scalingType}
           </span>
-          <span className="font-body-md text-body-md font-semibold text-on-surface">
-            {formatINR(subtotal)}
-          </span>
+          {item.applicabilityFiltered && (
+            <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
+              Sync gated
+            </span>
+          )}
+          {item.userExcluded && (
+            <span className="px-2 py-0.5 rounded bg-error-container/40 text-on-error-container font-label-sm">
+              User excluded
+            </span>
+          )}
         </div>
-        <button
-          type="button"
-          onClick={onRemove}
-          aria-label="Remove item"
-          className="h-touch-target w-touch-target inline-flex items-center justify-center rounded-lg text-on-surface-variant hover:text-error hover:bg-error-container shrink-0"
-        >
-          <Icon name="delete" />
-        </button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-        <label className="flex flex-col gap-1">
-          <span className="font-label-sm text-label-sm text-on-surface-variant">
-            Unit cost (₹)
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step={100}
-            value={item.unitCost}
-            onChange={(e) => onUnitCost(Number(e.target.value))}
-            className="h-touch-target rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md text-right"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="font-label-sm text-label-sm text-on-surface-variant">
-            Quantity
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step={1}
-            value={item.quantity}
-            onChange={(e) => onQty(Number(e.target.value))}
-            className="h-touch-target rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md text-right"
-          />
-        </label>
-      </div>
-    </div>
+      </td>
+      <td className="px-3 py-3 text-right font-body-md text-on-surface-variant">
+        {PLACEHOLDER}
+      </td>
+      <td className="px-3 py-3 text-right font-body-md text-on-surface-variant">
+        {PLACEHOLDER}
+      </td>
+      <td className="px-3 py-3 text-right text-on-surface-variant">
+        {formatPercent(item.gstPercent)}
+      </td>
+      <td className="px-3 py-3 text-right text-on-surface">
+        ₹ {formatINR(item.amount)}
+      </td>
+      <td className="px-3 py-3 text-right font-data-display text-on-surface">
+        ₹ {formatINR(item.total)}
+      </td>
+    </tr>
+  );
+}
+
+function ScalingBadge({ line }: { line: MaterializedLine }) {
+  const label = (() => {
+    switch (line.scalingType) {
+      case 'fixed':
+        return 'fixed';
+      case 'linear':
+        return 'linear';
+      case 'step':
+        return 'step';
+      case 'conditional':
+        return 'conditional';
+      case 'optional':
+        return 'optional';
+    }
+  })();
+  return (
+    <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
+      {label}
+    </span>
   );
 }

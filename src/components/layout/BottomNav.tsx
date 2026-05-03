@@ -1,23 +1,23 @@
 import { NavLink } from 'react-router-dom';
 import { Icon } from '@/components/ui/Icon';
-import { useScenarioStore } from '@/store/scenarios';
+import { useEstimateStore } from '@/store/estimates';
 
 const NAV = [
-  { to: '/', icon: 'analytics', label: 'Scenarios', kind: 'list' as const },
+  { to: '/', icon: 'analytics', label: 'Estimates', kind: 'list' as const },
+  { to: '/templates', icon: 'library_books', label: 'Templates', kind: 'templates' as const },
   { to: '/results', icon: 'insights', label: 'Results', kind: 'results' as const },
   { to: '/compare', icon: 'compare_arrows', label: 'Compare', kind: 'compare' as const },
-  { to: '/settings', icon: 'tune', label: 'Settings', kind: 'settings' as const },
   { to: '/export', icon: 'ios_share', label: 'Export', kind: 'export' as const },
 ];
 
 export function BottomNav() {
-  const recentId = useScenarioStore((s) => s.recentScenarioId);
+  const recentId = useEstimateStore((s) => s.recentEstimateId);
 
   function resolve(kind: (typeof NAV)[number]['kind']): string {
-    if (kind === 'results') return recentId ? `/scenarios/${recentId}` : '/';
-    if (kind === 'export') return recentId ? `/scenarios/${recentId}/export` : '/';
+    if (kind === 'results') return recentId ? `/estimates/${recentId}` : '/';
+    if (kind === 'export') return recentId ? `/estimates/${recentId}/export` : '/';
     if (kind === 'compare') return '/compare';
-    if (kind === 'settings') return '/settings';
+    if (kind === 'templates') return '/templates';
     return '/';
   }
 

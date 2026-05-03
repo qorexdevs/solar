@@ -90,6 +90,21 @@ export function formatMW(mw: number): string {
   return `${trim(mw, 2)} MW`;
 }
 
+/**
+ * Plant AC capacity for UI: Indian-grouped kW below 1 MW threshold, MW at ≥ 1000 kW
+ * (1000 kW → 1 MW). Uses up to 3 decimal places in MW so 1001 kW ≠ 1 MW.
+ */
+export function formatPlantCapacityKW(kw: number): string {
+  if (!Number.isFinite(kw) || kw < 0) return '—';
+  const r = Math.round(kw);
+  if (r < 1000) {
+    return `${formatIndianGroup(r)} kW`;
+  }
+  const mw = r / 1000;
+  const s = mw.toFixed(3).replace(/\.?0+$/, '');
+  return `${s} MW`;
+}
+
 export function formatTonnes(t: number): string {
   if (!Number.isFinite(t)) return '—';
   if (t >= 1000) return `${trim(t / 1000, 2)}k Tonnes`;
