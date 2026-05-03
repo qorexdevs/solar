@@ -19,14 +19,26 @@ import {
   type ProjectType,
   type SyncType,
 } from '@/types';
-import { formatPlantCapacityKW } from '@/lib/format';
-import { useTemplateStore } from '@/store/templates';
-import { useEstimateStore } from '@/store/estimates';
-import { MainBomTable } from './MainBomTable';
-import { OtherScopeTable } from './OtherScopeTable';
-import { TemplateSummary } from './TemplateSummary';
 
-const PROJECT_TYPES: ProjectType[] = ['utility', 'commercial', 'hybrid', 'residential'];
+const PROJECT_CHOICES: ProjectType[] = [
+  'utility',
+  'commercial',
+  'hybrid',
+  'residential',
+];
+import { formatPlantCapacityKW } from '@/lib/format';
+import {
+  BUSINESS_MODEL_FACET_ID,
+  MOUNTING_FACET_ID,
+  MONITORING_FACET_ID,
+  VOLTAGE_CLASS_FACET_ID,
+} from '@/lib/facets/constants';
+import { selectFacetsSorted, useFacetStore } from '@/store/facets';
+import { defaultSelectionsFromFacets } from '@/lib/estimate';
+import { useEstimateStore } from '@/store/estimates';
+import { useTemplateStore } from '@/store/templates';
+import { TemplateSummary } from './TemplateSummary';
+import { UnifiedLinesTable } from './UnifiedLinesTable';
 
 type TemplateNavigateState = { editableOnOpen?: boolean };
 
@@ -34,13 +46,15 @@ export function TemplateEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const facetsSorted = useFacetStore(selectFacetsSorted);
+
   const template = useTemplateStore((s) =>
     s.templates.find((t) => t.id === id)
   );
   const updateTemplate = useTemplateStore((s) => s.update);
   const removeTemplate = useTemplateStore((s) => s.remove);
   const duplicateTemplate = useTemplateStore((s) => s.duplicate);
-  const createFromTemplate = useEstimateStore((s) => s.createFromTemplate);
+  const createFromSelections = useEstimateStore((s) => s.createFromSelections);
 
   const editableOnOpenNav = Boolean(
     (location.state as TemplateNavigateState | null)?.editableOnOpen
@@ -66,6 +80,8 @@ export function TemplateEditor() {
           day: '2-digit',
         })
       : '';
+
+  const isVoltageFacet = template?.facetId === VOLTAGE_CLASS_FACET_ID;
 
   if (!template) {
     return (
@@ -129,7 +145,17 @@ export function TemplateEditor() {
             variant="primary"
             iconLeft={<Icon name="bolt" />}
             onClick={() => {
-              const est = createFromTemplate({ template });
+              const templatesAll = useTemplateStore.getState().templates;
+              const tplById = new Map(templatesAll.map((t) => [t.id, t]));
+              const selections = defaultSelectionsFromFacets(facetsSorted, tplById);
+              selections[template.facetId] = {
+                templateId: template.id,
+                selectedVersion: template.version,
+              };
+              const est = createFromSelections({
+                selections,
+                targetCapacityKW: template.baseCapacityKW,
+              });
               navigate(`/estimates/${est.id}/edit`);
             }}
           >
@@ -152,46 +178,86 @@ export function TemplateEditor() {
       </div>
 
       <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
-        <Field label="Project type">
+        <Field label="Facet">
           {editable ? (
             <select
-              value={template.projectType}
+              value={template.facetId}
               onChange={(e) =>
-                updateTemplate(template.id, {
-                  projectType: e.target.value as ProjectType,
-                })
+                updateTemplate(template.id, { facetId: e.target.value })
               }
               className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
             >
-              {PROJECT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {PROJECT_TYPE_LABELS[t]}
+              {facetsSorted.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name}
                 </option>
               ))}
             </select>
           ) : (
-            <ReadOnlyValue>{PROJECT_TYPE_LABELS[template.projectType]}</ReadOnlyValue>
+            <ReadOnlyValue>
+              {facetsSorted.find((f) => f.id === template.facetId)?.name ??
+                template.facetId}
+            </ReadOnlyValue>
           )}
         </Field>
-        <Field label="Sync type">
-          {editable ? (
-            <select
-              value={template.syncType}
-              onChange={(e) =>
-                updateTemplate(template.id, { syncType: e.target.value as SyncType })
-              }
-              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
-            >
-              {SYNC_TYPES.map((s) => (
-                <option key={s} value={s}>
-                  {SYNC_TYPE_LABELS[s]}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <ReadOnlyValue>{SYNC_TYPE_LABELS[template.syncType]}</ReadOnlyValue>
-          )}
-        </Field>
+        {isVoltageFacet ? (
+          <>
+            <Field label="Project type (engine context)">
+              {editable ? (
+                <select
+                  value={template.projectType ?? 'utility'}
+                  onChange={(e) =>
+                    updateTemplate(template.id, {
+                      projectType: e.target.value as ProjectType,
+                    })
+                  }
+                  className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+                >
+                  {PROJECT_CHOICES.map((t) => (
+                    <option key={t} value={t}>
+                      {PROJECT_TYPE_LABELS[t]}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <ReadOnlyValue>
+                  {PROJECT_TYPE_LABELS[template.projectType ?? 'utility']}
+                </ReadOnlyValue>
+              )}
+            </Field>
+            <Field label="Sync type (engine context)">
+              {editable ? (
+                <select
+                  value={template.syncType ?? 'HT'}
+                  onChange={(e) =>
+                    updateTemplate(template.id, {
+                      syncType: e.target.value as SyncType,
+                    })
+                  }
+                  className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+                >
+                  {SYNC_TYPES.map((s) => (
+                    <option key={s} value={s}>
+                      {SYNC_TYPE_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <ReadOnlyValue>
+                  {SYNC_TYPE_LABELS[template.syncType ?? 'Other']}
+                </ReadOnlyValue>
+              )}
+            </Field>
+          </>
+        ) : (
+          <Field label="Engine context" hint="Voltage facet templates own these fields">
+            <ReadOnlyValue>
+              Project type / sync applicability come from the selected{' '}
+              <span className="font-semibold">Voltage class</span> template —
+              configure them on voltage-class rows, not on this facet&apos;s BOM.
+            </ReadOnlyValue>
+          </Field>
+        )}
         <Field label="Base capacity (kW)">
           {editable ? (
             <input
@@ -263,8 +329,16 @@ export function TemplateEditor() {
       </section>
 
       <TemplateSummary template={template} editable={editable} />
-      <MainBomTable template={template} editable={editable} />
-      <OtherScopeTable template={template} editable={editable} />
+      <UnifiedLinesTable template={template} editable={editable} />
+
+      {(template.facetId === MOUNTING_FACET_ID ||
+        template.facetId === BUSINESS_MODEL_FACET_ID ||
+        template.facetId === MONITORING_FACET_ID) && (
+        <p className="text-body-sm text-on-surface-variant">
+          Mounting/business/monitoring facets should mirror the base kW of your voltage-class seed
+          (HT vs LT packs) so the capacity slider behaves predictably when facets are composed.
+        </p>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useEstimateStore } from '@/store/estimates';
 const NAV = [
   { to: '/', icon: 'analytics', label: 'Estimates', kind: 'list' as const },
   { to: '/templates', icon: 'library_books', label: 'Templates', kind: 'templates' as const },
+  { to: '/catalog', icon: 'inventory_2', label: 'Catalog', kind: 'catalog' as const },
   { to: '/results', icon: 'insights', label: 'Results', kind: 'results' as const },
   { to: '/compare', icon: 'compare_arrows', label: 'Compare', kind: 'compare' as const },
   { to: '/export', icon: 'ios_share', label: 'Export', kind: 'export' as const },
@@ -18,6 +19,7 @@ export function BottomNav() {
     if (kind === 'export') return recentId ? `/estimates/${recentId}/export` : '/';
     if (kind === 'compare') return '/compare';
     if (kind === 'templates') return '/templates';
+    if (kind === 'catalog') return '/catalog';
     return '/';
   }
 

@@ -98,15 +98,20 @@ function summarySheet(estimate: Estimate, r: ComputedResults): XLSX.WorkSheet {
 }
 
 function inputsSheet(estimate: Estimate): XLSX.WorkSheet {
+  const optionalLinePicks = Object.values(
+    estimate.selectedOptionsPerTemplate
+  ).reduce((acc, o) => acc + o.lineIds.length, 0);
   const rows: (string | number)[][] = [
     ['Input', 'Value'],
     ['Estimate name', estimate.name],
     ['Status', estimate.status],
     ['Target capacity', formatPlantCapacityKW(estimate.targetCapacityKW)],
-    ['Template ID', estimate.templateId],
-    ['Template version (snapshot)', estimate.selectedVersion],
-    ['Selected optional Main BOM lines', estimate.selectedOptions.mainBomLineIds.length],
-    ['Selected optional Other Scope items', estimate.selectedOptions.otherScopeIds.length],
+    ['Facet selections (JSON)', JSON.stringify(estimate.selections)],
+    ['Optional template line picks (count)', optionalLinePicks],
+    [
+      'Compose overrides (JSON)',
+      JSON.stringify(estimate.composeOverrides ?? {}),
+    ],
   ];
   if (estimate.location) {
     rows.push(

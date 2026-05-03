@@ -4,13 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { StatusTag } from '@/components/ui/Tag';
 import { formatINR, formatPlantCapacityKW } from '@/lib/format';
-import {
-  defaultSelectedOptionsFor,
-  materializeTemplate,
-} from '@/lib/templates';
-import { useTemplateStore } from '@/store/templates';
-import { useEstimateStore } from '@/store/estimates';
-import { uid } from '@/lib/uid';
+import { totalsAtDefaultSelections } from '@/lib/templates/previewAtDefaults';
 import {
   PROJECT_TYPE_LABELS,
   SYNC_TYPE_LABELS,
@@ -19,31 +13,52 @@ import {
   type ScenarioTemplate,
   type TemplateStatus,
 } from '@/types';
+import { defaultSelectionsFromFacets } from '@/lib/estimate';
+import { uid } from '@/lib/uid';
+import { MOUNTING_FACET_ID, VOLTAGE_CLASS_FACET_ID } from '@/lib/facets/constants';
+import { useCatalogStore } from '@/store/catalog';
+import { selectFacetsSorted, useFacetStore } from '@/store/facets';
+import { useEstimateStore } from '@/store/estimates';
+import { useTemplateStore } from '@/store/templates';
 
 export function TemplateList() {
   const navigate = useNavigate();
   const templates = useTemplateStore((s) => s.templates);
+  const facetsSorted = useFacetStore(selectFacetsSorted);
+  const facetsById = useMemo(() => Object.fromEntries(facetsSorted.map((f) => [f.id, f])), [facetsSorted]);
+  const catalogItems = useCatalogStore((s) => s.items);
   const removeTemplate = useTemplateStore((s) => s.remove);
   const duplicateTemplate = useTemplateStore((s) => s.duplicate);
   const setStatus = useTemplateStore((s) => s.setStatus);
   const createTemplate = useTemplateStore((s) => s.create);
-  const createFromTemplate = useEstimateStore((s) => s.createFromTemplate);
+  const createFromSelections = useEstimateStore((s) => s.createFromSelections);
 
   const [filter, setFilter] = useState<'all' | TemplateStatus>('all');
+  const [facetFilter, setFacetFilter] = useState<string | 'all'>('all');
 
-  const visible = useMemo(
-    () => (filter === 'all' ? templates : templates.filter((t) => t.status === filter)),
-    [templates, filter]
-  );
+  const visible = useMemo(() => {
+    let list =
+      filter === 'all' ? templates : templates.filter((t) => t.status === filter);
+    if (facetFilter !== 'all') list = list.filter((t) => t.facetId === facetFilter);
+    return [...list].sort((a, b) => {
+      const fa = facetsById[a.facetId]?.sequence ?? 999;
+      const fb = facetsById[b.facetId]?.sequence ?? 999;
+      return fa !== fb ? fa - fb : a.name.localeCompare(b.name);
+    });
+  }, [templates, filter, facetFilter, facetsById]);
 
   function handleNewTemplate() {
     const now = Date.now();
+    const defaultFacet =
+      facetsSorted.find((f) => f.id === MOUNTING_FACET_ID) ?? facetsSorted[0];
+
     const t: ScenarioTemplate = {
       id: uid('tpl'),
+      facetId: defaultFacet?.id ?? 'mounting',
       name: 'New scenario template',
-      projectType: 'utility',
-      syncType: 'HT',
       baseCapacityKW: 1000,
+      syncType: undefined,
+      projectType: undefined,
       status: 'draft',
       version: 'v1',
       effectiveFrom: now,
@@ -51,16 +66,24 @@ export function TemplateList() {
       source: 'manual',
       createdAt: now,
       updatedAt: now,
-      mainBom: [],
-      otherScope: [],
+      lines: [],
     };
     createTemplate(t);
     navigate(`/templates/${t.id}`, { state: { editableOnOpen: true } });
   }
 
   function handleGenerateEstimate(template: ScenarioTemplate) {
-    const est = createFromTemplate({ template });
-    navigate(`/estimates/${est.id}/edit`);
+    const tplById = new Map(useTemplateStore.getState().templates.map((x) => [x.id, x]));
+    const selections = defaultSelectionsFromFacets(facetsSorted, tplById);
+    selections[template.facetId] = {
+      templateId: template.id,
+      selectedVersion: template.version,
+    };
+    const estimate = createFromSelections({
+      selections,
+      targetCapacityKW: template.baseCapacityKW,
+    });
+    navigate(`/estimates/${estimate.id}/edit`);
   }
 
   return (
@@ -70,17 +93,23 @@ export function TemplateList() {
           Scenario Templates
         </h1>
         <p className="font-body-lg text-body-lg text-on-surface-variant">
-          Reusable BOM templates that capture real project configurations
-          (e.g. <em>1000 KW Ground Mounted - HT Sync</em>). Estimators pick a
-          template, set a target capacity, toggle optional scope, and the
-          system scales the BOM and computes totals.
+          Templates are curated per facet (mounting, business model, voltage class, monitoring).
+          An estimate merges one picked template per facet through the{' '}
+          <strong className="text-on-surface">material catalog composer</strong>.{' '}
+          <button
+            type="button"
+            className="text-primary underline hover:no-underline"
+            onClick={() => navigate('/catalog')}
+          >
+            Manage catalog →
+          </button>
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-sm justify-between">
-        <div className="flex items-center gap-sm">
+        <div className="flex flex-wrap items-center gap-sm">
           <label className="font-label-sm text-label-sm text-on-surface-variant">
-            Filter
+            Status
           </label>
           <select
             className="rounded border border-outline bg-surface-container-low px-3 py-2 font-body-sm text-body-sm"
@@ -91,6 +120,21 @@ export function TemplateList() {
             {TEMPLATE_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {TEMPLATE_STATUS_LABELS[s]}
+              </option>
+            ))}
+          </select>
+          <label className="font-label-sm text-label-sm text-on-surface-variant ml-md">
+            Facet
+          </label>
+          <select
+            className="rounded border border-outline bg-surface-container-low px-3 py-2 font-body-sm text-body-sm"
+            value={facetFilter}
+            onChange={(e) => setFacetFilter(e.target.value)}
+          >
+            <option value="all">All facets</option>
+            {facetsSorted.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.name}
               </option>
             ))}
           </select>
@@ -105,9 +149,11 @@ export function TemplateList() {
       </div>
 
       {visible.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-outline bg-surface-container-low p-xl text-center">
-          <p className="font-body-lg text-body-lg text-on-surface-variant">
-            No templates {filter === 'all' ? '' : `with status “${filter}”`} yet.
+        <div className="rounded-xl border border-dashed border-outline-variant p-lg text-center text-on-surface-variant">
+          <p>
+            No templates {filter === 'all' ? '' : `with status “${filter}”`}{' '}
+            {facetFilter === 'all' ? '' : 'for this facet '}
+            yet.
           </p>
         </div>
       ) : (
@@ -116,19 +162,30 @@ export function TemplateList() {
             <thead className="bg-surface-container-low text-on-surface-variant">
               <tr>
                 <th className="px-md py-sm">Name</th>
-                <th className="px-md py-sm">Project type</th>
-                <th className="px-md py-sm">Sync</th>
+                <th className="px-md py-sm">Facet</th>
+                <th className="px-md py-sm">Voltage context</th>
                 <th className="px-md py-sm text-right">Base capacity</th>
                 <th className="px-md py-sm">Version</th>
                 <th className="px-md py-sm">Status</th>
-                <th className="px-md py-sm text-right">Base total</th>
+                <th className="px-md py-sm text-right">Preview total*</th>
                 <th className="px-md py-sm">Updated</th>
                 <th className="px-md py-sm text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
               {visible.map((tpl) => {
-                const baseTotal = safeBaseTotal(tpl);
+                const facetName = facetsById[tpl.facetId]?.name ?? tpl.facetId;
+                const baseTotal =
+                  totalsAtDefaultSelections({
+                    template: tpl,
+                    facets: facetsSorted,
+                    allTemplates: templates,
+                    catalogItems,
+                  })?.grandTotal ?? 0;
+                const voltageLabel =
+                  tpl.facetId === VOLTAGE_CLASS_FACET_ID
+                    ? `${SYNC_TYPE_LABELS[tpl.syncType ?? 'Other']} · ${PROJECT_TYPE_LABELS[tpl.projectType ?? 'utility']}`
+                    : '—';
                 return (
                   <tr key={tpl.id} className="hover:bg-surface-container-low">
                     <td className="px-md py-sm">
@@ -146,18 +203,14 @@ export function TemplateList() {
                         </div>
                       )}
                     </td>
-                    <td className="px-md py-sm text-on-surface-variant">
-                      {PROJECT_TYPE_LABELS[tpl.projectType]}
-                    </td>
-                    <td className="px-md py-sm text-on-surface-variant">
-                      {SYNC_TYPE_LABELS[tpl.syncType]}
+                    <td className="px-md py-sm text-on-surface-variant">{facetName}</td>
+                    <td className="px-md py-sm text-on-surface-variant text-body-sm">
+                      {voltageLabel}
                     </td>
                     <td className="px-md py-sm text-right">
                       {formatPlantCapacityKW(tpl.baseCapacityKW)}
                     </td>
-                    <td className="px-md py-sm text-on-surface-variant">
-                      {tpl.version}
-                    </td>
+                    <td className="px-md py-sm text-on-surface-variant">{tpl.version}</td>
                     <td className="px-md py-sm">
                       <select
                         value={tpl.status}
@@ -186,7 +239,7 @@ export function TemplateList() {
                       <div className="flex justify-end gap-1">
                         <button
                           className="p-2 rounded hover:bg-surface-variant"
-                          title="Generate estimate"
+                          title="Generate estimate (other facets use defaults)"
                           onClick={() => handleGenerateEstimate(tpl)}
                         >
                           <Icon name="bolt" />
@@ -221,19 +274,10 @@ export function TemplateList() {
           </table>
         </div>
       )}
+      <p className="text-body-sm text-on-surface-variant">
+        * Preview total composites this template together with seeded defaults for every other facet —
+        approximate until the estimator confirms full selections.
+      </p>
     </div>
   );
-}
-
-function safeBaseTotal(tpl: ScenarioTemplate): number {
-  try {
-    const { totals } = materializeTemplate({
-      template: tpl,
-      targetCapacityKW: tpl.baseCapacityKW,
-      selectedOptions: defaultSelectedOptionsFor(tpl),
-    });
-    return totals.grandTotal;
-  } catch {
-    return 0;
-  }
 }

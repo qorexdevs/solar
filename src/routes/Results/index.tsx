@@ -5,9 +5,9 @@ import { CostDonut } from '@/components/charts/CostDonut';
 import { YearlyBarChart } from '@/components/charts/YearlyBarChart';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { KpiCard } from '@/components/ui/KpiCard';
 import { Switch } from '@/components/ui/Switch';
 import { computeEstimate, type FinanceResults } from '@/lib/calc';
+import { getVoltageClassTemplate } from '@/lib/estimate';
 import {
   formatINR,
   formatKWh,
@@ -41,9 +41,10 @@ export function Results() {
   );
   const setRecent = useEstimateStore((s) => s.setRecent);
   const enableFinance = useEstimateStore((s) => s.enableFinance);
-  const template = useTemplateStore((s) =>
-    estimate ? s.templates.find((t) => t.id === estimate.templateId) : undefined
-  );
+  const templates = useTemplateStore((s) => s.templates);
+  const voltageTemplate = estimate
+    ? getVoltageClassTemplate(estimate, templates)
+    : undefined;
 
   const [equityPctOverride, setEquityPctOverride] = useState<number | null>(null);
   const [extraPrepayment, setExtraPrepayment] = useState<number>(0);
@@ -195,16 +196,6 @@ export function Results() {
       value: g.total,
     }));
 
-  const irrLabel =
-    finance && Number.isFinite(finance.irr) ? formatRate(finance.irr) : '—';
-  const feasibilityHint = (() => {
-    if (!finance || !Number.isFinite(finance.irr)) return 'Finance modeling off';
-    if (finance.irr >= 0.15) return 'Excellent feasibility';
-    if (finance.irr >= 0.1) return 'Good feasibility';
-    if (finance.irr >= 0.05) return 'Marginal feasibility';
-    return 'Poor feasibility';
-  })();
-
   const fundingModified = equityPctOverride !== null;
   const prepayModified = clampedMonthly > 0 || autoAbsorb;
   const isWhatIfActive = fundingModified || prepayModified;
@@ -221,16 +212,16 @@ export function Results() {
           </h1>
           <div className="flex flex-wrap gap-2 mt-2">
             <span className="px-2 py-1 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
-              {template
-                ? PROJECT_TYPE_LABELS[template.projectType]
-                : 'Template missing'}
+              {voltageTemplate
+                ? PROJECT_TYPE_LABELS[voltageTemplate.projectType ?? 'utility']
+                : 'Voltage class unset'}
             </span>
             <span className="px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">
               {formatPlantCapacityKW(estimate.targetCapacityKW)}
             </span>
-            {template && (
+            {voltageTemplate && (
               <span className="px-2 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
-                {SYNC_TYPE_LABELS[template.syncType]} · {template.name}
+                {SYNC_TYPE_LABELS[voltageTemplate.syncType ?? 'Other']} · {voltageTemplate.name}
               </span>
             )}
             {isWhatIfActive && (
@@ -298,30 +289,6 @@ export function Results() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-sm">
-            <KpiCard
-              accent="tertiary"
-              icon="trending_up"
-              label="Internal Rate of Return (IRR)"
-              value={irrLabel}
-              hint={feasibilityHint}
-            />
-            <KpiCard
-              accent="primary"
-              icon="update"
-              label="Payback Period"
-              value={formatYears(finance.paybackYears)}
-              hint={`Project lifespan: ${finance.meta.basics.lifespanYears} yrs`}
-            />
-            <KpiCard
-              accent="secondary"
-              icon="account_balance"
-              label="Net Present Value (NPV)"
-              value={formatINR(finance.npv)}
-              hint={`At ${formatPercent(finance.meta.basics.discountPct)} discount rate`}
-            />
-          </div>
-
           {!estimate.location && (
             <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-md flex flex-col md:flex-row md:items-center md:justify-between gap-sm">
               <div className="flex items-start gap-sm">
@@ -537,6 +504,37 @@ export function Results() {
   );
 }
 
+function SummaryRow({
+  label,
+  value,
+  dense,
+}: {
+  label: string;
+  value: string;
+  dense?: boolean;
+}) {
+  return (
+    <div className="flex justify-between items-center gap-sm min-w-0">
+      <span
+        className={`shrink-0 ${
+          dense
+            ? 'font-body-sm text-on-surface-variant'
+            : 'font-body-md text-on-surface-variant'
+        }`}
+      >
+        {label}
+      </span>
+      <span
+        className={`text-on-surface tabular-nums text-right truncate min-w-0 ${
+          dense ? 'font-body-sm' : 'font-body-md'
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function EstimateTotalsCard({
   estimate,
   finance,
@@ -549,71 +547,86 @@ function EstimateTotalsCard({
     ? finance.revenue.reduce((s, x) => s + x, 0)
     : 0;
   const y1Generation = finance?.energy[0];
+  const lifespanYears = finance?.meta.basics.lifespanYears ?? 0;
+  const avgAnnualRevenue =
+    finance && lifespanYears > 0 ? lifetimeRevenue / lifespanYears : null;
+  const irrDisplay =
+    finance && Number.isFinite(finance.irr) ? formatRate(finance.irr) : '—';
 
   return (
     <section
-      aria-label="Cost and generation summary"
-      className="bg-surface-container-low rounded-xl border border-outline-variant/30 p-md shadow-card"
+      aria-label="Expense and revenue summary"
+      className="flex flex-col md:flex-row gap-sm items-stretch"
     >
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-md gap-y-4">
-        <TotalsMetric label="Main BOM" value={`₹ ${formatINR(t.mainBomSubtotal)}`} />
-        <TotalsMetric label="Main GST" value={`₹ ${formatINR(t.mainBomGst)}`} />
-        <TotalsMetric label="Other Scope" value={`₹ ${formatINR(t.otherScopeSubtotal)}`} />
-        <TotalsMetric label="Other GST" value={`₹ ${formatINR(t.otherScopeGst)}`} />
-        <TotalsMetric
-          label="Grand total"
-          value={`₹ ${formatINR(t.grandTotal)}`}
-          accent
-        />
-        <TotalsMetric label="Per kW" value={`₹ ${formatINR(t.perKwRate)}`} />
-        {finance && (
-          <>
-            <TotalsMetric
+      <article
+        aria-labelledby="results-expenses-heading"
+        className="bg-surface-container-lowest rounded-xl p-md shadow-card border-l-4 border-l-primary flex-1 min-w-0 flex flex-col"
+      >
+        <div className="flex items-center gap-2 text-outline mb-2">
+          <Icon name="payments" />
+          <h2 id="results-expenses-heading" className="font-label-sm text-label-sm font-normal">
+            Expenses
+          </h2>
+        </div>
+        <div className="font-data-display text-data-display text-on-surface">{`₹ ${formatINR(t.grandTotal)}`}</div>
+        <div className="mt-4 pt-4 border-t border-outline-variant/40 flex flex-col gap-2 flex-1 min-h-0">
+          <SummaryRow dense label="Main BOM" value={`₹ ${formatINR(t.mainBomSubtotal)}`} />
+          <SummaryRow dense label="Main GST" value={`₹ ${formatINR(t.mainBomGst)}`} />
+          <SummaryRow dense label="Other Scope" value={`₹ ${formatINR(t.otherScopeSubtotal)}`} />
+          <SummaryRow dense label="Other GST" value={`₹ ${formatINR(t.otherScopeGst)}`} />
+        </div>
+        <div className="mt-4 pt-3 border-t border-outline-variant/40">
+          <SummaryRow dense label="Per kW" value={`₹ ${formatINR(t.perKwRate)}`} />
+        </div>
+      </article>
+
+      {finance ? (
+        <article
+          aria-labelledby="results-revenue-heading"
+          className="bg-surface-container-lowest rounded-xl p-md shadow-card border-l-4 border-l-tertiary-container flex-1 min-w-0 flex flex-col"
+        >
+          <div className="flex items-center gap-2 text-outline mb-2">
+            <Icon name="solar_power" />
+            <h2 id="results-revenue-heading" className="font-label-sm text-label-sm font-normal">
+              Revenue
+            </h2>
+          </div>
+          <div className="font-data-display text-data-display text-on-surface">
+            ₹ {formatINR(lifetimeRevenue)}
+          </div>
+          <div className="mt-4 pt-4 border-t border-outline-variant/40 flex flex-col gap-2 flex-1 min-h-0">
+            <SummaryRow
+              dense
               label="Annual generation (Y1)"
               value={formatKWh(y1Generation ?? 0)}
             />
-            <TotalsMetric
-              label="Lifetime revenue"
-              value={`₹ ${formatINR(lifetimeRevenue)}`}
+            {avgAnnualRevenue !== null && (
+              <SummaryRow
+                dense
+                label="Avg. revenue / year"
+                value={`₹ ${formatINR(avgAnnualRevenue)}`}
+              />
+            )}
+          </div>
+          <div className="mt-4 pt-3 border-t border-outline-variant/40 flex flex-col gap-2">
+            <SummaryRow
+              dense
+              label="Internal Rate of Return (IRR)"
+              value={irrDisplay}
             />
-          </>
-        )}
-      </div>
+            <SummaryRow
+              dense
+              label="Payback Period"
+              value={formatYears(finance.paybackYears)}
+            />
+            <SummaryRow
+              dense
+              label="Net Present Value (NPV)"
+              value={formatINR(finance.npv)}
+            />
+          </div>
+        </article>
+      ) : null}
     </section>
-  );
-}
-
-function TotalsMetric({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-lg p-sm min-w-0 border ${
-        accent
-          ? 'bg-primary text-on-primary border-primary'
-          : 'bg-surface-container-lowest border-outline-variant'
-      }`}
-    >
-      <div
-        className={`font-label-sm text-label-sm uppercase tracking-wide truncate ${
-          accent ? 'text-on-primary opacity-85' : 'text-on-surface-variant'
-        }`}
-      >
-        {label}
-      </div>
-      <div
-        className={`font-data-display text-body-lg font-semibold mt-1 tabular-nums truncate min-w-0 ${
-          accent ? 'text-on-primary' : 'text-on-surface'
-        }`}
-      >
-        {value}
-      </div>
-    </div>
   );
 }

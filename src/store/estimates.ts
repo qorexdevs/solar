@@ -1,69 +1,80 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
+  ComposeMode,
+  ComposeOverridesMap,
   Estimate,
+  EstimateFacetSelections,
   FinanceLayer,
-  ScenarioLocation,
   ScenarioTemplate,
-  SelectedOptions,
+  SelectedOptionsPerTemplate,
 } from '@/types';
 import {
   createEstimate,
   defaultFinanceLayer,
   duplicateEstimate,
   recomputeMaterialization,
+  type EstimateInit,
 } from '@/lib/estimate';
 import { useTemplateStore } from './templates';
+import { useCatalogStore } from './catalog';
+import { selectFacetsSorted, useFacetStore } from './facets';
 
-export const ESTIMATES_PERSIST_KEY = 'solar-estimates-v1';
+export const ESTIMATES_PERSIST_KEY = 'solar-estimates-v2';
+
+function rematerialise(estimate: Estimate): Estimate {
+  return recomputeMaterialization(estimate, {
+    facets: selectFacetsSorted(useFacetStore.getState()),
+    templates: useTemplateStore.getState().templates,
+    catalogItems: useCatalogStore.getState().items,
+  });
+}
 
 type EstimateState = {
   estimates: Estimate[];
   recentEstimateId: string | null;
   comparisonIds: string[];
 
-  /* CRUD ----------------------------------------------------------------- */
-  createFromTemplate: (args: {
-    template: ScenarioTemplate;
-    name?: string;
-    targetCapacityKW?: number;
-  }) => Estimate;
+  createFromSelections: (
+    args?: Omit<EstimateInit, 'facets' | 'templates' | 'catalogItems'> & {
+      catalogItems?: EstimateInit['catalogItems'];
+      templates?: ScenarioTemplate[];
+    }
+  ) => Estimate;
   duplicate: (id: string) => Estimate | null;
   remove: (id: string) => void;
   update: (id: string, updater: (e: Estimate) => Estimate) => void;
   setRecent: (id: string) => void;
 
-  /* Estimate-specific edits — keep BOM materialization in sync ----------- */
   setTargetCapacity: (id: string, targetKW: number) => void;
-  setSelectedOptions: (id: string, opts: SelectedOptions) => void;
+  setSelections: (id: string, selections: EstimateFacetSelections) => void;
+  setSelectedOptionsPerTemplate: (
+    id: string,
+    opts: SelectedOptionsPerTemplate
+  ) => void;
+  setLineOptionsForTemplate: (
+    id: string,
+    templateId: string,
+    lineIds: string[]
+  ) => void;
+  setComposeOverride: (
+    id: string,
+    catalogItemId: string,
+    mode: ComposeMode | undefined
+  ) => void;
   setName: (id: string, name: string) => void;
   setStatus: (id: string, status: Estimate['status']) => void;
-  setLocation: (id: string, location: ScenarioLocation | undefined) => void;
+  setLocation: (id: string, location: Estimate['location']) => void;
 
-  /* Finance toggling ----------------------------------------------------- */
   enableFinance: (id: string, finance?: Partial<FinanceLayer>) => void;
   disableFinance: (id: string) => void;
   updateFinance: (id: string, patch: Partial<FinanceLayer>) => void;
 
-  /* Comparison list ----------------------------------------------------- */
   toggleCompare: (id: string) => void;
   clearCompare: () => void;
 
   resetSeed: () => void;
 };
-
-/**
- * Re-materialise an estimate after capacity / options edits. Pulls the
- * referenced template from the templates store; falls back to leaving the
- * estimate as-is if the template was deleted (the UI surfaces a warning).
- */
-function rematerialise(estimate: Estimate): Estimate {
-  const template = useTemplateStore
-    .getState()
-    .templates.find((t) => t.id === estimate.templateId);
-  if (!template) return estimate;
-  return recomputeMaterialization(estimate, template);
-}
 
 export const useEstimateStore = create<EstimateState>()(
   persist(
@@ -72,8 +83,18 @@ export const useEstimateStore = create<EstimateState>()(
       recentEstimateId: null,
       comparisonIds: [],
 
-      createFromTemplate: ({ template, name, targetCapacityKW }) => {
-        const estimate = createEstimate({ template, name, targetCapacityKW });
+      createFromSelections: (args = {}) => {
+        const templates =
+          args.templates ?? useTemplateStore.getState().templates;
+        const catalogItems =
+          args.catalogItems ?? useCatalogStore.getState().items;
+        const facets = selectFacetsSorted(useFacetStore.getState());
+        const estimate = createEstimate({
+          ...args,
+          facets,
+          templates,
+          catalogItems,
+        });
         set((state) => ({
           estimates: [estimate, ...state.estimates],
           recentEstimateId: estimate.id,
@@ -101,9 +122,7 @@ export const useEstimateStore = create<EstimateState>()(
       update: (id, updater) => {
         set((state) => ({
           estimates: state.estimates.map((e) =>
-            e.id === id
-              ? { ...updater(e), id: e.id, updatedAt: Date.now() }
-              : e
+            e.id === id ? { ...updater(e), id: e.id, updatedAt: Date.now() } : e
           ),
         }));
       },
@@ -123,13 +142,63 @@ export const useEstimateStore = create<EstimateState>()(
         }));
       },
 
-      setSelectedOptions: (id, opts) => {
+      setSelections: (id, selections) => {
         set((state) => ({
           estimates: state.estimates.map((e) => {
             if (e.id !== id) return e;
             return rematerialise({
               ...e,
-              selectedOptions: opts,
+              selections,
+              updatedAt: Date.now(),
+            });
+          }),
+        }));
+      },
+
+      setSelectedOptionsPerTemplate: (id, opts) => {
+        set((state) => ({
+          estimates: state.estimates.map((e) => {
+            if (e.id !== id) return e;
+            return rematerialise({
+              ...e,
+              selectedOptionsPerTemplate: opts,
+              updatedAt: Date.now(),
+            });
+          }),
+        }));
+      },
+
+      setLineOptionsForTemplate: (id, templateId, lineIds) => {
+        set((state) => ({
+          estimates: state.estimates.map((e) => {
+            if (e.id !== id) return e;
+            const selectedOptionsPerTemplate = {
+              ...e.selectedOptionsPerTemplate,
+              [templateId]: { lineIds },
+            };
+            return rematerialise({
+              ...e,
+              selectedOptionsPerTemplate,
+              updatedAt: Date.now(),
+            });
+          }),
+        }));
+      },
+
+      setComposeOverride: (id, catalogItemId, mode) => {
+        set((state) => ({
+          estimates: state.estimates.map((e) => {
+            if (e.id !== id) return e;
+            const next: ComposeOverridesMap = {
+              ...(e.composeOverrides ?? {}),
+            };
+            if (mode === undefined) delete next[catalogItemId];
+            else next[catalogItemId] = mode;
+            const composeOverrides =
+              Object.keys(next).length > 0 ? next : undefined;
+            return rematerialise({
+              ...e,
+              composeOverrides,
               updatedAt: Date.now(),
             });
           }),

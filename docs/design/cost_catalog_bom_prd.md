@@ -1,5 +1,7 @@
 ***
 
+> **Multi-template catalog:** The authoritative app design is **Multi-Template Estimate Composition** (global material catalog, facet templates, deterministic merge by `catalogItemId`, persisted under keys such as `solar-catalog-v1`, `solar-templates-v2`, `solar-estimates-v2`). Treat this BOM PRD as supporting reference for legacy line semantics still reflected in grouping and UX copy.
+
 # PRD: Scenario-Based BOM Cost Catalog
 
 ## 1. Product Overview

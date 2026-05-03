@@ -1,89 +1,52 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type {
-  BOMLineItem,
-  OtherScopeItem,
-  ScenarioTemplate,
-  TemplateStatus,
-} from '@/types';
+import type { ScenarioTemplate, TemplateLine, TemplateStatus } from '@/types';
 import { seedTemplates } from '@/lib/templates';
 import { uid } from '@/lib/uid';
 
-/** Persist key — bumping this on any breaking shape change wipes data. */
-export const TEMPLATES_PERSIST_KEY = 'solar-templates-v1';
+/** Persist key — v2 introduces facet-scoped catalog-backed templates. */
+export const TEMPLATES_PERSIST_KEY = 'solar-templates-v2';
 
 type TemplateState = {
   templates: ScenarioTemplate[];
   activeTemplateId: string | null;
 
-  /* CRUD ----------------------------------------------------------------- */
   create: (template: ScenarioTemplate) => void;
   update: (id: string, patch: Partial<ScenarioTemplate>) => void;
   duplicate: (id: string) => ScenarioTemplate | null;
   remove: (id: string) => void;
   setActive: (id: string | null) => void;
 
-  /* Status / version ---------------------------------------------------- */
   setStatus: (id: string, status: TemplateStatus) => void;
   bumpVersion: (id: string, nextVersion?: string) => void;
 
-  /* Main BOM ------------------------------------------------------------ */
-  addBomLine: (templateId: string, line?: Partial<BOMLineItem>) => void;
-  updateBomLine: (
+  addTemplateLine: (templateId: string, partial?: Partial<TemplateLine>) => void;
+  updateTemplateLine: (
     templateId: string,
     lineId: string,
-    patch: Partial<BOMLineItem>
+    patch: Partial<TemplateLine>
   ) => void;
-  removeBomLine: (templateId: string, lineId: string) => void;
-  reorderBomLines: (templateId: string, orderedIds: string[]) => void;
+  removeTemplateLine: (templateId: string, lineId: string) => void;
+  reorderTemplateLines: (templateId: string, orderedIds: string[]) => void;
 
-  /* Other Scope --------------------------------------------------------- */
-  addScopeItem: (templateId: string, item?: Partial<OtherScopeItem>) => void;
-  updateScopeItem: (
-    templateId: string,
-    itemId: string,
-    patch: Partial<OtherScopeItem>
-  ) => void;
-  removeScopeItem: (templateId: string, itemId: string) => void;
-  reorderScopeItems: (templateId: string, orderedIds: string[]) => void;
-
-  /* Bootstrap ----------------------------------------------------------- */
   seedIfEmpty: () => void;
   resetSeed: () => void;
 };
 
-function defaultLine(): BOMLineItem {
+function defaultTemplateLine(): TemplateLine {
   return {
     id: uid('ln'),
+    catalogItemId: 'cat-pv-module-540',
     sequence: 1,
-    category: 'misc',
-    itemName: 'New item',
-    description: '',
-    uom: 'count',
+    scalingType: 'linear',
     baseQuantity: 1,
-    rate: 0,
-    gstPercent: 18,
-    scalingType: 'fixed',
     isOptional: false,
     includedByDefault: true,
   };
 }
 
-function defaultScope(): OtherScopeItem {
-  return {
-    id: uid('sc'),
-    sequence: 1,
-    scopeName: 'New scope item',
-    baseAmount: 0,
-    gstPercent: 18,
-    scalingType: 'fixed',
-    isOptional: false,
-    includedByDefault: true,
-  };
-}
-
-function nextSequence(items: { sequence: number }[]): number {
-  return items.reduce((max, x) => Math.max(max, x.sequence), 0) + 1;
+function nextSequence(lines: { sequence: number }[]): number {
+  return lines.reduce((max, x) => Math.max(max, x.sequence), 0) + 1;
 }
 
 function touch(t: ScenarioTemplate): ScenarioTemplate {
@@ -115,8 +78,15 @@ export const useTemplateStore = create<TemplateState>()(
         const original = get().templates.find((t) => t.id === id);
         if (!original) return null;
         const now = Date.now();
+        const lineIdMap = new Map<string, string>();
+        const clonedLines = structuredClone(original.lines).map((ln) => {
+          const newId = uid('ln');
+          lineIdMap.set(ln.id, newId);
+          return { ...ln, id: newId };
+        });
         const copy: ScenarioTemplate = {
-          ...structuredClone(original),
+          ...original,
+          lines: clonedLines,
           id: uid('tpl'),
           name: `${original.name} (copy)`,
           status: 'draft',
@@ -157,28 +127,28 @@ export const useTemplateStore = create<TemplateState>()(
         }));
       },
 
-      addBomLine: (templateId, partial) => {
+      addTemplateLine: (templateId, partial) => {
         set((state) => ({
           templates: state.templates.map((t) => {
             if (t.id !== templateId) return t;
-            const line: BOMLineItem = {
-              ...defaultLine(),
-              sequence: nextSequence(t.mainBom),
+            const line: TemplateLine = {
+              ...defaultTemplateLine(),
+              sequence: nextSequence(t.lines),
               ...partial,
               id: partial?.id ?? uid('ln'),
             };
-            return touch({ ...t, mainBom: [...t.mainBom, line] });
+            return touch({ ...t, lines: [...t.lines, line] });
           }),
         }));
       },
 
-      updateBomLine: (templateId, lineId, patch) => {
+      updateTemplateLine: (templateId, lineId, patch) => {
         set((state) => ({
           templates: state.templates.map((t) => {
             if (t.id !== templateId) return t;
             return touch({
               ...t,
-              mainBom: t.mainBom.map((l) =>
+              lines: t.lines.map((l) =>
                 l.id === lineId ? { ...l, ...patch, id: l.id } : l
               ),
             });
@@ -186,92 +156,32 @@ export const useTemplateStore = create<TemplateState>()(
         }));
       },
 
-      removeBomLine: (templateId, lineId) => {
+      removeTemplateLine: (templateId, lineId) => {
         set((state) => ({
           templates: state.templates.map((t) => {
             if (t.id !== templateId) return t;
             return touch({
               ...t,
-              mainBom: t.mainBom.filter((l) => l.id !== lineId),
+              lines: t.lines.filter((l) => l.id !== lineId),
             });
           }),
         }));
       },
 
-      reorderBomLines: (templateId, orderedIds) => {
+      reorderTemplateLines: (templateId, orderedIds) => {
         set((state) => ({
           templates: state.templates.map((t) => {
             if (t.id !== templateId) return t;
-            const byId = new Map(t.mainBom.map((l) => [l.id, l]));
-            const next: BOMLineItem[] = [];
+            const byId = new Map(t.lines.map((l) => [l.id, l]));
+            const next: TemplateLine[] = [];
             orderedIds.forEach((id, idx) => {
               const line = byId.get(id);
               if (line) next.push({ ...line, sequence: idx + 1 });
             });
-            // Append any lines missed (defensive).
-            for (const l of t.mainBom) {
+            for (const l of t.lines) {
               if (!orderedIds.includes(l.id)) next.push(l);
             }
-            return touch({ ...t, mainBom: next });
-          }),
-        }));
-      },
-
-      addScopeItem: (templateId, partial) => {
-        set((state) => ({
-          templates: state.templates.map((t) => {
-            if (t.id !== templateId) return t;
-            const item: OtherScopeItem = {
-              ...defaultScope(),
-              sequence: nextSequence(t.otherScope),
-              ...partial,
-              id: partial?.id ?? uid('sc'),
-            };
-            return touch({ ...t, otherScope: [...t.otherScope, item] });
-          }),
-        }));
-      },
-
-      updateScopeItem: (templateId, itemId, patch) => {
-        set((state) => ({
-          templates: state.templates.map((t) => {
-            if (t.id !== templateId) return t;
-            return touch({
-              ...t,
-              otherScope: t.otherScope.map((s) =>
-                s.id === itemId ? { ...s, ...patch, id: s.id } : s
-              ),
-            });
-          }),
-        }));
-      },
-
-      removeScopeItem: (templateId, itemId) => {
-        set((state) => ({
-          templates: state.templates.map((t) => {
-            if (t.id !== templateId) return t;
-            return touch({
-              ...t,
-              otherScope: t.otherScope.filter((s) => s.id !== itemId),
-            });
-          }),
-        }));
-      },
-
-      reorderScopeItems: (templateId, orderedIds) => {
-        set((state) => ({
-          templates: state.templates.map((t) => {
-            if (t.id !== templateId) return t;
-            const byId = new Map(t.otherScope.map((s) => [s.id, s]));
-            const next: OtherScopeItem[] = [];
-            orderedIds.forEach((id, idx) => {
-              const s = byId.get(id);
-              if (s) next.push({ ...s, sequence: idx + 1 });
-            });
-            for (const s of t.otherScope) {
-              if (!orderedIds.includes(s.id)) next.push(s);
-            }
-            return touch({ ...t, otherScope: next });
+            return touch({ ...t, lines: next });
           }),
         }));
       },
@@ -299,7 +209,6 @@ export const useTemplateStore = create<TemplateState>()(
   )
 );
 
-/** Bump a free-form version like `v1` → `v2`, `1.2` → `1.3`. */
 function autoBumpVersion(current: string): string {
   if (!current) return 'v1';
   const m = current.match(/^(.*?)(\d+)$/);
@@ -308,7 +217,6 @@ function autoBumpVersion(current: string): string {
   return `${m[1]}${next}`;
 }
 
-/* Selector helpers ------------------------------------------------------- */
 export const selectActiveTemplates = (state: TemplateState): ScenarioTemplate[] =>
   state.templates.filter((t) => t.status === 'active');
 
@@ -319,3 +227,8 @@ export const selectTemplateById =
   (id: string | null) =>
   (state: TemplateState): ScenarioTemplate | undefined =>
     id ? state.templates.find((t) => t.id === id) : undefined;
+
+export const selectTemplatesByFacetId =
+  (facetId: string | null) =>
+  (state: TemplateState): ScenarioTemplate[] =>
+    facetId ? state.templates.filter((t) => t.facetId === facetId) : [];

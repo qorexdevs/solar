@@ -3,11 +3,10 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { StatusTag } from '@/components/ui/Tag';
 import { formatINR, formatPlantCapacityKW } from '@/lib/format';
-import {
-  defaultSelectedOptionsFor,
-  materializeTemplate,
-  validateTemplate,
-} from '@/lib/templates';
+import { validateTemplate } from '@/lib/templates';
+import { totalsAtDefaultSelections } from '@/lib/templates/previewAtDefaults';
+import { useCatalogStore } from '@/store/catalog';
+import { selectFacetsSorted, useFacetStore } from '@/store/facets';
 import { useTemplateStore } from '@/store/templates';
 import {
   TEMPLATE_STATUSES,
@@ -25,26 +24,27 @@ export function TemplateSummary({ template, editable }: Props) {
   const setStatus = useTemplateStore((s) => s.setStatus);
   const bumpVersion = useTemplateStore((s) => s.bumpVersion);
   const update = useTemplateStore((s) => s.update);
+  const allTemplates = useTemplateStore((s) => s.templates);
+  const facets = useFacetStore(selectFacetsSorted);
+  const catalogItems = useCatalogStore((s) => s.items);
 
   const issues = useMemo(() => validateTemplate(template), [template]);
 
-  const totals = useMemo(() => {
-    try {
-      const out = materializeTemplate({
+  const totals = useMemo(
+    () =>
+      totalsAtDefaultSelections({
         template,
-        targetCapacityKW: template.baseCapacityKW,
-        selectedOptions: defaultSelectedOptionsFor(template),
-      });
-      return out.totals;
-    } catch {
-      return null;
-    }
-  }, [template]);
+        facets,
+        allTemplates,
+        catalogItems,
+      }),
+    [template, facets, allTemplates, catalogItems]
+  );
 
   return (
     <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-md flex flex-col gap-sm">
       <div className="flex flex-wrap items-center justify-between gap-sm">
-        <h3 className="font-headline-md text-headline-md">Base totals</h3>
+        <h3 className="font-headline-md text-headline-md">Base totals @ defaults</h3>
         <div className="flex items-center gap-sm">
           {editable ? (
             <>
@@ -93,7 +93,7 @@ export function TemplateSummary({ template, editable }: Props) {
         </div>
       ) : (
         <p className="text-body-sm text-on-surface-variant">
-          Totals unavailable — fix validation issues below.
+          Totals unavailable — fix catalog links / validation issues.
         </p>
       )}
 
@@ -109,9 +109,7 @@ export function TemplateSummary({ template, editable }: Props) {
                 <code className="text-on-surface">{i.path}</code>: {i.message}
               </li>
             ))}
-            {issues.length > 8 && (
-              <li>… and {issues.length - 8} more</li>
-            )}
+            {issues.length > 8 && <li>… and {issues.length - 8} more</li>}
           </ul>
         </div>
       )}

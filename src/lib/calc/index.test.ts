@@ -19,11 +19,35 @@ import {
   yearlyOM,
   yearlyRevenue,
 } from '.';
-import type { MaterializedBOM } from '@/types';
-import { createEstimate, defaultFinanceLayer } from '../estimate';
-import { seedTemplates, SEED_TEMPLATE_ID_HT } from '../templates';
+import type { ComposeMode, MaterializedBOM } from '@/types';
+import {
+  createEstimate,
+  defaultFinanceLayer,
+  defaultSelectionsFromFacets,
+} from '../estimate';
+import { seedTemplates } from '../templates';
+import { seedFacets } from '@/lib/facets';
+import { seedMaterialCatalog } from '@/lib/catalog';
 
-const SEED_HT = seedTemplates().find((t) => t.id === SEED_TEMPLATE_ID_HT)!;
+function testEstimate(partial?: {
+  targetCapacityKW?: number;
+  finance?: ReturnType<typeof defaultFinanceLayer>;
+}) {
+  const facets = seedFacets();
+  const templates = seedTemplates();
+  const catalogItems = seedMaterialCatalog();
+  return createEstimate({
+    facets,
+    templates,
+    catalogItems,
+    selections: defaultSelectionsFromFacets(
+      facets,
+      new Map(templates.map((t) => [t.id, t]))
+    ),
+    targetCapacityKW: partial?.targetCapacityKW,
+    finance: partial?.finance,
+  });
+}
 
 /* ------------------------------------------------------------------------ */
 /* Pure helpers                                                              */
@@ -87,6 +111,10 @@ describe('capexBreakdown', () => {
       mainLines: [
         {
           id: 'l1',
+          catalogItemId: 'l1',
+          composeMode: 'max' as ComposeMode,
+          contributedBy: [],
+          sourceLineIds: ['l1'],
           sourceLineId: 'l1',
           sequence: 1,
           category: 'modules',
@@ -106,6 +134,10 @@ describe('capexBreakdown', () => {
         },
         {
           id: 'l2',
+          catalogItemId: 'l2',
+          composeMode: 'max' as ComposeMode,
+          contributedBy: [],
+          sourceLineIds: ['l2'],
           sourceLineId: 'l2',
           sequence: 2,
           category: 'cables',
@@ -127,6 +159,10 @@ describe('capexBreakdown', () => {
       otherLines: [
         {
           id: 'cu1',
+          catalogItemId: 'cu1',
+          composeMode: 'max' as ComposeMode,
+          contributedBy: [],
+          sourceItemIds: ['cu1'],
           sourceItemId: 'cu1',
           sequence: 1,
           scopeName: 'Permitting',
@@ -157,6 +193,10 @@ describe('capexBreakdown', () => {
       mainLines: [
         {
           id: 'l1',
+          catalogItemId: 'l1',
+          composeMode: 'max' as ComposeMode,
+          contributedBy: [],
+          sourceLineIds: ['l1'],
           sourceLineId: 'l1',
           sequence: 1,
           category: 'switchyard',
@@ -284,10 +324,7 @@ describe('co2Tonnes', () => {
 
 describe('computeEstimate', () => {
   it('without finance layer: returns capex + totals only', () => {
-    const est = createEstimate({
-      template: SEED_HT,
-      targetCapacityKW: 1000,
-    });
+    const est = testEstimate({ targetCapacityKW: 1000 });
     const out = computeEstimate(est);
     expect(out.capex.total).toBeGreaterThan(0);
     expect(out.totals.grandTotal).toBeGreaterThan(0);
@@ -295,8 +332,7 @@ describe('computeEstimate', () => {
   });
 
   it('with finance layer enabled: returns full finance results', () => {
-    const est = createEstimate({
-      template: SEED_HT,
+    const est = testEstimate({
       targetCapacityKW: 1000,
       finance: { ...defaultFinanceLayer(true) },
     });
@@ -316,10 +352,7 @@ describe('computeEstimate', () => {
   });
 
   it('totals.grandTotal matches capex.total within rounding', () => {
-    const est = createEstimate({
-      template: SEED_HT,
-      targetCapacityKW: 1000,
-    });
+    const est = testEstimate({ targetCapacityKW: 1000 });
     const out = computeEstimate(est);
     expect(Math.abs(out.totals.grandTotal - out.capex.total)).toBeLessThan(1);
   });
@@ -360,8 +393,7 @@ describe('tariffSchedule', () => {
 
 describe('lcoeINRPerKWh', () => {
   it('returns a finite ₹/kWh for a typical 1 MW plant with finance layer', () => {
-    const est = createEstimate({
-      template: SEED_HT,
+    const est = testEstimate({
       targetCapacityKW: 1000,
       finance: { ...defaultFinanceLayer(true) },
     });
@@ -371,18 +403,14 @@ describe('lcoeINRPerKWh', () => {
   });
 
   it('returns 0 when finance layer is disabled', () => {
-    const est = createEstimate({
-      template: SEED_HT,
-      targetCapacityKW: 1000,
-    });
+    const est = testEstimate({ targetCapacityKW: 1000 });
     expect(lcoeINRPerKWh(est)).toBe(0);
   });
 });
 
 describe('solvePPARate', () => {
   it('finds a rate whose IRR is near the target', () => {
-    const est = createEstimate({
-      template: SEED_HT,
+    const est = testEstimate({
       targetCapacityKW: 1000,
       finance: { ...defaultFinanceLayer(true) },
     });
@@ -401,8 +429,7 @@ describe('solvePPARate', () => {
 
 describe('withPPARate', () => {
   it('overrides ppaRate and ppaEscalationPct, leaving everything else untouched', () => {
-    const est = createEstimate({
-      template: SEED_HT,
+    const est = testEstimate({
       targetCapacityKW: 1000,
       finance: { ...defaultFinanceLayer(true) },
     });
@@ -418,8 +445,7 @@ describe('withPPARate', () => {
   });
 
   it('cpi indexation folds the inflation pass-through into the escalation', () => {
-    const est = createEstimate({
-      template: SEED_HT,
+    const est = testEstimate({
       targetCapacityKW: 1000,
       finance: { ...defaultFinanceLayer(true) },
     });
@@ -430,7 +456,7 @@ describe('withPPARate', () => {
   });
 
   it('returns the estimate unchanged when finance is disabled', () => {
-    const est = createEstimate({ template: SEED_HT, targetCapacityKW: 1000 });
+    const est = testEstimate({ targetCapacityKW: 1000 });
     expect(withPPARate(est, 9, 4)).toBe(est);
   });
 });

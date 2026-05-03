@@ -1,22 +1,52 @@
 import type {
+  ComposeOverridesMap,
   Estimate,
   EstimateBasics,
+  EstimateFacetSelections,
   EstimateFinancing,
   EstimateOM,
   EstimateRevenue,
+  EstimateStatus,
   FinanceLayer,
+  MaterialCatalogItem,
   ScenarioTemplate,
-  SelectedOptions,
+  SelectedOptionsPerTemplate,
+  TemplateFacet,
 } from '@/types';
 import {
-  defaultSelectedOptionsFor,
-  materializeTemplate,
-} from '@/lib/templates';
+  composeEstimate,
+  defaultSelectedOptionsFromSelections,
+  resolveEngineTemplate,
+} from '@/lib/composer';
+import { VOLTAGE_CLASS_FACET_ID } from '@/lib/facets/constants';
 import { uid } from '../uid';
 
 const DEFAULT_PPA_RATE = 3.5;
 
-/** Industry-baseline finance defaults; project-type tuning lives elsewhere. */
+export type {
+  ComposeOverridesMap,
+  EstimateFacetSelections,
+  EstimateStatus,
+  FinanceLayer,
+  MaterialCatalogItem,
+  ScenarioTemplate,
+  SelectedOptionsPerTemplate,
+  TemplateFacet,
+} from '@/types';
+
+export type EstimateInit = {
+  name?: string;
+  status?: EstimateStatus;
+  selections?: EstimateFacetSelections;
+  targetCapacityKW?: number;
+  selectedOptionsPerTemplate?: SelectedOptionsPerTemplate;
+  composeOverrides?: ComposeOverridesMap;
+  facets: TemplateFacet[];
+  templates: ScenarioTemplate[];
+  catalogItems: MaterialCatalogItem[];
+  finance?: Partial<FinanceLayer>;
+};
+
 function defaultBasics(): EstimateBasics {
   return {
     lifespanYears: 25,
@@ -44,7 +74,6 @@ function defaultFinancing(): EstimateFinancing {
   };
 }
 
-/** A `disabled`-by-default finance layer with sane defaults pre-populated. */
 export function defaultFinanceLayer(enabled = false): FinanceLayer {
   return {
     enabled,
@@ -55,44 +84,91 @@ export function defaultFinanceLayer(enabled = false): FinanceLayer {
   };
 }
 
-export type EstimateInit = {
-  name?: string;
-  template: ScenarioTemplate;
-  targetCapacityKW?: number;
-  selectedOptions?: SelectedOptions;
-  /** When provided, overrides the default disabled finance layer. */
-  finance?: Partial<FinanceLayer> | undefined;
-  status?: Estimate['status'];
-};
+export function defaultSelectionsFromFacets(
+  facets: TemplateFacet[],
+  templatesById: Map<string, ScenarioTemplate>
+): EstimateFacetSelections {
+  const out: EstimateFacetSelections = {};
+  for (const f of facets) {
+    if (f.defaultTemplateId) {
+      const t = templatesById.get(f.defaultTemplateId);
+      if (t) {
+        out[f.id] = { templateId: t.id, selectedVersion: t.version };
+        continue;
+      }
+    }
+    if (!f.required) {
+      out[f.id] = null;
+    }
+  }
+  return out;
+}
 
-/**
- * Create a fresh `Estimate` from a `ScenarioTemplate` at a target capacity.
- * Materializes the BOM at creation so totals are immediately available; the
- * caller can re-materialize on edits via `recomputeMaterialization`.
- */
+function resolveTargetCapacity(
+  selections: EstimateFacetSelections,
+  templatesById: Map<string, ScenarioTemplate>,
+  explicit?: number
+): number {
+  if (explicit !== undefined && Number.isFinite(explicit) && explicit > 0) {
+    return explicit;
+  }
+  const eng = resolveEngineTemplate(selections, templatesById, VOLTAGE_CLASS_FACET_ID);
+  return eng?.baseCapacityKW ?? 1000;
+}
+
+export function syncSelectionVersions(
+  selections: EstimateFacetSelections,
+  templatesById: Map<string, ScenarioTemplate>
+): EstimateFacetSelections {
+  const next: EstimateFacetSelections = { ...selections };
+  for (const key of Object.keys(next)) {
+    const snap = next[key];
+    if (!snap?.templateId) continue;
+    const t = templatesById.get(snap.templateId);
+    if (t) next[key] = { templateId: t.id, selectedVersion: t.version };
+  }
+  return next;
+}
+
 export function createEstimate(init: EstimateInit): Estimate {
   const now = Date.now();
-  const targetCapacityKW = init.targetCapacityKW ?? init.template.baseCapacityKW;
-  const selectedOptions =
-    init.selectedOptions ?? defaultSelectedOptionsFor(init.template);
-  const { materialized, totals } = materializeTemplate({
-    template: init.template,
+  const templatesById = new Map(init.templates.map((t) => [t.id, t]));
+  let selections =
+    init.selections ?? defaultSelectionsFromFacets(init.facets, templatesById);
+  selections = syncSelectionVersions(selections, templatesById);
+
+  const targetCapacityKW = resolveTargetCapacity(
+    selections,
+    templatesById,
+    init.targetCapacityKW
+  );
+
+  const selectedOptionsPerTemplate =
+    init.selectedOptionsPerTemplate ??
+    defaultSelectedOptionsFromSelections(selections, templatesById);
+
+  const { materialized, totals } = composeEstimate({
+    facets: init.facets,
+    selections,
+    selectedOptionsPerTemplate,
+    composeOverrides: init.composeOverrides,
     targetCapacityKW,
-    selectedOptions,
+    catalogItems: init.catalogItems,
+    templates: init.templates,
   });
 
   const finance = init.finance
-    ? { ...defaultFinanceLayer(false), ...init.finance } as FinanceLayer
+    ? ({ ...defaultFinanceLayer(false), ...init.finance } as FinanceLayer)
     : undefined;
 
   return {
     id: uid('est'),
-    name: init.name ?? `${init.template.name} estimate`,
+    name: init.name ?? 'New estimate',
     status: init.status ?? 'draft',
-    templateId: init.template.id,
-    selectedVersion: init.template.version,
+    selections,
     targetCapacityKW,
-    selectedOptions,
+    selectedOptionsPerTemplate,
+    composeOverrides: init.composeOverrides,
     materialized,
     totals,
     finance,
@@ -101,22 +177,30 @@ export function createEstimate(init: EstimateInit): Estimate {
   };
 }
 
-/**
- * Re-materialize an estimate against its template after the user changes
- * target capacity or option selections. Pure: returns a new Estimate.
- */
 export function recomputeMaterialization(
   estimate: Estimate,
-  template: ScenarioTemplate
+  ctx: {
+    facets: TemplateFacet[];
+    templates: ScenarioTemplate[];
+    catalogItems: MaterialCatalogItem[];
+  }
 ): Estimate {
-  const { materialized, totals } = materializeTemplate({
-    template,
+  const templatesById = new Map(ctx.templates.map((t) => [t.id, t]));
+  const selections = syncSelectionVersions(estimate.selections, templatesById);
+
+  const { materialized, totals } = composeEstimate({
+    facets: ctx.facets,
+    selections,
+    selectedOptionsPerTemplate: estimate.selectedOptionsPerTemplate,
+    composeOverrides: estimate.composeOverrides,
     targetCapacityKW: estimate.targetCapacityKW,
-    selectedOptions: estimate.selectedOptions,
+    catalogItems: ctx.catalogItems,
+    templates: ctx.templates,
   });
+
   return {
     ...estimate,
-    selectedVersion: template.version,
+    selections,
     materialized,
     totals,
     updatedAt: Date.now(),

@@ -11,6 +11,7 @@ import { PillTab } from '@/components/ui/PillTab';
 import { computeEstimate } from '@/lib/calc';
 import { downloadExcel, downloadPdf } from '@/lib/exporters';
 import { formatINR, formatPlantCapacityKW, formatRate, formatTonnes, formatYears } from '@/lib/format';
+import { getVoltageClassTemplate } from '@/lib/estimate';
 import { useEstimateStore } from '@/store/estimates';
 import { useTemplateStore } from '@/store/templates';
 import { PROJECT_TYPE_LABELS } from '@/types';
@@ -125,7 +126,7 @@ export function Export() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
             {estimates.map((e) => {
-              const t = templates.find((tt) => tt.id === e.templateId);
+              const vTpl = getVoltageClassTemplate(e, templates);
               const isSelected = e.id === selectedId;
               return (
                 <button
@@ -150,8 +151,10 @@ export function Export() {
                       {e.name}
                     </span>
                     <span className="font-body-md text-[14px] leading-[20px] text-on-surface-variant">
-                      {t ? PROJECT_TYPE_LABELS[t.projectType] : 'Template missing'} ·{' '}
-                      {formatPlantCapacityKW(e.targetCapacityKW)}
+                      {vTpl
+                        ? PROJECT_TYPE_LABELS[vTpl.projectType ?? 'utility']
+                        : 'Voltage facet unset'}{' '}
+                      · {formatPlantCapacityKW(e.targetCapacityKW)}
                       {e.finance?.enabled ? ' · finance on' : ''}
                     </span>
                   </div>

@@ -1,55 +1,58 @@
 import { describe, expect, it } from 'vitest';
 import { computeEstimate } from '@/lib/calc';
-import { createEstimate, recomputeMaterialization } from './factory';
 import {
-  seedTemplates,
-  SEED_TEMPLATE_ID_HT,
-} from '../templates';
-
-const HT = seedTemplates().find((t) => t.id === SEED_TEMPLATE_ID_HT)!;
+  createEstimate,
+  defaultSelectionsFromFacets,
+  recomputeMaterialization,
+} from './factory';
+import { seedTemplates } from '@/lib/templates';
+import { seedFacets } from '@/lib/facets';
+import { seedMaterialCatalog } from '@/lib/catalog';
 
 /**
- * End-to-end smoke test that mirrors what the EstimateBuilder UI does:
- *   1. user picks a template and we create a default estimate at base capacity,
- *   2. user drags the target-capacity slider and we re-materialise,
- *   3. user toggles an optional Main BOM line and totals respond,
- *   4. enabling finance starts producing IRR/NPV; disabling stops.
- *
- * Catches regressions where any of these store/calc seams disagree.
+ * End-to-end smoke: create default-composed estimate → resize → strip optional picks → finance.
  */
 describe('estimate builder pipeline (smoke)', () => {
   it('materialise → resize → toggle option → compute', () => {
-    const initial = createEstimate({ template: HT });
-    expect(initial.targetCapacityKW).toBe(HT.baseCapacityKW);
+    const facets = seedFacets();
+    const templates = seedTemplates();
+    const catalogItems = seedMaterialCatalog();
+    const templatesById = new Map(templates.map((t) => [t.id, t]));
+    const selections = defaultSelectionsFromFacets(facets, templatesById);
+
+    const initial = createEstimate({
+      facets,
+      templates,
+      catalogItems,
+      selections,
+    });
     expect(initial.totals.grandTotal).toBeGreaterThan(0);
 
-    // Step 1: resize down — totals should drop.
-    const halved = recomputeMaterialization(
-      { ...initial, targetCapacityKW: Math.round(HT.baseCapacityKW / 2) },
-      HT
+    const host = templates.find((t) =>
+      t.lines.some((l) => l.isOptional || l.scalingType === 'optional')
     );
-    expect(halved.totals.grandTotal).toBeLessThan(initial.totals.grandTotal);
+    expect(host).toBeDefined();
+    const nextOpts = initial.selectedOptionsPerTemplate[host!.id]?.lineIds?.length
+      ? { ...initial.selectedOptionsPerTemplate, [host!.id]: { lineIds: [] } }
+      : initial.selectedOptionsPerTemplate;
 
-    // Step 2: toggle every optional Main BOM line off — total should not increase.
-    const withoutOptional = recomputeMaterialization(
+    const resized = recomputeMaterialization(
       {
-        ...halved,
-        selectedOptions: { mainBomLineIds: [], otherScopeIds: [] },
+        ...initial,
+        targetCapacityKW: Math.min(350, Math.max(250, Math.round(initial.targetCapacityKW * 0.35))),
+        selectedOptionsPerTemplate: nextOpts,
       },
-      HT
+      { facets, templates, catalogItems }
     );
-    expect(withoutOptional.totals.grandTotal).toBeLessThanOrEqual(
-      halved.totals.grandTotal
-    );
+    expect(resized.targetCapacityKW).toBeLessThan(initial.targetCapacityKW);
+    expect(resized.totals.grandTotal).toBeLessThanOrEqual(initial.totals.grandTotal);
 
-    // Step 3: compute without finance — finance block must be null.
-    const bomOnly = computeEstimate(withoutOptional);
+    const bomOnly = computeEstimate(resized);
     expect(bomOnly.finance).toBeNull();
-    expect(bomOnly.capex.total).toBeCloseTo(withoutOptional.totals.grandTotal, 0);
+    expect(bomOnly.capex.total).toBeCloseTo(resized.totals.grandTotal, 0);
 
-    // Step 4: enable finance and recompute — IRR should now be a finite number.
     const withFinance = computeEstimate({
-      ...withoutOptional,
+      ...resized,
       finance: {
         enabled: true,
         basics: {

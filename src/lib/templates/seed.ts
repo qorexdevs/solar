@@ -1,784 +1,588 @@
-import type {
-  BOMLineItem,
-  OtherScopeItem,
-  ScenarioTemplate,
-  SyncType,
-} from '@/types';
-import { uid } from '../uid';
+import type { LineApplicability, ScenarioTemplate, TemplateLine } from '@/types';
+import {
+  BUSINESS_MODEL_FACET_ID,
+  MOUNTING_FACET_ID,
+  MONITORING_FACET_ID,
+  VOLTAGE_CLASS_FACET_ID,
+} from '@/lib/facets/constants';
 
 /**
- * Hand-derived from `docs/Project costing details _MW.xlsx`. The 1 MW HT-Sync
- * sheet drives the canonical values; the 700 kW LT sheet drops HT switchyard
- * gear and swaps the approvals item. Keeping seed ids stable so the editor's
- * "duplicate" affordance and any future migration can reference them.
+ * Hand-derived from `docs/Project costing details _MW.xlsx`. Catalog item ids
+ * live in `seedMaterialCatalog`; templates are facet-scoped compositions.
  */
-
-let seq = 0;
-function nextSeq(): number {
-  seq += 1;
-  return seq;
-}
-
-function resetSeq() {
-  seq = 0;
-}
-
-function bomLine(args: Omit<BOMLineItem, 'id' | 'sequence'>): BOMLineItem {
-  return {
-    id: `bom_${uid('ln')}`,
-    sequence: nextSeq(),
-    ...args,
-  };
-}
-
-function scopeItem(args: Omit<OtherScopeItem, 'id' | 'sequence'>): OtherScopeItem {
-  return {
-    id: `scp_${uid('sc')}`,
-    sequence: nextSeq(),
-    ...args,
-  };
-}
-
-/* ------------------------------------------------------------------------ */
-/* Reusable line builders — one helper per item that recurs across templates */
-/* ------------------------------------------------------------------------ */
-
-function htMainBom(): BOMLineItem[] {
-  resetSeq();
-  return [
-    bomLine({
-      category: 'modules',
-      itemName: 'Solar PV Module 540 Wp',
-      description:
-        'Solar PV Module — Mono-PERC, 540 Wp, half-cut bifacial. Make: APS / Premier / N Icon.',
-      make: 'APS / Premier / N Icon',
-      uom: 'count',
-      baseQuantity: 1852,
-      rate: 7290,
-      gstPercent: 12,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'inverters',
-      itemName: 'String Inverter 250 kW',
-      description:
-        'Grid-connect solar inverter, 1 × 250 kW, 800 V AC, MPPT, DC:AC ≤ 1.5.',
-      make: 'Solis / APS / Polycab',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 410000,
-      gstPercent: 12,
-      scalingType: 'step',
-      unitCapacityKW: 250,
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'cables',
-      itemName: '1C × 6 sq.mm Cu Solar DC Cable',
-      description: 'Array → string → inverter DC cable run.',
-      make: 'Polycab / Lapp',
-      uom: 'meter',
-      baseQuantity: 10000,
-      rate: 52,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'cables',
-      itemName: '3C × 150 sq.mm AC Armoured Cable',
-      description: 'XLPE armoured Al PVC 1.1 kV FR cable.',
-      make: 'Polycab / Universal',
-      uom: 'meter',
-      baseQuantity: 500,
-      rate: 680,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'cables',
-      itemName: '3C × 300 sq.mm AC Armoured Cable',
-      description: 'XLPE armoured Al PVC 1.1 kV FR cable for inverter trunks.',
-      make: 'Polycab / Universal',
-      uom: 'meter',
-      baseQuantity: 60,
-      rate: 1250,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'cables',
-      itemName: '1C × 16 sq.mm Cu LA Earth Cable',
-      description: '1.1 kV FR flexible Cu cable for lightning-arrestor earthing.',
-      make: 'Polycab / Universal',
-      uom: 'meter',
-      baseQuantity: 60,
-      rate: 300,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'mounting',
-      itemName: 'Module Mounting Structure (28 MMS)',
-      description:
-        'Galvanised penetrating-type 28 MMS mounting structure (kg of steel).',
-      make: 'Galvanized',
-      uom: 'kg',
-      baseQuantity: 25000,
-      rate: 100,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'mounting',
-      itemName: 'Inverter Mounting Structure with Canopy',
-      description: 'One canopy structure per inverter block.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 8000,
-      gstPercent: 18,
-      scalingType: 'step',
-      unitCapacityKW: 250,
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'earthing',
-      itemName: 'Lightning Arrestor (ESE)',
-      description: 'ESE / conventional with counter (Mytrah / Torq).',
-      make: 'Torq',
-      uom: 'count',
-      baseQuantity: 2,
-      rate: 32000,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'earthing',
-      itemName: 'Earthing Kit (Cu-bonded)',
-      description:
-        '40 mm dia × 2 m copper-bonded maintenance-free electrode kit.',
-      uom: 'meter',
-      baseQuantity: 18,
-      rate: 3000,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'earthing',
-      itemName: 'Earthing Strip GI 25 × 3 mm',
-      description: 'Hot-dip GI strip (kg).',
-      make: 'Hot Dip',
-      uom: 'kg',
-      baseQuantity: 1500,
-      rate: 82,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'earthing',
-      itemName: 'Earthing Strip GI 50 × 6 mm (HT grade)',
-      description: 'HT-grade earth-pit grid GI strip (kg).',
-      uom: 'kg',
-      baseQuantity: 500,
-      rate: 150,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['HT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'metering',
-      itemName: 'Inverter Termination Box (DCDB)',
-      description: 'One DCDB per inverter block.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 55000,
-      gstPercent: 18,
-      scalingType: 'step',
-      unitCapacityKW: 250,
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'metering',
-      itemName: '4-IN-1-OUT AC LTDB / ACB',
-      description:
-        '250A 4P MCCB & 1000A ACB with metering, SPD, breakers.',
-      make: 'L&T / Schneider / Siemens',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 500000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'monitoring',
-      itemName: 'Weather Monitoring System',
-      description: 'On-site WMS with data logger.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 100000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'monitoring',
-      itemName: 'SCADA',
-      description: 'Plant-wide SCADA control + monitoring.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 200000,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['HT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'switchyard',
-      itemName: 'Step-Up Power Transformer 1200 kVA',
-      description: '0.80 / 33 kV oil-cooled step-up transformer.',
-      make: 'Esennar',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 1600000,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['HT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'switchyard',
-      itemName: 'VCB Panel 33 kV',
-      description: 'VCB panel with metering & protection control.',
-      make: 'CG / ABB',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 700000,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['HT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'switchyard',
-      itemName: 'HT Switch Yard',
-      description: 'HT switchyard erection.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 500000,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['HT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'services',
-      itemName: 'Installation & Commissioning + Civil',
-      description: 'EPC labour + civil work, ₹/Wp.',
-      uom: 'Wp',
-      baseQuantity: 1_000_000,
-      rate: 2.75,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'services',
-      itemName: 'Design & Engineering',
-      description: 'Detailed engineering + drawings, ₹/Wp.',
-      uom: 'Wp',
-      baseQuantity: 1_000_000,
-      rate: 0.20,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'services',
-      itemName: 'Approvals (HT)',
-      description: 'NREDCAP / DISCOM / SLDC + synchronisation, HT.',
-      uom: 'Wp',
-      baseQuantity: 1_000_000,
-      rate: 1.0,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['HT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'civil',
-      itemName: 'DWC Pipe (UV-protected)',
-      description: 'DWC piping, m.',
-      uom: 'meter',
-      baseQuantity: 1600,
-      rate: 45,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'civil',
-      itemName: 'Inverter Stands & ACDB Platform',
-      description: 'Concrete stands + ACDB mounting platform.',
-      uom: 'lot',
-      baseQuantity: 1,
-      rate: 50000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'logistics',
-      itemName: 'Transport & Storage',
-      description: 'Inbound + onsite logistics.',
-      uom: 'lot',
-      baseQuantity: 1,
-      rate: 100000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'misc',
-      itemName: 'Hardware Misc',
-      description: 'Fasteners, lugs, glands, etc.',
-      uom: 'lot',
-      baseQuantity: 1,
-      rate: 200000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-  ];
-}
-
-function htOtherScope(): OtherScopeItem[] {
-  resetSeq();
-  return [
-    scopeItem({
-      scopeName: 'CEIG Inspection & Approval Fee',
-      baseAmount: 130000,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['HT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    scopeItem({
-      scopeName: 'Module Cleaning System',
-      baseAmount: 70000,
-      gstPercent: 18,
-      scalingType: 'optional',
-      isOptional: true,
-      includedByDefault: false,
-    }),
-    scopeItem({
-      scopeName: 'Shed for Inverter & ACDB',
-      baseAmount: 35000,
-      gstPercent: 18,
-      scalingType: 'optional',
-      isOptional: true,
-      includedByDefault: false,
-    }),
-    scopeItem({
-      scopeName: 'RS-485 Communication Cable & Accessories',
-      baseAmount: 50000,
-      gstPercent: 18,
-      scalingType: 'optional',
-      isOptional: true,
-      includedByDefault: false,
-    }),
-  ];
-}
-
-function ltMainBom(): BOMLineItem[] {
-  resetSeq();
-  // 700 kW LT plant — derived from the 1 MW sheet by scaling base quantities
-  // pro-rata at 0.7 ratio for linear items, dropping HT switchyard gear, and
-  // swapping the Approvals service to its LT variant.
-  const ratio = 0.7;
-  const lin = (n: number) => Math.round(n * ratio);
-
-  return [
-    bomLine({
-      category: 'modules',
-      itemName: 'Solar PV Module 540 Wp',
-      description:
-        'Solar PV Module — Mono-PERC, 540 Wp. Make: APS / Premier / N Icon.',
-      make: 'APS / Premier / N Icon',
-      uom: 'count',
-      baseQuantity: lin(1852),
-      rate: 7290,
-      gstPercent: 12,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'inverters',
-      itemName: 'String Inverter 250 kW',
-      description:
-        'Grid-connect solar inverter, 1 × 250 kW, 800 V AC, MPPT, DC:AC ≤ 1.5.',
-      make: 'Solis / APS / Polycab',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 410000,
-      gstPercent: 12,
-      scalingType: 'step',
-      unitCapacityKW: 250,
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'cables',
-      itemName: '1C × 6 sq.mm Cu Solar DC Cable',
-      description: 'Array → string → inverter DC cable run.',
-      make: 'Polycab / Lapp',
-      uom: 'meter',
-      baseQuantity: lin(10000),
-      rate: 52,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'cables',
-      itemName: '3C × 150 sq.mm AC Armoured Cable',
-      description: 'XLPE armoured Al PVC 1.1 kV FR cable.',
-      make: 'Polycab / Universal',
-      uom: 'meter',
-      baseQuantity: lin(500),
-      rate: 680,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'cables',
-      itemName: '1C × 16 sq.mm Cu LA Earth Cable',
-      description: '1.1 kV FR flexible Cu cable for lightning-arrestor earthing.',
-      make: 'Polycab / Universal',
-      uom: 'meter',
-      baseQuantity: lin(60),
-      rate: 300,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'mounting',
-      itemName: 'Module Mounting Structure (28 MMS)',
-      description: 'Galvanised penetrating-type 28 MMS mounting structure (kg).',
-      make: 'Galvanized',
-      uom: 'kg',
-      baseQuantity: lin(25000),
-      rate: 100,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'mounting',
-      itemName: 'Inverter Mounting Structure with Canopy',
-      description: 'One canopy structure per inverter block.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 8000,
-      gstPercent: 18,
-      scalingType: 'step',
-      unitCapacityKW: 250,
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'earthing',
-      itemName: 'Lightning Arrestor (ESE)',
-      description: 'ESE / conventional with counter.',
-      make: 'Torq',
-      uom: 'count',
-      baseQuantity: 2,
-      rate: 32000,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'earthing',
-      itemName: 'Earthing Kit (Cu-bonded)',
-      description: '40 mm dia × 2 m copper-bonded maintenance-free electrode kit.',
-      uom: 'meter',
-      baseQuantity: lin(18),
-      rate: 3000,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'earthing',
-      itemName: 'Earthing Strip GI 25 × 3 mm',
-      description: 'Hot-dip GI strip (kg).',
-      make: 'Hot Dip',
-      uom: 'kg',
-      baseQuantity: lin(1500),
-      rate: 82,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'metering',
-      itemName: 'Inverter Termination Box (DCDB)',
-      description: 'One DCDB per inverter block.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 55000,
-      gstPercent: 18,
-      scalingType: 'step',
-      unitCapacityKW: 250,
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'metering',
-      itemName: 'AC LTDB / ACB Panel',
-      description: 'LT distribution panel with metering, breakers, SPD.',
-      make: 'L&T / Schneider / Siemens',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 350000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'monitoring',
-      itemName: 'Weather Monitoring System',
-      description: 'On-site WMS with data logger.',
-      uom: 'count',
-      baseQuantity: 1,
-      rate: 100000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'services',
-      itemName: 'Installation & Commissioning + Civil',
-      description: 'EPC labour + civil work, ₹/Wp.',
-      uom: 'Wp',
-      baseQuantity: 700_000,
-      rate: 2.75,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'services',
-      itemName: 'Design & Engineering',
-      description: 'Detailed engineering + drawings, ₹/Wp.',
-      uom: 'Wp',
-      baseQuantity: 700_000,
-      rate: 0.20,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'services',
-      itemName: 'Approvals (LT)',
-      description: 'NREDCAP / DISCOM + synchronisation, LT.',
-      uom: 'Wp',
-      baseQuantity: 700_000,
-      rate: 0.75,
-      gstPercent: 18,
-      scalingType: 'conditional',
-      applicability: { syncTypes: ['LT'] },
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'civil',
-      itemName: 'DWC Pipe (UV-protected)',
-      description: 'DWC piping, m.',
-      uom: 'meter',
-      baseQuantity: lin(1600),
-      rate: 45,
-      gstPercent: 18,
-      scalingType: 'linear',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'civil',
-      itemName: 'Inverter Stands & ACDB Platform',
-      description: 'Concrete stands + ACDB mounting platform.',
-      uom: 'lot',
-      baseQuantity: 1,
-      rate: 50000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'logistics',
-      itemName: 'Transport & Storage',
-      description: 'Inbound + onsite logistics.',
-      uom: 'lot',
-      baseQuantity: 1,
-      rate: 80000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-    bomLine({
-      category: 'misc',
-      itemName: 'Hardware Misc',
-      description: 'Fasteners, lugs, glands, etc.',
-      uom: 'lot',
-      baseQuantity: 1,
-      rate: 150000,
-      gstPercent: 18,
-      scalingType: 'fixed',
-      isOptional: false,
-      includedByDefault: true,
-    }),
-  ];
-}
-
-function ltOtherScope(): OtherScopeItem[] {
-  resetSeq();
-  return [
-    scopeItem({
-      scopeName: 'Module Cleaning System',
-      baseAmount: 50000,
-      gstPercent: 18,
-      scalingType: 'optional',
-      isOptional: true,
-      includedByDefault: false,
-    }),
-    scopeItem({
-      scopeName: 'Shed for Inverter & ACDB',
-      baseAmount: 35000,
-      gstPercent: 18,
-      scalingType: 'optional',
-      isOptional: true,
-      includedByDefault: false,
-    }),
-    scopeItem({
-      scopeName: 'RS-485 Communication Cable & Accessories',
-      baseAmount: 30000,
-      gstPercent: 18,
-      scalingType: 'optional',
-      isOptional: true,
-      includedByDefault: false,
-    }),
-  ];
-}
-
-/* ------------------------------------------------------------------------ */
-/* Public seed builders                                                      */
-/* ------------------------------------------------------------------------ */
-
-function template(args: {
-  id: string;
-  name: string;
-  baseCapacityKW: number;
-  syncType: SyncType;
-  description: string;
-  mainBom: BOMLineItem[];
-  otherScope: OtherScopeItem[];
-}): ScenarioTemplate {
-  const now = Date.now();
-  return {
-    id: args.id,
-    name: args.name,
-    projectType: 'utility',
-    syncType: args.syncType,
-    baseCapacityKW: args.baseCapacityKW,
-    status: 'active',
-    version: 'v1',
-    effectiveFrom: now,
-    description: args.description,
-    source: 'seed',
-    createdAt: now,
-    updatedAt: now,
-    mainBom: args.mainBom,
-    otherScope: args.otherScope,
-  };
-}
 
 export const SEED_TEMPLATE_ID_HT = 'tpl_seed_1mw_ht';
 export const SEED_TEMPLATE_ID_LT = 'tpl_seed_700kw_lt';
+export const SEED_TEMPLATE_ID_MOUNT_GROUND_HT = 'tpl_seed_mount_ground_ht';
+export const SEED_TEMPLATE_ID_MOUNT_GROUND_LT = 'tpl_seed_mount_ground_lt';
+export const SEED_TEMPLATE_ID_MOUNT_ROOF_HT = 'tpl_seed_mount_roof_ht';
+export const SEED_TEMPLATE_ID_MOUNT_ROOF_LT = 'tpl_seed_mount_roof_lt';
+export const SEED_TEMPLATE_ID_BUS_CLOSED = 'tpl_seed_bus_closed';
+export const SEED_TEMPLATE_ID_BUS_OPEN = 'tpl_seed_bus_open';
+export const SEED_TEMPLATE_ID_MON_NONE = 'tpl_seed_mon_none';
+export const SEED_TEMPLATE_ID_MON_ADV = 'tpl_seed_mon_advanced';
+
+const htCond: LineApplicability = { syncTypes: ['HT'] };
+const ltCond: LineApplicability = { syncTypes: ['LT'] };
+
+function line(
+  templateKey: string,
+  catalogItemId: string,
+  sequence: number,
+  rest: Omit<TemplateLine, 'id' | 'catalogItemId' | 'sequence'>
+): TemplateLine {
+  return {
+    id: `${templateKey}_ln_${sequence}`,
+    catalogItemId,
+    sequence,
+    ...rest,
+  };
+}
+
+function shell(
+  args: Omit<
+    ScenarioTemplate,
+    'createdAt' | 'updatedAt' | 'source' | 'lines'
+  > & { lines: TemplateLine[] }
+): ScenarioTemplate {
+  const now = Date.now();
+  return {
+    ...args,
+    source: 'seed',
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+/** 1 MW HT plant — MMS + inverter canopy live in mounting facet templates. */
+function linesVoltageHt(tk: string): TemplateLine[] {
+  return [
+    line(tk, 'cat-pv-module-540', 1, {
+      baseQuantity: 1852,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-inv-string-250', 2, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-cable-dc-6mm', 3, {
+      baseQuantity: 10000,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-cable-ac-150', 4, {
+      baseQuantity: 500,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-cable-ac-300', 5, {
+      baseQuantity: 60,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-cable-la-earth-16', 6, {
+      baseQuantity: 60,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-la-ese', 7, {
+      baseQuantity: 2,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-earth-kit', 8, {
+      baseQuantity: 18,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-earth-strip-25', 9, {
+      baseQuantity: 1500,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-earth-strip-50-ht', 10, {
+      baseQuantity: 500,
+      scalingType: 'conditional',
+      applicability: htCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-dcdb', 11, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-ac-ltdb-ht', 12, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-wms', 13, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-scada-ht', 14, {
+      baseQuantity: 1,
+      scalingType: 'conditional',
+      applicability: htCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-xfmr-1200', 15, {
+      baseQuantity: 1,
+      scalingType: 'conditional',
+      applicability: htCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-vcb-33kv', 16, {
+      baseQuantity: 1,
+      scalingType: 'conditional',
+      applicability: htCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-ht-switchyard', 17, {
+      baseQuantity: 1,
+      scalingType: 'conditional',
+      applicability: htCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-svc-epc', 18, {
+      baseQuantity: 1_000_000,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-svc-design', 19, {
+      baseQuantity: 1_000_000,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-svc-approvals-ht', 20, {
+      baseQuantity: 1_000_000,
+      scalingType: 'conditional',
+      applicability: htCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-civil-dwc', 21, {
+      baseQuantity: 1600,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-civil-stands', 22, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-logistics', 23, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-misc-hardware', 24, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-scope-ceig', 25, {
+      baseAmount: 130_000,
+      scalingType: 'conditional',
+      applicability: htCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-scope-cleaning', 26, {
+      baseAmount: 70_000,
+      scalingType: 'optional',
+      isOptional: true,
+      includedByDefault: false,
+    }),
+    line(tk, 'cat-scope-shed', 27, {
+      baseAmount: 35_000,
+      scalingType: 'optional',
+      isOptional: true,
+      includedByDefault: false,
+    }),
+    line(tk, 'cat-scope-rs485', 28, {
+      baseAmount: 50_000,
+      scalingType: 'optional',
+      isOptional: true,
+      includedByDefault: false,
+    }),
+  ];
+}
+
+/** 700 kW LT — no HT switchyard block, different metering + approvals. */
+function linesVoltageLt(tk: string): TemplateLine[] {
+  const ratio = 0.7;
+  const lin = (n: number) => Math.round(n * ratio);
+  return [
+    line(tk, 'cat-pv-module-540', 1, {
+      baseQuantity: lin(1852),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-inv-string-250', 2, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-cable-dc-6mm', 3, {
+      baseQuantity: lin(10000),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-cable-ac-150', 4, {
+      baseQuantity: lin(500),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-cable-la-earth-16', 5, {
+      baseQuantity: lin(60),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-la-ese', 6, {
+      baseQuantity: 2,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-earth-kit', 7, {
+      baseQuantity: lin(18),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-earth-strip-25', 8, {
+      baseQuantity: lin(1500),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-dcdb', 9, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-ac-ltdb-lt', 10, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-wms', 11, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-svc-epc', 12, {
+      baseQuantity: 700_000,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-svc-design', 13, {
+      baseQuantity: 700_000,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-svc-approvals-lt', 14, {
+      baseQuantity: 700_000,
+      scalingType: 'conditional',
+      applicability: ltCond,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-civil-dwc', 15, {
+      baseQuantity: lin(1600),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-civil-stands', 16, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-logistics', 17, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      rateOverride: 80_000,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-misc-hardware', 18, {
+      baseQuantity: 1,
+      scalingType: 'fixed',
+      rateOverride: 150_000,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-scope-cleaning', 19, {
+      baseAmount: 50_000,
+      scalingType: 'optional',
+      isOptional: true,
+      includedByDefault: false,
+    }),
+    line(tk, 'cat-scope-shed', 20, {
+      baseAmount: 35_000,
+      scalingType: 'optional',
+      isOptional: true,
+      includedByDefault: false,
+    }),
+    line(tk, 'cat-scope-rs485', 21, {
+      baseAmount: 30_000,
+      scalingType: 'optional',
+      isOptional: true,
+      includedByDefault: false,
+    }),
+  ];
+}
+
+function linesMountGroundHt(tk: string): TemplateLine[] {
+  return [
+    line(tk, 'cat-mms-ground-28', 1, {
+      baseQuantity: 25000,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-inv-canopy-mms', 2, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+  ];
+}
+
+function linesMountGroundLt(tk: string): TemplateLine[] {
+  const lin = (n: number) => Math.round(n * 0.7);
+  return [
+    line(tk, 'cat-mms-ground-28', 1, {
+      baseQuantity: lin(25000),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-inv-canopy-mms', 2, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+  ];
+}
+
+function linesMountRoofHt(tk: string): TemplateLine[] {
+  return [
+    line(tk, 'cat-mms-rooftop', 1, {
+      baseQuantity: 18500,
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-inv-canopy-mms', 2, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+  ];
+}
+
+function linesMountRoofLt(tk: string): TemplateLine[] {
+  const lin = (n: number) => Math.round(n * 0.7);
+  return [
+    line(tk, 'cat-mms-rooftop', 1, {
+      baseQuantity: lin(18500),
+      scalingType: 'linear',
+      isOptional: false,
+      includedByDefault: true,
+    }),
+    line(tk, 'cat-inv-canopy-mms', 2, {
+      baseQuantity: 1,
+      scalingType: 'step',
+      unitCapacityKW: 250,
+      isOptional: false,
+      includedByDefault: true,
+    }),
+  ];
+}
 
 export function seedTemplates(): ScenarioTemplate[] {
   return [
-    template({
+    shell({
       id: SEED_TEMPLATE_ID_HT,
-      name: '1000 KW Ground Mounted - HT Sync',
-      baseCapacityKW: 1000,
+      name: 'HT',
+      facetId: VOLTAGE_CLASS_FACET_ID,
       syncType: 'HT',
+      projectType: 'utility',
+      baseCapacityKW: 1000,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
       description:
-        'Canonical 1 MW utility-scale ground-mounted plant with HT switchyard, derived from Project costing details _MW.xlsx.',
-      mainBom: htMainBom(),
-      otherScope: htOtherScope(),
+        'Canonical 1 MW utility-scale core BOM (mounting lives in the Mounting facet).',
+      lines: linesVoltageHt(SEED_TEMPLATE_ID_HT),
     }),
-    template({
+    shell({
       id: SEED_TEMPLATE_ID_LT,
-      name: '700 KW Ground Mounted - LT Sync',
-      baseCapacityKW: 700,
+      name: 'LT',
+      facetId: VOLTAGE_CLASS_FACET_ID,
       syncType: 'LT',
+      projectType: 'utility',
+      baseCapacityKW: 700,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'LT-tied 700 kW core BOM (no HT yard block).',
+      lines: linesVoltageLt(SEED_TEMPLATE_ID_LT),
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_MOUNT_GROUND_HT,
+      name: 'Ground mount — HT base',
+      facetId: MOUNTING_FACET_ID,
+      baseCapacityKW: 1000,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'Galvanised ground MMS package calibrated for a 1 MW plant.',
+      lines: linesMountGroundHt(SEED_TEMPLATE_ID_MOUNT_GROUND_HT),
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_MOUNT_GROUND_LT,
+      name: 'Ground mount — LT base',
+      facetId: MOUNTING_FACET_ID,
+      baseCapacityKW: 700,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'Ground MMS package calibrated for a 700 kW LT plant.',
+      lines: linesMountGroundLt(SEED_TEMPLATE_ID_MOUNT_GROUND_LT),
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_MOUNT_ROOF_HT,
+      name: 'Rooftop mount — HT base',
+      facetId: MOUNTING_FACET_ID,
+      baseCapacityKW: 1000,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
       description:
-        'LT-tied 700 kW ground-mounted plant. No step-up transformer / HT switchyard; uses LT approvals stream.',
-      mainBom: ltMainBom(),
-      otherScope: ltOtherScope(),
+        'Rooftop / ballasted MMS calibrated for ~1 MW. Uses max compose vs ground MMS if both ever appear.',
+      lines: linesMountRoofHt(SEED_TEMPLATE_ID_MOUNT_ROOF_HT),
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_MOUNT_ROOF_LT,
+      name: 'Rooftop mount — LT base',
+      facetId: MOUNTING_FACET_ID,
+      baseCapacityKW: 700,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'Rooftop MMS calibrated for 700 kW LT plants.',
+      lines: linesMountRoofLt(SEED_TEMPLATE_ID_MOUNT_ROOF_LT),
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_BUS_CLOSED,
+      name: 'Closed captive',
+      facetId: BUSINESS_MODEL_FACET_ID,
+      baseCapacityKW: 1000,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'No additional open-access metering scope.',
+      lines: [],
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_BUS_OPEN,
+      name: 'Open access adders',
+      facetId: BUSINESS_MODEL_FACET_ID,
+      baseCapacityKW: 1000,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'Illustrative open-access metering & billing hardware.',
+      lines: [
+        line(SEED_TEMPLATE_ID_BUS_OPEN, 'cat-scope-open-access-metering', 1, {
+          baseAmount: 180_000,
+          scalingType: 'fixed',
+          isOptional: false,
+          includedByDefault: true,
+          composeModeOverride: 'sum',
+        }),
+      ],
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_MON_NONE,
+      name: 'Monitoring — baseline',
+      facetId: MONITORING_FACET_ID,
+      baseCapacityKW: 1000,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'No extra monitoring uplift.',
+      lines: [],
+    }),
+    shell({
+      id: SEED_TEMPLATE_ID_MON_ADV,
+      name: 'Monitoring — advanced SCADA uplift',
+      facetId: MONITORING_FACET_ID,
+      baseCapacityKW: 1000,
+      status: 'active',
+      version: 'v1',
+      effectiveFrom: Date.now(),
+      description: 'Optional advanced historian & gateway (sum-composed).',
+      lines: [
+        line(SEED_TEMPLATE_ID_MON_ADV, 'cat-scada-advanced', 1, {
+          baseQuantity: 1,
+          scalingType: 'optional',
+          isOptional: true,
+          includedByDefault: false,
+          composeModeOverride: 'sum',
+        }),
+      ],
     }),
   ];
 }

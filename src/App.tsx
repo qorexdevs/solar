@@ -12,6 +12,9 @@ const TemplateEditor = lazy(() =>
   import('@/routes/Templates/TemplateEditor').then((m) => ({ default: m.TemplateEditor }))
 );
 const Export = lazy(() => import('@/routes/Export').then((m) => ({ default: m.Export })));
+const CatalogAdmin = lazy(() =>
+  import('@/routes/Catalog/index').then((m) => ({ default: m.CatalogAdmin }))
+);
 
 function Loading() {
   return <div className="text-on-surface-variant text-center py-lg">Loading…</div>;
@@ -31,6 +34,7 @@ export default function App() {
           <Route path="/ppa" element={<PPARedirect />} />
           <Route path="/templates" element={<TemplateList />} />
           <Route path="/templates/:id" element={<TemplateEditor />} />
+          <Route path="/catalog" element={<CatalogAdmin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

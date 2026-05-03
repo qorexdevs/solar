@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
@@ -7,15 +7,22 @@ import { Switch } from '@/components/ui/Switch';
 import { CostBreakdownPanel } from '@/components/builder/CostBreakdownPanel';
 import { EstimateCard } from '@/components/builder/EstimateCard';
 import { capexBreakdown, loanAmountForEstimate } from '@/lib/calc';
-import { defaultFinanceLayer, recomputeMaterialization } from '@/lib/estimate';
+import {
+  defaultFinanceLayer,
+  recomputeMaterialization,
+} from '@/lib/estimate';
 import { formatINR, formatPlantCapacityKW } from '@/lib/format';
 import { useEstimateStore } from '@/store/estimates';
 import { useTemplateStore } from '@/store/templates';
-import {
-  PROJECT_TYPE_LABELS,
-  SYNC_TYPE_LABELS,
-  type FinanceLayer,
-  type ScenarioTemplate,
+import { useCatalogStore } from '@/store/catalog';
+import { selectFacetsSorted, useFacetStore } from '@/store/facets';
+import type {
+  ComposeMode,
+  EstimateFacetSelections,
+  FinanceLayer,
+  ScenarioTemplate,
+  ScenarioLocation,
+  TemplateFacet,
 } from '@/types';
 import { FormSection } from '../ScenarioBuilder/FormSection';
 import { SiteLocationSection } from '../ScenarioBuilder/SiteLocationSection';
@@ -29,69 +36,74 @@ export function EstimateBuilder({ mode }: Props) {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  const facets = useFacetStore(selectFacetsSorted);
   const templates = useTemplateStore((s) => s.templates);
+  const catalogItems = useCatalogStore((s) => s.items);
+
   const estimate = useEstimateStore((s) =>
     id ? s.estimates.find((e) => e.id === id) : undefined
   );
 
-  const createFromTemplate = useEstimateStore((s) => s.createFromTemplate);
+  const createFromSelections = useEstimateStore((s) => s.createFromSelections);
   const update = useEstimateStore((s) => s.update);
   const setName = useEstimateStore((s) => s.setName);
   const setTargetCapacity = useEstimateStore((s) => s.setTargetCapacity);
-  const setSelectedOptions = useEstimateStore((s) => s.setSelectedOptions);
+  const setSelections = useEstimateStore((s) => s.setSelections);
+  const setLineOptionsForTemplate = useEstimateStore(
+    (s) => s.setLineOptionsForTemplate
+  );
+  const setComposeOverride = useEstimateStore((s) => s.setComposeOverride);
   const setLocation = useEstimateStore((s) => s.setLocation);
   const enableFinance = useEstimateStore((s) => s.enableFinance);
   const disableFinance = useEstimateStore((s) => s.disableFinance);
   const updateFinance = useEstimateStore((s) => s.updateFinance);
   const setRecent = useEstimateStore((s) => s.setRecent);
 
-  const [pickerTemplateId, setPickerTemplateId] = useState<string | null>(null);
+  const newEstimateBootstrapRef = useRef(false);
+  const [newEstimateBootstrapError, setNewEstimateBootstrapError] = useState<
+    string | null
+  >(null);
 
-  // ----- Mode: new — show template picker first ----------------------------
+  useEffect(() => {
+    if (mode !== 'new') return;
+    if (!facets.length || !templates.length) return;
+    if (newEstimateBootstrapRef.current) return;
+    newEstimateBootstrapRef.current = true;
+    try {
+      const est = createFromSelections({});
+      setRecent(est.id);
+      navigate(`/estimates/${est.id}/edit`, { replace: true });
+    } catch (e) {
+      newEstimateBootstrapRef.current = false;
+      const msg =
+        e instanceof Error ? e.message : 'Could not compose a new estimate.';
+      setNewEstimateBootstrapError(msg);
+    }
+  }, [mode, facets, templates, createFromSelections, navigate, setRecent]);
+
   if (mode === 'new') {
-    return (
-      <div className="flex flex-col gap-lg">
-        <div className="flex flex-col gap-sm">
-          <h1 className="font-headline-xl text-headline-xl text-primary">
-            New estimate
-          </h1>
-          <p className="font-body-lg text-body-lg text-on-surface-variant">
-            Pick a scenario template, set a target capacity, and the system
-            scales the BOM and produces totals.
-          </p>
-        </div>
-        <TemplatePicker
-          templates={templates}
-          selectedId={pickerTemplateId}
-          onSelect={setPickerTemplateId}
-        />
-        <div className="flex justify-end gap-sm">
-          <Link
-            to="/"
-            className="px-md py-sm text-on-surface-variant hover:text-primary"
-          >
-            Cancel
+    if (newEstimateBootstrapError) {
+      return (
+        <div className="rounded-lg border border-error/40 bg-error/5 p-md text-body-sm text-on-surface">
+          <p className="font-semibold mb-2">{newEstimateBootstrapError}</p>
+          <Link to="/" className="text-primary hover:underline">
+            ← Back to estimates
           </Link>
-          <Button
-            variant="primary"
-            disabled={!pickerTemplateId}
-            iconRight={<Icon name="arrow_forward" />}
-            onClick={() => {
-              const template = templates.find((t) => t.id === pickerTemplateId);
-              if (!template) return;
-              const est = createFromTemplate({ template });
-              setRecent(est.id);
-              navigate(`/estimates/${est.id}/edit`);
-            }}
-          >
-            Continue
-          </Button>
         </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center gap-md py-xl text-on-surface-variant">
+        <Icon name="sync" className="text-4xl animate-spin text-primary" ariaLabel="Loading" />
+        <p className="font-body-lg text-body-lg">Creating your estimate…</p>
+        <Link to="/" className="text-body-sm hover:text-primary">
+          Cancel
+        </Link>
       </div>
     );
   }
 
-  // ----- Mode: edit --------------------------------------------------------
   if (!estimate) {
     return (
       <div className="rounded border border-outline-variant bg-surface-container-lowest p-md text-on-surface-variant">
@@ -103,28 +115,76 @@ export function EstimateBuilder({ mode }: Props) {
     );
   }
 
-  const template = templates.find((t) => t.id === estimate.templateId);
+  const templatesById = new Map(templates.map((t) => [t.id, t]));
+  const resolved = facets.map((f) => {
+    const snap = estimate.selections[f.id];
+    const tpl = snap?.templateId ? templatesById.get(snap.templateId) : undefined;
+    return { facet: f, snap, tpl };
+  });
+
+  const resolvedActive = resolved.filter(
+    (
+      r
+    ): r is {
+      facet: TemplateFacet;
+      snap: { templateId: string; selectedVersion: string };
+      tpl: ScenarioTemplate;
+    } => !!(r.snap && r.snap.templateId && r.tpl)
+  );
+
+  const missing = resolved.filter((r) => {
+    if (!r.facet.required && !r.snap?.templateId) return false;
+    if (r.facet.required && !r.snap?.templateId) return true;
+    return !!(r.snap?.templateId && !r.tpl);
+  });
+
+  if (missing.length > 0) {
+    return (
+      <div className="rounded border border-error/40 bg-error/5 p-md text-on-surface">
+        <p className="font-semibold mb-2">Incomplete or stale selections</p>
+        <ul className="list-disc pl-5 text-body-sm mb-4">
+          {missing.map((m) => (
+            <li key={m.facet.id}>
+              {m.facet.name}:{' '}
+              {m.snap?.templateId ? 'template missing — pick again' : 'not selected'}
+            </li>
+          ))}
+        </ul>
+        <Link to="/estimates/new" className="text-primary hover:underline">
+          Start fresh →
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <EditView
-      template={template}
-      estimateId={estimate.id}
-      name={estimate.name}
-      targetKW={estimate.targetCapacityKW}
-      selectedMain={estimate.selectedOptions.mainBomLineIds}
-      selectedScope={estimate.selectedOptions.otherScopeIds}
-      finance={estimate.finance}
-      hasLocation={!!estimate.location}
+      estimate={estimate}
+      facets={facets}
+      resolvedActive={resolvedActive}
+      templates={templates}
+      catalogItems={catalogItems}
       onChangeName={(n) => setName(estimate.id, n)}
       onChangeTarget={(n) => setTargetCapacity(estimate.id, n)}
-      onChangeOptions={(opts) => setSelectedOptions(estimate.id, opts)}
+      onSelectionsChange={(s) => setSelections(estimate.id, s)}
+      onLineOptionsChange={(tid, lids) =>
+        setLineOptionsForTemplate(estimate.id, tid, lids)
+      }
+      onComposeModeChange={(cid, mode) =>
+        setComposeOverride(estimate.id, cid, mode)
+      }
       onEnableFinance={(p) => enableFinance(estimate.id, p)}
       onDisableFinance={() => disableFinance(estimate.id)}
       onUpdateFinance={(p) => updateFinance(estimate.id, p)}
       onSetLocation={(loc) => setLocation(estimate.id, loc)}
       onResync={() => {
-        if (!template) return;
-        update(estimate.id, (e) => recomputeMaterialization(e, template));
+        update(estimate.id, (e) =>
+          recomputeMaterialization(e, {
+            facets,
+            templates: useTemplateStore.getState().templates,
+            catalogItems: useCatalogStore.getState().items,
+          })
+        );
       }}
       onSave={() => {
         setRecent(estimate.id);
@@ -134,97 +194,74 @@ export function EstimateBuilder({ mode }: Props) {
   );
 }
 
-/* ------------------------------------------------------------------------ */
-/* Edit view                                                                 */
-/* ------------------------------------------------------------------------ */
-
 type EditProps = {
-  template: ScenarioTemplate | undefined;
-  estimateId: string;
-  name: string;
-  targetKW: number;
-  selectedMain: string[];
-  selectedScope: string[];
-  finance: FinanceLayer | undefined;
-  hasLocation: boolean;
+  estimate: import('@/types').Estimate;
+  facets: TemplateFacet[];
+  resolvedActive: {
+    facet: TemplateFacet;
+    snap: { templateId: string; selectedVersion: string };
+    tpl: ScenarioTemplate;
+  }[];
+  templates: ScenarioTemplate[];
+  catalogItems: import('@/types').MaterialCatalogItem[];
   onChangeName: (n: string) => void;
   onChangeTarget: (kw: number) => void;
-  onChangeOptions: (opts: {
-    mainBomLineIds: string[];
-    otherScopeIds: string[];
-  }) => void;
+  onSelectionsChange: (s: EstimateFacetSelections) => void;
+  onLineOptionsChange: (templateId: string, lineIds: string[]) => void;
+  onComposeModeChange: (catalogItemId: string, mode: ComposeMode | undefined) => void;
   onEnableFinance: (patch?: Partial<FinanceLayer>) => void;
   onDisableFinance: () => void;
   onUpdateFinance: (patch: Partial<FinanceLayer>) => void;
-  onSetLocation: (loc: import('@/types').ScenarioLocation | undefined) => void;
+  onSetLocation: (loc: ScenarioLocation | undefined) => void;
   onResync: () => void;
   onSave: () => void;
 };
 
 function EditView(p: EditProps) {
-  const estimate = useEstimateStore((s) =>
-    s.estimates.find((e) => e.id === p.estimateId)
+  const { estimate } = p;
+  const chosenTemplates = useMemo(
+    () => p.resolvedActive.map((r) => r.tpl),
+    [p.resolvedActive]
   );
 
-  if (!estimate || !p.template) {
-    return (
-      <div className="rounded border border-error/40 bg-error/5 p-md text-on-surface">
-        <p>
-          Template{' '}
-          <code className="text-primary">{estimate?.templateId ?? ''}</code>{' '}
-          no longer exists. Re-link to a template to continue editing.
-        </p>
-        <Link to="/" className="text-primary hover:underline">
-          ← Back to estimates
-        </Link>
-      </div>
+  const minSlider =
+    chosenTemplates.length > 0
+      ? Math.max(
+          50,
+          Math.round(Math.max(...chosenTemplates.map((t) => t.baseCapacityKW * 0.5)))
+        )
+      : 50;
+  const maxSlider =
+    chosenTemplates.length > 0
+      ? Math.round(
+          Math.min(
+            ...chosenTemplates.map((t) => Math.max(t.baseCapacityKW * 2, t.baseCapacityKW + 200))
+          )
+        )
+      : 4000;
+
+  const versionStale = p.resolvedActive.some(
+    (r) => r.snap.selectedVersion !== r.tpl.version
+  );
+
+  const optionalRows = useMemo(() => {
+    const cata = new Map(p.catalogItems.map((c) => [c.id, c]));
+    return chosenTemplates.flatMap((tpl) =>
+      tpl.lines
+        .filter((l) => l.isOptional || l.scalingType === 'optional')
+        .map((line) => ({
+          tpl,
+          line,
+          label: cata.get(line.catalogItemId)?.name ?? line.catalogItemId,
+        }))
     );
-  }
-
-  const { template } = p;
-
-  const includedMain = useMemo(() => new Set(p.selectedMain), [p.selectedMain]);
-  const includedScope = useMemo(
-    () => new Set(p.selectedScope),
-    [p.selectedScope]
-  );
-
-  function toggleMain(id: string) {
-    const next = new Set(includedMain);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    p.onChangeOptions({
-      mainBomLineIds: [...next],
-      otherScopeIds: p.selectedScope,
-    });
-  }
-
-  function toggleScope(id: string) {
-    const next = new Set(includedScope);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    p.onChangeOptions({
-      mainBomLineIds: p.selectedMain,
-      otherScopeIds: [...next],
-    });
-  }
-
-  const optionalMain = template.mainBom.filter(
-    (l) => l.isOptional || l.scalingType === 'optional'
-  );
-  const optionalScope = template.otherScope.filter(
-    (s) => s.isOptional || s.scalingType === 'optional'
-  );
+  }, [chosenTemplates, p.catalogItems]);
 
   const capex = capexBreakdown(estimate.materialized);
   const loanAmount = estimate.finance?.enabled
     ? loanAmountForEstimate(capex.total, estimate.finance.financing)
     : 0;
   const equity = Math.max(0, capex.total - loanAmount);
-
-  const baseTarget = template.baseCapacityKW;
-  const minSlider = Math.max(50, Math.round(baseTarget * 0.1));
-  const maxSlider = Math.max(baseTarget * 2, baseTarget + 200);
 
   return (
     <div className="flex flex-col gap-lg">
@@ -233,25 +270,24 @@ function EditView(p: EditProps) {
           ← All estimates
         </Link>
         <input
-          value={p.name}
+          value={estimate.name}
           onChange={(e) => p.onChangeName(e.target.value)}
           className="font-headline-xl text-headline-xl text-primary bg-transparent border-b border-transparent hover:border-outline-variant focus:border-primary focus:outline-none"
         />
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          Built from{' '}
-          <Link to={`/templates/${template.id}`} className="text-primary hover:underline">
-            {template.name}
-          </Link>{' '}
-          (v{template.version}, base {formatPlantCapacityKW(baseTarget)},{' '}
-          {SYNC_TYPE_LABELS[template.syncType]},{' '}
-          {PROJECT_TYPE_LABELS[template.projectType]})
-        </p>
-        {estimate.selectedVersion !== template.version && (
-          <div className="rounded border border-tertiary/40 bg-tertiary/5 p-sm flex items-center justify-between gap-sm">
+
+        <TemplatePicker
+          facets={p.facets}
+          templates={p.templates}
+          catalogItems={p.catalogItems}
+          selections={estimate.selections}
+          onSelectionsChange={p.onSelectionsChange}
+          showPreviewStrip={false}
+        />
+
+        {versionStale && (
+          <div className="rounded border border-tertiary/40 bg-tertiary/5 p-sm flex items-center justify-between gap-sm flex-wrap">
             <span className="text-body-sm">
-              This estimate was built against template version{' '}
-              <strong>{estimate.selectedVersion}</strong>; the template is now{' '}
-              <strong>v{template.version}</strong>.
+              Template versions changed since this estimate was saved — re-sync when ready.
             </span>
             <Button variant="outline" onClick={p.onResync}>
               Re-sync to latest
@@ -288,8 +324,7 @@ function EditView(p: EditProps) {
             <Stat
               label="Other Scope"
               value={`₹ ${formatINR(
-                estimate.totals.otherScopeSubtotal +
-                  estimate.totals.otherScopeGst
+                estimate.totals.otherScopeSubtotal + estimate.totals.otherScopeGst
               )}`}
             />
             {estimate.finance?.enabled && (
@@ -303,123 +338,92 @@ function EditView(p: EditProps) {
       </div>
 
       <section className="flex flex-col gap-lg bg-surface-container-lowest rounded-2xl p-md lg:p-lg shadow-card-xl border border-outline-variant/30">
-          <FormSection title="Target capacity">
-            <Slider
-              id="target_kw"
-              label="Target capacity"
-              value={p.targetKW}
-              onChange={(n) => p.onChangeTarget(Math.round(n))}
-              min={minSlider}
-              max={maxSlider}
-              step={10}
-              variant="plain"
-              formatValue={formatPlantCapacityKW}
-              minMaxFormat={formatPlantCapacityKW}
-              hint={`Template base is ${formatPlantCapacityKW(baseTarget)}. Linear lines scale pro-rata; step lines re-bucket.`}
-            />
-          </FormSection>
-
-          {optionalMain.length > 0 && (
-            <FormSection
-              title="Optional Main BOM lines"
-              subtitle={`${optionalMain.length} optional line(s). Toggle on to include.`}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                {optionalMain.map((line) => (
-                  <label
-                    key={line.id}
-                    className="flex items-center gap-sm rounded border border-outline-variant px-sm py-2 hover:bg-surface-container-low cursor-pointer"
-                  >
-                    <Switch
-                      checked={includedMain.has(line.id)}
-                      onChange={() => toggleMain(line.id)}
-                      label={line.itemName}
-                    />
-                    <div className="flex-1">
-                      <div className="font-body-md text-body-md">{line.itemName}</div>
-                      <div className="text-body-sm text-on-surface-variant">
-                        ₹ {formatINR(line.baseQuantity * line.rate)} base
-                        {line.isOptional && ' · optional'}
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </FormSection>
-          )}
-
-          {optionalScope.length > 0 && (
-            <FormSection
-              title="Optional Other Scope items"
-              subtitle="Customer-add-on items priced as a single amount."
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                {optionalScope.map((item) => (
-                  <label
-                    key={item.id}
-                    className="flex items-center gap-sm rounded border border-outline-variant px-sm py-2 hover:bg-surface-container-low cursor-pointer"
-                  >
-                    <Switch
-                      checked={includedScope.has(item.id)}
-                      onChange={() => toggleScope(item.id)}
-                      label={item.scopeName}
-                    />
-                    <div className="flex-1">
-                      <div className="font-body-md text-body-md">{item.scopeName}</div>
-                      <div className="text-body-sm text-on-surface-variant">
-                        ₹ {formatINR(item.baseAmount)} base · {item.scalingType}
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </FormSection>
-          )}
-
-          <FormSection
-            title="Cost breakdown"
-            subtitle="Live preview at the current target capacity. Lines hidden by sync gating are shown grey."
-            collapsible
-            open={true}
-          >
-            <CostBreakdownPanel materialized={estimate.materialized} />
-          </FormSection>
-
-          {/* Finance toggle ---------------------------------------------- */}
-          <FinanceSection
-            finance={p.finance}
-            onEnable={() => p.onEnableFinance({ ...defaultFinanceLayer(true) })}
-            onDisable={p.onDisableFinance}
-            onUpdate={p.onUpdateFinance}
+        <FormSection title="Target capacity">
+          <Slider
+            id="target_kw"
+            label="Target capacity"
+            value={estimate.targetCapacityKW}
+            onChange={(n) => p.onChangeTarget(Math.round(n))}
+            min={minSlider}
+            max={maxSlider}
+            step={10}
+            variant="plain"
+            formatValue={formatPlantCapacityKW}
+            minMaxFormat={formatPlantCapacityKW}
+            hint="Composer scales each selected template independently against its calibrated base kW."
           />
+        </FormSection>
 
-          {p.finance?.enabled && (
-            <SiteLocationSection
-              location={estimate.location}
-              onChange={p.onSetLocation}
-            />
-          )}
+        {optionalRows.length > 0 && (
+          <FormSection title="Optional lines" subtitle="Namespaced per template.">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
+              {optionalRows.map(({ tpl, line, label }) => {
+                const ids: string[] =
+                  estimate.selectedOptionsPerTemplate[tpl.id]?.lineIds ?? [];
+                const on = new Set(ids).has(line.id);
+                const toggleLine = () => {
+                  const set = new Set(ids);
+                  if (set.has(line.id)) set.delete(line.id);
+                  else set.add(line.id);
+                  p.onLineOptionsChange(tpl.id, [...set]);
+                };
+                return (
+                  <label
+                    key={`${tpl.id}_${line.id}`}
+                    className="flex items-center gap-sm rounded border border-outline-variant px-sm py-2 hover:bg-surface-container-low cursor-pointer"
+                  >
+                    <Switch checked={on} onChange={toggleLine} label={label} />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-body-md text-body-md truncate">{label}</div>
+                      <div className="text-body-sm text-on-surface-variant truncate">
+                        {tpl.name}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </FormSection>
+        )}
 
-          <div className="flex flex-col-reverse md:flex-row md:justify-end gap-sm pt-md border-t border-outline-variant/30 mt-sm">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={p.onSave}
-              iconRight={<Icon name="check" />}
-              fullWidth
-              className="md:w-auto"
-            >
-              View results
-            </Button>
-          </div>
+        <FormSection title="Cost breakdown" collapsible open>
+          <CostBreakdownPanel
+            materialized={estimate.materialized}
+            composeOverrides={estimate.composeOverrides}
+            onComposeModeChange={p.onComposeModeChange}
+          />
+        </FormSection>
+
+        <FinanceSection
+          finance={estimate.finance}
+          onEnable={() => p.onEnableFinance({ ...defaultFinanceLayer(true) })}
+          onDisable={p.onDisableFinance}
+          onUpdate={p.onUpdateFinance}
+        />
+
+        {estimate.finance?.enabled && (
+          <SiteLocationSection
+            location={estimate.location}
+            onChange={p.onSetLocation}
+          />
+        )}
+
+        <div className="flex flex-col-reverse md:flex-row md:justify-end gap-sm pt-md border-t border-outline-variant/30 mt-sm">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={p.onSave}
+            iconRight={<Icon name="check" />}
+            fullWidth
+            className="md:w-auto"
+          >
+            View results
+          </Button>
+        </div>
       </section>
     </div>
   );
 }
-
-/* ------------------------------------------------------------------------ */
-/* Finance section                                                           */
-/* ------------------------------------------------------------------------ */
 
 function FinanceSection({
   finance,
@@ -437,7 +441,7 @@ function FinanceSection({
   return (
     <FormSection
       title="Finance modeling"
-      subtitle="Optional layer: enables IRR / NPV / cash flows / PPA / yield-from-irradiance for this estimate."
+      subtitle="Optional layer: IRR / NPV / cashflows / irradiance-linked yield."
     >
       <label className="flex items-center gap-sm cursor-pointer">
         <Switch

@@ -1,9 +1,8 @@
 import type { ProjectType } from './projectType';
+import type { ComposeMode } from './materialCatalog';
 
 /**
- * Project sync type at the BOM-template level. HT covers utility-grade
- * 11–33 kV interconnects (drives switchyard / transformer items); LT covers
- * < 415 V rooftop and small-commercial; `Other` is the future escape hatch.
+ * Project sync type. HT covers utility interconnects; LT covers rooftop/small-commercial.
  */
 export type SyncType = 'HT' | 'LT' | 'Other';
 
@@ -15,7 +14,7 @@ export const SYNC_TYPE_LABELS: Record<SyncType, string> = {
   Other: 'Other',
 };
 
-/** PRD §6 status workflow: only Active templates surface to estimators. */
+/** PRD — only Active templates surface to estimators. */
 export type TemplateStatus = 'draft' | 'active' | 'archived';
 
 export const TEMPLATE_STATUSES: readonly TemplateStatus[] = [
@@ -30,12 +29,7 @@ export const TEMPLATE_STATUS_LABELS: Record<TemplateStatus, string> = {
   archived: 'Archived',
 };
 
-/**
- * One of the five PRD §7 scaling kinds. `fixed` items are constant; `linear`
- * scales pro-rata with target capacity; `step` ceil-buckets capacity into
- * discrete units (`unitCapacityKW`); `conditional` is pure on/off via
- * `applicability`; `optional` is on/off driven by user inclusion.
- */
+/** PRD scaling kinds for template lines + catalog-derived BOM rows. */
 export type ScalingType =
   | 'fixed'
   | 'linear'
@@ -61,39 +55,63 @@ export const SCALING_TYPE_LABELS: Record<ScalingType, string> = {
 
 /**
  * Filters that gate whether a line is included for a given estimate context.
- * AND across present fields. Empty / missing means "applies".
+ * AND across present fields. Prefer `sizeRangeKW`; older seeds may still set
+ * `syncTypes` / `projectTypes` until fully migrated off template lines.
  */
 export type LineApplicability = {
   syncTypes?: SyncType[];
   projectTypes?: ProjectType[];
-  /** Min/max target capacity (kW) inside which this line participates. */
   sizeRangeKW?: { min?: number; max?: number };
 };
 
-import type { BOMLineItem } from './bomLineItem';
-import type { OtherScopeItem } from './otherScopeItem';
+/**
+ * One catalog-backed row inside a `ScenarioTemplate`. Quantities calibrated at
+ * `template.baseCapacityKW`.
+ */
+export type TemplateLine = {
+  id: string;
+  catalogItemId: string;
+  sequence: number;
+  /** For catalog `kind === 'bom'`. Quantity at template base capacity. */
+  baseQuantity?: number;
+  /** For catalog `kind === 'scope'`. INR at template base calibration. */
+  baseAmount?: number;
+  rateOverride?: number;
+  gstPercentOverride?: number;
+  /** Only for bom lines; inherits from catalog when absent. */
+  uomOverride?: import('./bomLineItem').BOMUom;
+  composeModeOverride?: ComposeMode;
+  scalingType: ScalingType;
+  scalingFormula?: string;
+  unitCapacityKW?: number;
+  applicability?: LineApplicability;
+  isOptional: boolean;
+  includedByDefault: boolean;
+  notes?: string;
+};
 
 /**
- * The PRD §8 entity 1 — the canonical BOM template. Owns its main BOM and
- * Other Scope items end-to-end (denormalized; no shared catalog). Status +
- * version + effective date drive admin workflow.
+ * BOM template referencing the global catalog. Each template belongs to
+ * exactly one facet; multi-template estimates pick one template per facet and
+ * merge by `catalogItemId`.
+ *
+ * When `facetId === 'voltageClass'`, set `syncType` + `projectType` so scaling
+ * / applicability resolves consistently for conditional lines across facets.
  */
 export type ScenarioTemplate = {
   id: string;
   name: string;
-  projectType: ProjectType;
-  syncType: SyncType;
-  /** Capacity at which `baseQuantity` / `baseAmount` were calibrated. */
+  facetId: string;
+  /** Drives applicability context for composing this template with others. Required for voltage/engine templates; optional elsewhere. */
+  syncType?: SyncType;
+  projectType?: ProjectType;
   baseCapacityKW: number;
   status: TemplateStatus;
-  /** Free-form semver-ish version string (e.g. `v1`, `2024.10`). */
   version: string;
-  /** Epoch ms; templates take effect on or after this date. */
   effectiveFrom: number;
   description?: string;
   source: 'manual' | 'upload' | 'seed';
   createdAt: number;
   updatedAt: number;
-  mainBom: BOMLineItem[];
-  otherScope: OtherScopeItem[];
+  lines: TemplateLine[];
 };

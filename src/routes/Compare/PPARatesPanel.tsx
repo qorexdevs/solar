@@ -12,6 +12,7 @@ import {
   formatTonnes,
   formatYears,
 } from '@/lib/format';
+import { getVoltageClassTemplate } from '@/lib/estimate';
 import { useEstimateStore } from '@/store/estimates';
 import { useTemplateStore } from '@/store/templates';
 import { PROJECT_TYPE_LABELS, type Estimate } from '@/types';
@@ -241,7 +242,7 @@ export function PPARatesPanel() {
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
           {estimates.map((e) => {
-            const t = templates.find((tt) => tt.id === e.templateId);
+            const vTpl = getVoltageClassTemplate(e, templates);
             const isSelected = e.id === selectedId;
             const disabled = !e.finance?.enabled;
             return (
@@ -270,8 +271,10 @@ export function PPARatesPanel() {
                     {e.name}
                   </span>
                   <span className="font-body-md text-[14px] leading-[20px] text-on-surface-variant">
-                    {t ? PROJECT_TYPE_LABELS[t.projectType] : 'Template missing'} ·{' '}
-                    {formatPlantCapacityKW(e.targetCapacityKW)}
+                    {vTpl
+                      ? PROJECT_TYPE_LABELS[vTpl.projectType ?? 'utility']
+                      : 'Voltage facet unset'}{' '}
+                    · {formatPlantCapacityKW(e.targetCapacityKW)}
                   </span>
                   {disabled && (
                     <Link

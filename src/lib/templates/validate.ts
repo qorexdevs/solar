@@ -1,29 +1,24 @@
 import {
-  BOM_CATEGORIES,
   BOM_UOMS,
-  type BOMLineItem,
-  type OtherScopeItem,
-  type ScalingType,
   type ScenarioTemplate,
+  type ScalingType,
+  type TemplateLine,
 } from '@/types';
 import { evalFormula, type ScalingContext } from './scaling';
 
 export type ValidationIssue = {
-  /** Hierarchical path so editors can highlight the offending field. */
   path: string;
   message: string;
 };
 
-/**
- * Lightweight schema validation for templates. Returns a flat list of issues
- * — empty when the template is well-formed. Used by the editor for inline
- * errors and by the importer to gate "save".
- */
 export function validateTemplate(template: ScenarioTemplate): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
 
   if (!template.name?.trim()) {
     issues.push({ path: 'name', message: 'Template name is required.' });
+  }
+  if (!template.facetId?.trim()) {
+    issues.push({ path: 'facetId', message: 'Facet id is required.' });
   }
   if (!Number.isFinite(template.baseCapacityKW) || template.baseCapacityKW <= 0) {
     issues.push({
@@ -36,68 +31,71 @@ export function validateTemplate(template: ScenarioTemplate): ValidationIssue[] 
   }
 
   const seenLineIds = new Set<string>();
-  for (let i = 0; i < template.mainBom.length; i++) {
-    const line = template.mainBom[i];
-    const path = `mainBom[${i}]`;
+  const seenCatalogRows = new Set<string>();
+  const linesSorted = [...template.lines].sort((a, b) => a.sequence - b.sequence);
+
+  for (let i = 0; i < linesSorted.length; i++) {
+    const line = linesSorted[i];
+    const path = `lines[${i}]`;
     if (!line.id || seenLineIds.has(line.id)) {
-      issues.push({ path, message: 'Duplicate or missing BOM line id.' });
+      issues.push({ path, message: 'Duplicate or missing template line id.' });
     }
     seenLineIds.add(line.id);
-    issues.push(...validateLine(line, path));
-  }
 
-  const seenScopeIds = new Set<string>();
-  for (let i = 0; i < template.otherScope.length; i++) {
-    const item = template.otherScope[i];
-    const path = `otherScope[${i}]`;
-    if (!item.id || seenScopeIds.has(item.id)) {
-      issues.push({ path, message: 'Duplicate or missing scope item id.' });
+    const dupKey = line.catalogItemId;
+    if (seenCatalogRows.has(dupKey)) {
+      issues.push({
+        path,
+        message: `Duplicate catalog reference ${line.catalogItemId} in this template.`,
+      });
     }
-    seenScopeIds.add(item.id);
-    issues.push(...validateScope(item, path));
+    seenCatalogRows.add(dupKey);
+
+    issues.push(...validateTemplateLine(line, path));
   }
 
   return issues;
 }
 
-function validateLine(line: BOMLineItem, path: string): ValidationIssue[] {
+function validateTemplateLine(line: TemplateLine, path: string): ValidationIssue[] {
   const out: ValidationIssue[] = [];
-  if (!line.itemName?.trim()) {
-    out.push({ path: `${path}.itemName`, message: 'Item name is required.' });
+  if (!line.catalogItemId?.trim()) {
+    out.push({ path: `${path}.catalogItemId`, message: 'Catalog item id is required.' });
   }
-  if (!BOM_CATEGORIES.includes(line.category)) {
-    out.push({ path: `${path}.category`, message: 'Invalid category.' });
+  if (line.baseQuantity !== undefined) {
+    if (!Number.isFinite(line.baseQuantity) || line.baseQuantity < 0) {
+      out.push({ path: `${path}.baseQuantity`, message: 'Quantity must be ≥ 0.' });
+    }
   }
-  if (!BOM_UOMS.includes(line.uom)) {
-    out.push({ path: `${path}.uom`, message: 'Invalid unit of measure.' });
+  if (line.baseAmount !== undefined) {
+    if (!Number.isFinite(line.baseAmount) || line.baseAmount < 0) {
+      out.push({ path: `${path}.baseAmount`, message: 'Amount must be ≥ 0.' });
+    }
   }
-  if (!Number.isFinite(line.baseQuantity) || line.baseQuantity < 0) {
-    out.push({ path: `${path}.baseQuantity`, message: 'Quantity must be ≥ 0.' });
+  if (line.rateOverride !== undefined) {
+    if (!Number.isFinite(line.rateOverride) || line.rateOverride < 0) {
+      out.push({ path: `${path}.rateOverride`, message: 'Rate override must be ≥ 0.' });
+    }
   }
-  if (!Number.isFinite(line.rate) || line.rate < 0) {
-    out.push({ path: `${path}.rate`, message: 'Rate must be ≥ 0.' });
+  if (line.gstPercentOverride !== undefined) {
+    if (!Number.isFinite(line.gstPercentOverride) || line.gstPercentOverride < 0) {
+      out.push({
+        path: `${path}.gstPercentOverride`,
+        message: 'GST override must be ≥ 0.',
+      });
+    }
   }
-  if (!Number.isFinite(line.gstPercent) || line.gstPercent < 0) {
-    out.push({ path: `${path}.gstPercent`, message: 'GST % must be ≥ 0.' });
+  if (line.uomOverride && !BOM_UOMS.includes(line.uomOverride)) {
+    out.push({ path: `${path}.uomOverride`, message: 'Invalid UOM override.' });
   }
   out.push(...validateScalingShape(line.scalingType, line.unitCapacityKW, path));
-  out.push(...validateFormula(line.scalingFormula, line.baseQuantity, path));
-  return out;
-}
-
-function validateScope(item: OtherScopeItem, path: string): ValidationIssue[] {
-  const out: ValidationIssue[] = [];
-  if (!item.scopeName?.trim()) {
-    out.push({ path: `${path}.scopeName`, message: 'Scope name is required.' });
-  }
-  if (!Number.isFinite(item.baseAmount) || item.baseAmount < 0) {
-    out.push({ path: `${path}.baseAmount`, message: 'Amount must be ≥ 0.' });
-  }
-  if (!Number.isFinite(item.gstPercent) || item.gstPercent < 0) {
-    out.push({ path: `${path}.gstPercent`, message: 'GST % must be ≥ 0.' });
-  }
-  out.push(...validateScalingShape(item.scalingType, item.unitCapacityKW, path));
-  out.push(...validateFormula(item.scalingFormula, item.baseAmount, path));
+  out.push(
+    ...validateFormula(
+      line.scalingFormula,
+      line.baseQuantity ?? line.baseAmount ?? 0,
+      path
+    )
+  );
   return out;
 }
 

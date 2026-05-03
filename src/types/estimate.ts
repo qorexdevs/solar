@@ -1,22 +1,34 @@
 import type { BOMCategory, BOMUom } from './bomLineItem';
+import type { ComposeMode } from './materialCatalog';
 import type { ScalingType } from './scenarioTemplate';
 import type { ScenarioLocation } from './irradiance';
+
+/* ------------------------------------------------------------------------ */
+/* Provenance                                                               */
+/* ------------------------------------------------------------------------ */
+
+/** One facet template's scaled contribution before merge. */
+export type LineContributionSlice = {
+  templateId: string;
+  facetId: string;
+  lineId: string;
+  quantity?: number;
+  amount?: number;
+};
 
 /* ------------------------------------------------------------------------ */
 /* Materialized BOM                                                          */
 /* ------------------------------------------------------------------------ */
 
-/**
- * One Main BOM line after scaling to a target capacity, with GST math
- * applied. Carries enough provenance to render line-level breakdowns
- * without re-resolving the template.
- */
 export type MaterializedLine = {
-  /** Unique id within the materialized BOM (mirrors source line id). */
+  /** Stable key for merged BOM rows — usually `catalogItemId`. */
   id: string;
-  /** Original template line id, for back-references during edits. */
+  catalogItemId: string;
+  sourceLineIds: string[];
+  contributedBy: LineContributionSlice[];
+  composeMode: ComposeMode;
+  /** Original template line id (merged from first facet order). */
   sourceLineId: string;
-  /** Display order from the template. */
   sequence: number;
   category: BOMCategory;
   itemName: string;
@@ -24,33 +36,28 @@ export type MaterializedLine = {
   make?: string;
   uom: BOMUom;
   scalingType: ScalingType;
-  /** Quantity after scaling (already rounded for countable UoMs). */
   quantity: number;
   rate: number;
   gstPercent: number;
-  /** quantity × rate (pre-tax). */
   subtotal: number;
-  /** subtotal × gstPercent / 100. */
   gst: number;
-  /** subtotal + gst. */
   total: number;
-  /** True when the line was included in the estimate (vs hidden by gating). */
   included: boolean;
-  /** True when applicability gates excluded the line for this estimate. */
   applicabilityFiltered: boolean;
-  /** True when the line was excluded by user via `selectedOptions`. */
   userExcluded: boolean;
   notes?: string;
 };
 
-/** Other-scope line after scaling (same shape minus quantity / rate). */
 export type MaterializedScopeLine = {
   id: string;
+  catalogItemId: string;
+  sourceItemIds: string[];
+  contributedBy: LineContributionSlice[];
+  composeMode: ComposeMode;
   sourceItemId: string;
   sequence: number;
   scopeName: string;
   scalingType: ScalingType;
-  /** Final scaled INR before GST. */
   amount: number;
   gstPercent: number;
   gst: number;
@@ -67,13 +74,9 @@ export type MaterializedBOM = {
 };
 
 /* ------------------------------------------------------------------------ */
-/* Totals                                                                    */
+/* Totals                                                                   */
 /* ------------------------------------------------------------------------ */
 
-/**
- * PRD §7 totals block. `perKwRate` divides Grand Total by the estimate's
- * target capacity; `0` when target is non-positive.
- */
 export type EstimateTotals = {
   mainBomSubtotal: number;
   mainBomGst: number;
@@ -84,7 +87,7 @@ export type EstimateTotals = {
 };
 
 /* ------------------------------------------------------------------------ */
-/* Optional finance layer                                                    */
+/* Optional finance                                                         */
 /* ------------------------------------------------------------------------ */
 
 export type EstimateBasics = {
@@ -101,7 +104,6 @@ export type EstimateRevenue = {
 };
 
 export type EstimateOM = {
-  /** Annual O&M as a percent of total CAPEX. */
   percentOfCapex: number;
   overrides: { year: number; amount: number }[];
 };
@@ -114,10 +116,6 @@ export type EstimateFinancing = {
   gracePeriodYears: number;
 };
 
-/**
- * Optional finance modeling layer on top of an Estimate. When `enabled` is
- * false, only BOM cost outputs (capex / GST / per-kW) are produced.
- */
 export type FinanceLayer = {
   enabled: boolean;
   basics: EstimateBasics;
@@ -130,35 +128,29 @@ export type FinanceLayer = {
 /* Estimate                                                                  */
 /* ------------------------------------------------------------------------ */
 
-/**
- * What the user picks at estimate time:
- *   - `mainBomLineIds`: which optional Main BOM lines are included.
- *   - `otherScopeIds`: which optional Other Scope items are included.
- *
- * Required (`isOptional: false`) lines ignore these lists.
- */
-export type SelectedOptions = {
-  mainBomLineIds: string[];
-  otherScopeIds: string[];
-};
+/** Optional lines keyed per facet template (`templateLine.id` for both bom + scope). */
+export type SelectedOptionsPerTemplate = Record<string, { lineIds: string[] }>;
 
-/** Status mirrors the older Scenario lifecycle so the list view stays useful. */
+export type EstimateFacetSelections = Record<
+  string,
+  { templateId: string; selectedVersion: string } | null | undefined
+>;
+
+export type ComposeOverridesMap = Partial<Record<string, ComposeMode>>;
+
 export type EstimateStatus = 'draft' | 'feasible' | 'review';
 
-/**
- * The PRD §8 entity 4 plus carry-over fields needed for the existing finance,
- * irradiance, and PPA flows. Always carries `materialized` + `totals`; the
- * `finance` block is optional and gated by `finance.enabled` at compute time.
- */
 export type Estimate = {
   id: string;
   name: string;
   status: EstimateStatus;
-  templateId: string;
-  /** Snapshot of the template version at estimate time. */
-  selectedVersion: string;
+  /** One template snapshot per facet (null = facet skipped when optional). */
+  selections: EstimateFacetSelections;
   targetCapacityKW: number;
-  selectedOptions: SelectedOptions;
+  /** Optional template lines included by user toggle, namespaced per template id. */
+  selectedOptionsPerTemplate: SelectedOptionsPerTemplate;
+  /** User override merge rule for duplicated catalog refs. */
+  composeOverrides?: ComposeOverridesMap;
   materialized: MaterializedBOM;
   totals: EstimateTotals;
   finance?: FinanceLayer;

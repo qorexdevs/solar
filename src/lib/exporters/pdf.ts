@@ -159,7 +159,15 @@ function addSummaryPage(
     body: [
       ['Target capacity', formatPlantCapacityKW(estimate.targetCapacityKW)],
       ['Status', estimate.status],
-      ['Template version (snapshot)', estimate.selectedVersion],
+      ['Facet selections (JSON)', JSON.stringify(estimate.selections)],
+      [
+        'Optional line picks (JSON)',
+        JSON.stringify(estimate.selectedOptionsPerTemplate),
+      ],
+      [
+        'Compose overrides (JSON)',
+        JSON.stringify(estimate.composeOverrides ?? {}),
+      ],
       ['Main BOM subtotal', `₹ ${formatINR(t.mainBomSubtotal)}`],
       ['Main BOM GST', `₹ ${formatINR(t.mainBomGst)}`],
       ['Other Scope subtotal', `₹ ${formatINR(t.otherScopeSubtotal)}`],

@@ -5,6 +5,7 @@ import { useEstimateStore } from '@/store/estimates';
 const NAV = [
   { to: '/', icon: 'analytics', label: 'Estimates' },
   { to: '/templates', icon: 'library_books', label: 'Templates' },
+  { to: '/catalog', icon: 'inventory_2', label: 'Catalog' },
   { to: '/results', icon: 'insights', label: 'Results' },
   { to: '/compare', icon: 'compare_arrows', label: 'Compare' },
   { to: '/export', icon: 'ios_share', label: 'Export' },

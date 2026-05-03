@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { computeEstimate } from '@/lib/calc';
 import { formatINR, formatPlantCapacityKW, formatRate } from '@/lib/format';
+import { getVoltageClassTemplate } from '@/lib/estimate';
 import { useEstimateStore } from '@/store/estimates';
 import { useTemplateStore } from '@/store/templates';
 import type { Estimate } from '@/types';
@@ -26,7 +27,7 @@ export function EstimateList() {
       estimates.map((e) => ({
         estimate: e,
         results: safeCompute(e),
-        template: templates.find((t) => t.id === e.templateId),
+        template: getVoltageClassTemplate(e, templates),
       })),
     [estimates, templates]
   );

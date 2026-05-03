@@ -29,7 +29,7 @@ type Props = {
 
 function typeLabel(template: ScenarioTemplate | undefined): string {
   if (!template) return '—';
-  return `${PROJECT_TYPE_LABELS[template.projectType]} · ${SYNC_TYPE_LABELS[template.syncType]}`;
+  return `${PROJECT_TYPE_LABELS[template.projectType ?? 'utility']} · ${SYNC_TYPE_LABELS[template.syncType ?? 'Other']}`;
 }
 
 function compositeEstimateTitle(

@@ -1,14 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import { lcoeINRPerKWh } from '@/lib/calc';
-import { createEstimate, defaultFinanceLayer } from '@/lib/estimate';
-import { seedTemplates, SEED_TEMPLATE_ID_HT } from '@/lib/templates';
+import { createEstimate, defaultFinanceLayer, defaultSelectionsFromFacets } from '@/lib/estimate';
+import { seedTemplates } from '@/lib/templates';
+import { seedFacets } from '@/lib/facets';
+import { seedMaterialCatalog } from '@/lib/catalog';
 import { evaluateScenarios, seedScenarios, type RateScenario } from './ppaRates';
 
-const SEED_HT = seedTemplates().find((t) => t.id === SEED_TEMPLATE_ID_HT)!;
-
 function makeEstimate() {
+  const facets = seedFacets();
+  const templates = seedTemplates();
+  const catalogItems = seedMaterialCatalog();
+  const byId = new Map(templates.map((t) => [t.id, t]));
   return createEstimate({
-    template: SEED_HT,
+    facets,
+    templates,
+    catalogItems,
+    selections: defaultSelectionsFromFacets(facets, byId),
     targetCapacityKW: 1000,
     finance: { ...defaultFinanceLayer(true) },
   });

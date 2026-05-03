@@ -3,15 +3,24 @@ import {
   BOM_CATEGORIES,
   BOM_UOM_LABELS,
   type BOMCategory,
+  type ComposeMode,
+  type ComposeOverridesMap,
   type MaterializedBOM,
   type MaterializedLine,
   type MaterializedScopeLine,
+  type ScalingType,
+  SCALING_TYPE_LABELS,
 } from '@/types';
 import { formatINR, formatIndianGroup, formatPercent } from '@/lib/format';
 import { capexBreakdown, OTHER_SCOPE_GROUP_LABEL } from '@/lib/calc';
 
 type Props = {
   materialized: MaterializedBOM;
+  composeOverrides?: ComposeOverridesMap;
+  onComposeModeChange?: (
+    catalogItemId: string,
+    mode: ComposeMode | undefined
+  ) => void;
 };
 
 const PLACEHOLDER = '—';
@@ -25,7 +34,11 @@ const PLACEHOLDER = '—';
  * Lines hidden by sync gating ("conditional") show greyed; user-excluded
  * optional lines also show greyed.
  */
-export function CostBreakdownPanel({ materialized }: Props) {
+export function CostBreakdownPanel({
+  materialized,
+  composeOverrides,
+  onComposeModeChange,
+}: Props) {
   const breakdown = capexBreakdown(materialized);
 
   const orderedCategories = useMemo<string[]>(() => {
@@ -92,10 +105,20 @@ export function CostBreakdownPanel({ materialized }: Props) {
                     </tr>
                     {isScope
                       ? materialized.otherLines.map((item) => (
-                          <ScopeBodyRow key={item.id} item={item} />
+                          <ScopeBodyRow
+                            key={item.id}
+                            item={item}
+                            overrideMode={composeOverrides?.[item.catalogItemId]}
+                            onComposeModeChange={onComposeModeChange}
+                          />
                         ))
                       : mainLines.map((line) => (
-                          <MainBodyRow key={line.id} line={line} />
+                          <MainBodyRow
+                            key={line.id}
+                            line={line}
+                            overrideMode={composeOverrides?.[line.catalogItemId]}
+                            onComposeModeChange={onComposeModeChange}
+                          />
                         ))}
                   </Fragment>
                 );
@@ -149,7 +172,15 @@ export function CostBreakdownPanel({ materialized }: Props) {
   );
 }
 
-function MainBodyRow({ line }: { line: MaterializedLine }) {
+function MainBodyRow({
+  line,
+  overrideMode,
+  onComposeModeChange,
+}: {
+  line: MaterializedLine;
+  overrideMode?: ComposeMode;
+  onComposeModeChange?: (catalogItemId: string, mode: ComposeMode | undefined) => void;
+}) {
   return (
     <tr
       className={`border-b border-outline-variant/20 align-top ${
@@ -163,8 +194,50 @@ function MainBodyRow({ line }: { line: MaterializedLine }) {
         {line.make && (
           <div className="font-label-sm text-on-surface-variant">{line.make}</div>
         )}
-        <div className="flex flex-wrap gap-1 mt-1">
-          <ScalingBadge line={line} />
+        {line.contributedBy.length > 1 && (
+          <div className="text-label-sm text-on-surface-variant mt-1">
+            Merged ({line.composeMode}) · {line.contributedBy.length} contributions
+          </div>
+        )}
+        <div className="flex flex-wrap gap-1 mt-1 items-center">
+          {line.contributedBy.length > 1 && onComposeModeChange && (
+            <span className="flex items-center gap-1 mr-1">
+              <span className="text-label-sm text-on-surface-variant">Merge</span>
+              <button
+                type="button"
+                className={`px-2 py-0.5 rounded font-label-sm ${
+                  (overrideMode ?? line.composeMode) === 'max'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-surface-container-low text-on-surface-variant'
+                }`}
+                onClick={() =>
+                  onComposeModeChange(
+                    line.catalogItemId,
+                    overrideMode === 'max' ? undefined : 'max'
+                  )
+                }
+              >
+                Max
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-0.5 rounded font-label-sm ${
+                  (overrideMode ?? line.composeMode) === 'sum'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-surface-container-low text-on-surface-variant'
+                }`}
+                onClick={() =>
+                  onComposeModeChange(
+                    line.catalogItemId,
+                    overrideMode === 'sum' ? undefined : 'sum'
+                  )
+                }
+              >
+                Sum
+              </button>
+            </span>
+          )}
+          <ScalingBadge scalingType={line.scalingType} />
           {line.applicabilityFiltered && (
             <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
               Sync gated
@@ -198,7 +271,15 @@ function MainBodyRow({ line }: { line: MaterializedLine }) {
   );
 }
 
-function ScopeBodyRow({ item }: { item: MaterializedScopeLine }) {
+function ScopeBodyRow({
+  item,
+  overrideMode,
+  onComposeModeChange,
+}: {
+  item: MaterializedScopeLine;
+  overrideMode?: ComposeMode;
+  onComposeModeChange?: (catalogItemId: string, mode: ComposeMode | undefined) => void;
+}) {
   return (
     <tr
       className={`border-b border-outline-variant/20 align-top ${
@@ -209,10 +290,50 @@ function ScopeBodyRow({ item }: { item: MaterializedScopeLine }) {
         <div className="font-body-md font-semibold text-on-surface">
           {item.scopeName}
         </div>
-        <div className="flex flex-wrap gap-1 mt-1">
-          <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
-            {item.scalingType}
-          </span>
+        {item.contributedBy.length > 1 && (
+          <div className="text-label-sm text-on-surface-variant mt-1">
+            Merged ({item.composeMode}) · {item.contributedBy.length} contributions
+          </div>
+        )}
+        <div className="flex flex-wrap gap-1 mt-1 items-center">
+          {item.contributedBy.length > 1 && onComposeModeChange && (
+            <span className="flex items-center gap-1 mr-1">
+              <span className="text-label-sm text-on-surface-variant">Merge</span>
+              <button
+                type="button"
+                className={`px-2 py-0.5 rounded font-label-sm ${
+                  (overrideMode ?? item.composeMode) === 'max'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-surface-container-low text-on-surface-variant'
+                }`}
+                onClick={() =>
+                  onComposeModeChange(
+                    item.catalogItemId,
+                    overrideMode === 'max' ? undefined : 'max'
+                  )
+                }
+              >
+                Max
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-0.5 rounded font-label-sm ${
+                  (overrideMode ?? item.composeMode) === 'sum'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-surface-container-low text-on-surface-variant'
+                }`}
+                onClick={() =>
+                  onComposeModeChange(
+                    item.catalogItemId,
+                    overrideMode === 'sum' ? undefined : 'sum'
+                  )
+                }
+              >
+                Sum
+              </button>
+            </span>
+          )}
+          <ScalingBadge scalingType={item.scalingType} />
           {item.applicabilityFiltered && (
             <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
               Sync gated
@@ -244,21 +365,8 @@ function ScopeBodyRow({ item }: { item: MaterializedScopeLine }) {
   );
 }
 
-function ScalingBadge({ line }: { line: MaterializedLine }) {
-  const label = (() => {
-    switch (line.scalingType) {
-      case 'fixed':
-        return 'fixed';
-      case 'linear':
-        return 'linear';
-      case 'step':
-        return 'step';
-      case 'conditional':
-        return 'conditional';
-      case 'optional':
-        return 'optional';
-    }
-  })();
+function ScalingBadge({ scalingType }: { scalingType: ScalingType }) {
+  const label = SCALING_TYPE_LABELS[scalingType];
   return (
     <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
       {label}

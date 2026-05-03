@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/Slider';
 import { type Indexation, lcoeINRPerKWh, solvePPARate } from '@/lib/calc';
 import { downloadPPATermSheet } from '@/lib/exporters';
 import { formatINR, formatPercent, formatPlantCapacityKW, formatRate } from '@/lib/format';
+import { getVoltageClassTemplate } from '@/lib/estimate';
 import { useTemplateStore } from '@/store/templates';
 import { PROJECT_TYPE_LABELS, type Estimate } from '@/types';
 import { SensitivityGrid } from './SensitivityGrid';
@@ -23,8 +24,8 @@ type Props = {
  */
 export function PPAPanel({ estimate }: Props) {
   const templates = useTemplateStore((s) => s.templates);
-  const template = estimate
-    ? templates.find((t) => t.id === estimate.templateId)
+  const voltageTemplate = estimate
+    ? getVoltageClassTemplate(estimate, templates)
     : undefined;
 
   const [termYears, setTermYears] = useState<number>(25);
@@ -250,9 +251,11 @@ export function PPAPanel({ estimate }: Props) {
 
           <ProjectSummary
             estimate={estimate}
-            templateName={template?.name}
+            templateName={voltageTemplate?.name}
             projectTypeLabel={
-              template ? PROJECT_TYPE_LABELS[template.projectType] : '—'
+              voltageTemplate
+                ? PROJECT_TYPE_LABELS[voltageTemplate.projectType ?? 'utility']
+                : '—'
             }
           />
         </>
@@ -417,7 +420,7 @@ function ProjectSummary({
           label="Capacity"
           value={formatPlantCapacityKW(estimate.targetCapacityKW)}
         />
-        <Snippet label="Template" value={templateName ?? '—'} />
+        <Snippet label="Voltage class template" value={templateName ?? '—'} />
         <Snippet
           label="Grand total"
           value={`₹ ${formatINR(estimate.totals.grandTotal)}`}
