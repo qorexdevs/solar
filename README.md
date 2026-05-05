@@ -9,6 +9,7 @@ Stitch design references live in [`docs/design/`](docs/design).
 - **First time in the repo?** Read [`docs/onboarding.md`](docs/onboarding.md) — it's the day-1 reading path.
 - **Coding conventions** (for both humans and AI agents): [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/).
 - **How we work** (push-to-main, hooks, high-risk areas): [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- **Optional spec-driven features:** [GitHub Spec Kit](https://github.com/github/spec-kit) — Cursor skills in [`.cursor/skills/`](.cursor/skills/) (e.g. `speckit-specify`, `speckit-plan`); templates and constitution stub in [`.specify/`](.specify/). Install the CLI with [`uv`](https://docs.astral.sh/uv/): `uv tool install specify-cli --from git+https://github.com/github/spec-kit.git` (then `specify check`).
 
 ## Stack
 

@@ -1,0 +1,14 @@
+---
+alwaysApply: true
+---
+
+<!-- SPECKIT: SolarCalc India -->
+
+When using **Spec Kit** skills (`speckit-*` under `.cursor/skills/`), follow their SKILL instructions and the templates in `.specify/templates/`.
+
+For **all** work in this repo (including speckit-driven features), treat [`AGENTS.md`](../../AGENTS.md) as authoritative: layering (`routes/` → `store/` → `lib/` → `types/`), formatting (`src/lib/format.ts`), store migrations, calc/catalog tests, and design tokens.
+
+- **Project principles (speckit):** `.specify/memory/constitution.md` — refine via the `speckit-constitution` skill before large spec/plan cycles.
+- **Feature artifacts:** specs and plans land under `specs/<feature>/` once you run the specify/plan/tasks flow; read the active feature’s `plan.md` (or equivalent) when the skill says to consult the current plan.
+
+If speckit output conflicts with `AGENTS.md` or `docs/architecture.md`, **resolve in favour of the repo docs** unless the team explicitly amends them.
