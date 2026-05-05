@@ -1,0 +1,80 @@
+---
+description: Rules for route components in src/routes/
+globs: src/routes/**
+alwaysApply: false
+---
+
+# Route rules — `src/routes/`
+
+Routes orchestrate state and stitch subcomponents. They do not contain business logic, calculations, or data shape transformations beyond what's needed to render.
+
+## Folder shape
+
+Each route is a folder with:
+
+```
+src/routes/<Route>/
+  index.tsx           # the route component, registered in src/App.tsx
+  <SubComponent>.tsx  # extracted dumb subcomponents specific to this route
+  <hookName>.ts       # route-local hooks (e.g. usePrepaymentMax)
+  *.test.ts           # any logic in route-local hooks must be tested
+```
+
+Cross-route reusable pieces graduate to `src/components/<feature>/` (or `src/components/ui/` if generic). Don't import a subcomponent from one route into another — extract it first.
+
+## Invariants
+
+1. **Routes orchestrate; subcomponents stay dumb.** Subcomponents take props and render. They don't read from stores. The route reads from stores and passes the data down.
+2. **No calc in routes.** If you find yourself doing arithmetic on cash flows, building a P&L row, or computing a payback year — that belongs in `src/lib/calc/`. Add a function there, test it, then call it from the route.
+3. **No formatting hand-rolled.** Use `src/lib/format.ts` (`formatCurrency`, `formatLakhCrore`, `formatPercent`, `formatYears`, `formatMW`, `formatTonnes`, `formatKWh`). Numbers in markup get the `tabular` utility.
+4. **No raw hex / px / shadow strings.** Use Tailwind tokens from [`tailwind.config.ts`](../../tailwind.config.ts). The full design contract is in [`docs/design.md`](../../docs/design.md).
+5. **No page-level horizontal padding inside a route.** `AppShell` provides it.
+
+## Mobile-first
+
+- Every component must work at 360px wide. Test at that width before declaring a feature done.
+- Tap targets ≥ 48px (`h-touch-target`).
+- Tables wrap in `overflow-x-auto` with `sticky left-0 bg-surface` first column. Reference: [`src/routes/Results/PnLTable.tsx`](../../src/routes/Results/PnLTable.tsx).
+- Numeric inputs: `inputmode="decimal"` for ₹/%, `inputmode="numeric"` for years.
+- If a control doesn't fit on mobile, redesign it (sheet, expandable section, separate route). **Never** `hidden md:block` to gate functionality. Same routes, same data, same store on both.
+
+## State shape inside a route
+
+- Local UI state (open/closed, hover, transient form drafts) → `useState`.
+- Persisted user data → store. Never mirror store state in `useState`.
+- Derived values → `useMemo` over store selectors. Don't store derived values.
+- Cross-route navigation state → URL params or store.
+
+## Composition pattern (the `index.tsx` rhythm)
+
+```tsx
+export default function MyRoute() {
+  // 1. Read from stores via selectors
+  const estimate = useEstimateStore((s) => s.current);
+  const catalog = useCatalogStore((s) => s.activeCatalog);
+
+  // 2. Derive (memoized)
+  const results = useMemo(() => computeScenario(estimate), [estimate]);
+
+  // 3. Local UI state
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // 4. Render — pass data down to dumb subcomponents
+  return (
+    <div className="space-y-lg">
+      <KpiStrip results={results} />
+      <ChartSection results={results} />
+      {showAdvanced && <AdvancedPanel results={results} />}
+    </div>
+  );
+}
+```
+
+Keep `index.tsx` files focused. If they grow past ~250 lines, extract subcomponents.
+
+## Don'ts
+
+- Don't import from another route's folder. Extract a shared piece to `src/components/`.
+- Don't bypass the store and read `localStorage` directly.
+- Don't add a route without wiring it into `src/App.tsx` and the nav (`TopBar` + `BottomNav`).
+- Don't use `react-router`'s data APIs (`loader`, `action`) without team discussion — we currently use plain components + Zustand.

@@ -1,0 +1,89 @@
+---
+description: Rules for Zustand persisted stores in src/store/
+globs: src/store/**
+alwaysApply: false
+---
+
+# Store rules — `src/store/`
+
+All stores are Zustand with the `persist` middleware writing to `localStorage`. Existing user data is in production (well, on real users' machines once we ship). **Schema changes need migrations or data is silently lost.**
+
+## Existing stores
+
+- `useScenarioStore` — saved scenarios + comparison set
+- `useSettingsStore` — global settings
+- `useEstimateStore` — estimate builder state, including `manualOverrides`
+- `useCatalogStore` — material catalogs (versioned, multi-catalog)
+- `useTemplatesStore` — BOM templates per project type
+
+Read `src/store/estimates.ts` and `src/store/catalog.ts` before adding a new store — match their patterns (slice shape, selectors, action naming, migration block).
+
+## Invariants
+
+1. **Every persisted store has `name` and `version` set explicitly.** No defaulting.
+2. **Schema change = bump version + write migration in the same commit.** Use the `migrate` option of `persist`. Cover the migration with at least one test that loads old shape and asserts new shape.
+3. **No imports from `src/routes/` or `src/components/`.** Stores depend on `src/lib/` and `src/types/` only.
+4. **Selectors over destructuring.** Prefer `useEstimateStore(s => s.ppaRate)` to `const { ppaRate } = useEstimateStore()`. The latter re-renders on any store change.
+5. **Actions live on the store, not in components.** A component should call `useEstimateStore.getState().updateLine(...)` or use a returned action — never mutate the store from outside.
+
+## Manual override flags (estimate store)
+
+The estimate store carries two `manualOverrides` blocks that survive re-derivation:
+
+- `manualOverrides.materials[materialKey]` — `{ unitCost?: boolean; quantity?: boolean }`
+- `manualOverrides.defaults[fieldName]` — for the seven `CATALOG_DEFAULT_FIELDS` (lifespan, degradation, inflation, discount, CUF, PPA escalation, O&M %)
+
+Rules:
+
+- When the user explicitly edits a field, set the corresponding flag to `true` in the same action.
+- When the user explicitly resets a row/field, set it back to `false`.
+- When `deriveMaterials` or `applyCatalogDefaults` runs, **never overwrite a flagged field**. The catalog/derive layer enforces this, but if you add a new derivation path you must re-implement the guard.
+- On scenario save, the builder marks **all** of the seven defaults as touched so a future project-type change won't quietly rewrite them. Don't undo this.
+
+See [`docs/architecture.md`](../../docs/architecture.md) §"Override flags" for the longer explanation.
+
+## Migration template
+
+When you bump a store version, follow this shape:
+
+```ts
+persist(
+  (set, get) => ({
+    /* state + actions */
+  }),
+  {
+    name: 'solarcalc-estimates',
+    version: 4, // was 3
+    migrate: (persistedState, fromVersion) => {
+      let state = persistedState as EstimateState;
+      if (fromVersion < 4) {
+        state = {
+          ...state,
+          // explicit, narrow change — never a sweeping rewrite
+          newField: defaultValue,
+        };
+      }
+      return state;
+    },
+  }
+);
+```
+
+And add a test:
+
+```ts
+it('migrates v3 → v4 by adding newField with default', () => {
+  const v3 = {
+    /* old shape */
+  };
+  const migrated = migrate(v3, 3);
+  expect(migrated.newField).toBe(defaultValue);
+});
+```
+
+## Don'ts
+
+- Don't read from `localStorage` directly in components — go through the store.
+- Don't put derived values in the store — derive in selectors or in `lib/calc/`.
+- Don't add a third middleware (devtools, immer) to a single store without doing it to all of them — consistency matters.
+- Don't catch errors silently in a `migrate` function. If migration fails, the user sees fresh state — surface it.

@@ -4,6 +4,12 @@ A mobile-first PWA for evaluating solar plant feasibility (0.25–5 MW projects,
 prices in ₹). Built per the spec in [`docs/prd.md`](docs/prd.md); the original
 Stitch design references live in [`docs/design/`](docs/design).
 
+## New here?
+
+- **First time in the repo?** Read [`docs/onboarding.md`](docs/onboarding.md) — it's the day-1 reading path.
+- **Coding conventions** (for both humans and AI agents): [`AGENTS.md`](AGENTS.md) and [`.cursor/rules/`](.cursor/rules/).
+- **How we work** (push-to-main, hooks, high-risk areas): [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Stack
 
 - Vite + React 18 + TypeScript (strict)

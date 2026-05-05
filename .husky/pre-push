@@ -1,0 +1,10 @@
+echo "▸ pre-push: lint"
+npm run lint || exit 1
+
+echo "▸ pre-push: tests"
+npm test || exit 1
+
+echo "▸ pre-push: build"
+npm run build || exit 1
+
+echo "✓ pre-push checks passed"

@@ -1,0 +1,63 @@
+---
+description: Design system rules for any UI work — tokens, type, spacing, charts
+globs: src/**/*.tsx, src/**/*.css, tailwind.config.ts
+alwaysApply: false
+---
+
+# Design system rules — UI / styles
+
+This is a short enforcement layer. The full visual contract — every token, every type level, every chart palette, every component pattern — is in [`docs/design.md`](../../docs/design.md). **Read it before adding any UI.**
+
+## Hard rules (these get enforced in review)
+
+1. **No raw hex.** No `#047857`, no `text-emerald-600`, no `bg-[#FFF]`. Use the named tokens in [`tailwind.config.ts`](../../tailwind.config.ts) (`primary`, `surface`, `success`, `error`, `on-surface-variant`, etc.).
+2. **No raw px / ms / shadow strings in `.tsx` files.** Use spacing tokens (`p-lg`, `gap-md`), radius tokens (`rounded-lg`), shadow tokens (`shadow-card`, `shadow-elevated`), motion tokens (`duration-base`, `ease-standard`).
+3. **No raw greys.** `text-on-surface-variant` is the only correct way to get a secondary text colour. `text-gray-500` is wrong; it isn't theme-aware.
+4. **Numbers always use `tabular`.** Either `text-data tabular` (KPIs, hero numbers) or `text-body tabular` (inline figures). Never plain numbers in a column.
+5. **Icons via `<Icon name="..." />` only.** Never inline `<span class="material-symbols-outlined">`.
+6. **One `secondary` (sunlight amber) accent per screen, max.** It marks the most important thing. If everything is highlighted, nothing is.
+7. **Currency / percent via `lib/format.ts`.** `formatCurrency`, `formatLakhCrore`, `formatPercent`, `formatYears`, `formatMW`, `formatTonnes`, `formatKWh`. Never `toLocaleString`, `toFixed`, or hand-rolled `₹`/`%` strings.
+
+## Theme awareness
+
+The app currently runs in light mode (`<html class="light">`) but every component must work in dark mode by **only using token names**. If you find yourself writing a conditional for theme, you're using the wrong token.
+
+## Charts (Recharts)
+
+When adding or editing a chart in `src/components/charts/`:
+
+- Series 1 always uses `primary`.
+- Categorical palette in [`docs/design.md`](../../docs/design.md) §9.1 — use the colours in order.
+- With ≥3 series, vary stroke style as well as colour (solid → dashed → dotted) for colour-blind safety.
+- Use the standard axis/grid/tooltip styling in [`docs/design.md`](../../docs/design.md) §9.5 — don't reinvent it per chart.
+- Positive cash flow → `success`; negative → `error`; break-even marker → `secondary`; baseline reference → `outline` dashed `4 4`.
+
+**Forbidden chart types**: 3D, true pie (use donut), dual-axis line, bubble, radial bar.
+
+## Mobile
+
+- Components must work at 360px wide.
+- Tap targets ≥ 48px (`h-touch-target`).
+- Tables: `overflow-x-auto` + `sticky left-0 bg-surface` first column.
+- Tooltips: tap-to-open on mobile (handled by `Tooltip` primitive — don't reinvent).
+- Numeric inputs: `inputmode="decimal"` for ₹/%, `"numeric"` for years.
+
+## Motion
+
+- Hover/press: `duration-fast` (120ms).
+- Enter/exit, panel toggles: `duration-base` (200ms).
+- Modals/sheets: `duration-slow` (320ms) with `ease-emphasised`.
+- `prefers-reduced-motion` is handled globally in `src/index.css` — **don't override per component**, and never rely on transform-based animation to convey information.
+
+## When you need something that isn't here
+
+Add a token to `tailwind.config.ts` with a one-line comment explaining the use case. **Don't** hard-code a value. If the new token is reusable, also document it in `docs/design.md`. The doc is the contract — code without an entry there is technical debt.
+
+## Reference files (read these for patterns)
+
+- Layout shell: [`src/components/layout/AppShell.tsx`](../../src/components/layout/AppShell.tsx)
+- KPI card: [`src/components/ui/KpiCard.tsx`](../../src/components/ui/KpiCard.tsx)
+- Tag/badge: [`src/components/ui/Tag.tsx`](../../src/components/ui/Tag.tsx)
+- Tooltip (mobile-aware): [`src/components/ui/Tooltip.tsx`](../../src/components/ui/Tooltip.tsx)
+- Mobile table reference: [`src/routes/Results/PnLTable.tsx`](../../src/routes/Results/PnLTable.tsx)
+- Chart wrapper reference: [`src/components/charts/MultiCashFlowChart.tsx`](../../src/components/charts/MultiCashFlowChart.tsx)

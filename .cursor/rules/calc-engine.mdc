@@ -1,0 +1,59 @@
+---
+description: Rules for the pure finance calc engine in src/lib/calc/
+globs: src/lib/calc/**
+alwaysApply: false
+---
+
+# Calc engine rules — `src/lib/calc/`
+
+This is the pure-finance heart of the app. It produces every number the user sees in Results, Compare, and Export. Bugs here are silent and high-impact. Treat changes here with extra care.
+
+## Invariants
+
+1. **Pure functions only.** No React, no DOM, no `window`, no `localStorage`, no Zustand. No imports from `src/store/`, `src/routes/`, `src/components/`. The only allowed imports are from `src/types/` and other `src/lib/` modules (and Node primitives).
+2. **No side effects.** No mutation of input arguments. No global state. Same input → same output, every time.
+3. **Public surface goes through the barrel.** UI imports `computeScenario` from `@/lib/calc` (i.e. `src/lib/calc/index.ts`). Don't add new top-level imports from individual modules in routes/components.
+4. **Tests are mandatory.** Every public function in this folder has a vitest in `src/lib/calc/index.test.ts` (or a sibling `*.test.ts`). If you add or change a public function, add or update tests **in the same commit**.
+
+## Module map (don't reshuffle without reason)
+
+| File          | Public exports                                                                                            |
+| ------------- | --------------------------------------------------------------------------------------------------------- |
+| `energy.ts`   | `annualEnergyKWh`, `yearlyEnergy`, `yearlyRevenue`                                                        |
+| `om.ts`       | `yearlyOM`                                                                                                |
+| `capex.ts`    | `capexBreakdown`, `CapexBreakdown`                                                                        |
+| `loan.ts`     | `loanSchedule`, `loanAmountForScenario`, `LoanRow`                                                        |
+| `cashflow.ts` | `yearlyCashFlows`, `cumulativeCF`, `npv`, `irr`                                                           |
+| `payback.ts`  | `paybackYears`, `breakEvenYear`                                                                           |
+| `co2.ts`      | `co2Tonnes`, `CO2_FACTOR_KG_PER_KWH` (= 0.82, India CEA grid factor — do not change without a PRD update) |
+| `compute.ts`  | `computeScenario`, `ComputedResults`, `PnLRow`, `ScenarioOverrides`                                       |
+| `index.ts`    | barrel — public surface for `@/lib/calc`                                                                  |
+
+## Sensitive constants
+
+These have product/regulatory meaning. Treat as read-only unless the change is accompanied by a PRD update and a test update:
+
+- `CO2_FACTOR_KG_PER_KWH = 0.82` (India CEA)
+- IRR Newton-Raphson seed (`0.10`) and bisection fallback in `cashflow.ts`
+- Loan grace-period semantics (interest-only during grace, then annuity) in `loan.ts`
+
+## What-if overrides
+
+`computeScenario` accepts a `ScenarioOverrides` object. Adding a new override:
+
+1. Add the field to `ScenarioOverrides` in `compute.ts` with a JSDoc one-liner.
+2. Wire it through the relevant module (e.g. loan, cashflow).
+3. Add a test that verifies the override path **and** that omitting it doesn't change baseline behaviour.
+4. Document it in the override table in [`docs/architecture.md`](../../docs/architecture.md) §"What-if overrides".
+
+## Numerical hygiene
+
+- Currency math: keep in plain numbers (₹). Don't introduce a Decimal library without team discussion — it cascades.
+- Avoid `Number.EPSILON` comparisons; tests use explicit tolerances (`expect(x).toBeCloseTo(y, 2)`).
+- For divide-by-zero paths (e.g. zero-loan, zero-energy), return a defined value (often `0` or `null`) — never `NaN` or `Infinity` leaking into the UI.
+
+## Don'ts
+
+- Don't add a function here that needs `useState`, `useEffect`, or anything React-shaped — that belongs in `src/routes/<Route>/` or a hook in that route's folder.
+- Don't read from a store inside a calc function — pass the data in as an argument.
+- Don't catch and swallow errors here. Throw with a useful message; the route layer decides what to show the user.
