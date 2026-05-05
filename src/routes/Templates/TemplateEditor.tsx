@@ -85,7 +85,7 @@ export function TemplateEditor() {
 
   if (!template) {
     return (
-      <div className="rounded border border-outline-variant bg-surface-container-lowest p-md text-on-surface-variant">
+      <div className="rounded border border-outline-variant bg-surface-container-lowest p-lg text-on-surface-variant">
         <p>Template not found.</p>
         <Link to="/templates" className="text-primary hover:underline">
           ← Back to templates
@@ -95,9 +95,9 @@ export function TemplateEditor() {
   }
 
   return (
-    <div className="flex flex-col gap-lg">
-      <div className="flex flex-wrap items-start justify-between gap-sm">
-        <div className="flex flex-col gap-sm flex-1 min-w-[280px]">
+    <div className="flex flex-col gap-xl">
+      <div className="flex flex-wrap items-start justify-between gap-md">
+        <div className="flex flex-col gap-md flex-1 min-w-[280px]">
           <Link to="/templates" className="text-body-sm text-on-surface-variant hover:text-primary">
             ← All templates
           </Link>
@@ -113,7 +113,7 @@ export function TemplateEditor() {
             </span>
           )}
         </div>
-        <div className="flex flex-wrap items-center gap-sm justify-end">
+        <div className="flex flex-wrap items-center gap-md justify-end">
           {!editable ? (
             <Button
               variant="outline"
@@ -162,7 +162,7 @@ export function TemplateEditor() {
             Generate estimate
           </Button>
           <button
-            className="p-2 rounded hover:bg-error/10 text-error"
+            className="p-1 rounded hover:bg-error/10 text-error"
             title="Delete template"
             type="button"
             onClick={() => {
@@ -177,7 +177,7 @@ export function TemplateEditor() {
         </div>
       </div>
 
-      <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-md grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md">
+      <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-lg grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
         <Field label="Facet">
           {editable ? (
             <select
@@ -185,7 +185,7 @@ export function TemplateEditor() {
               onChange={(e) =>
                 updateTemplate(template.id, { facetId: e.target.value })
               }
-              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-1 py-1 text-body-md"
             >
               {facetsSorted.map((f) => (
                 <option key={f.id} value={f.id}>
@@ -211,7 +211,7 @@ export function TemplateEditor() {
                       projectType: e.target.value as ProjectType,
                     })
                   }
-                  className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+                  className="w-full rounded border border-outline-variant bg-surface-container-lowest px-1 py-1 text-body-md"
                 >
                   {PROJECT_CHOICES.map((t) => (
                     <option key={t} value={t}>
@@ -234,7 +234,7 @@ export function TemplateEditor() {
                       syncType: e.target.value as SyncType,
                     })
                   }
-                  className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+                  className="w-full rounded border border-outline-variant bg-surface-container-lowest px-1 py-1 text-body-md"
                 >
                   {SYNC_TYPES.map((s) => (
                     <option key={s} value={s}>
@@ -268,7 +268,7 @@ export function TemplateEditor() {
                   baseCapacityKW: Math.max(0, Number(e.target.value)),
                 })
               }
-              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-1 py-1 text-body-md"
             />
           ) : (
             <ReadOnlyValue>
@@ -283,7 +283,7 @@ export function TemplateEditor() {
               onChange={(e) =>
                 updateTemplate(template.id, { version: e.target.value })
               }
-              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-1 py-1 text-body-md"
             />
           ) : (
             <ReadOnlyValue>{template.version}</ReadOnlyValue>
@@ -299,7 +299,7 @@ export function TemplateEditor() {
                   effectiveFrom: new Date(e.target.value).getTime() || Date.now(),
                 })
               }
-              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-2 py-2 text-body-md"
+              className="w-full rounded border border-outline-variant bg-surface-container-lowest px-1 py-1 text-body-md"
             />
           ) : (
             <ReadOnlyValue>{effectiveDateDisplay}</ReadOnlyValue>
@@ -310,19 +310,19 @@ export function TemplateEditor() {
             <input
               value={template.source}
               disabled
-              className="w-full rounded border border-outline-variant bg-surface-container-low px-2 py-2 text-body-md text-on-surface-variant"
+              className="w-full rounded border border-outline-variant bg-surface-container-low px-1 py-1 text-body-md text-on-surface-variant"
             />
           ) : (
             <ReadOnlyValue>{template.source}</ReadOnlyValue>
           )}
         </Field>
         <Field label="Created">
-          <div className="px-2 py-2 text-body-md text-on-surface-variant">
+          <div className="px-1 py-1 text-body-md text-on-surface-variant">
             {new Date(template.createdAt).toLocaleDateString('en-IN')}
           </div>
         </Field>
         <Field label="Updated">
-          <div className="px-2 py-2 text-body-md text-on-surface-variant">
+          <div className="px-1 py-1 text-body-md text-on-surface-variant">
             {new Date(template.updatedAt).toLocaleString('en-IN')}
           </div>
         </Field>
@@ -353,11 +353,11 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0.5">
       <span className="font-label-sm text-label-sm uppercase tracking-wide text-on-surface-variant">
         {label}
         {hint && (
-          <span className="ml-1 normal-case text-body-sm opacity-70">
+          <span className="ml-0.5 normal-case text-body-sm opacity-70">
             ({hint})
           </span>
         )}
@@ -369,7 +369,7 @@ function Field({
 
 function ReadOnlyValue({ children }: { children: ReactNode }) {
   return (
-    <div className="px-2 py-2 text-body-md text-on-surface min-h-[42px] flex items-center">
+    <div className="px-1 py-1 text-body-md text-on-surface min-h-[42px] flex items-center">
       {children}
     </div>
   );

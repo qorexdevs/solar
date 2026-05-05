@@ -1,4 +1,8 @@
-import type { ComposeMode, MaterialCatalogItem } from '@/types';
+import type {
+  ComposeMode,
+  MaterialCatalogItem,
+  MaterialFacetTags,
+} from '@/types';
 import type { BOMCategory, BOMUom } from '@/types';
 
 function stamp(): { createdAt: number; updatedAt: number } {
@@ -18,6 +22,7 @@ function bom(
     description?: string;
     make?: string;
     notes?: string;
+    facetTags?: MaterialFacetTags;
   }
 ): MaterialCatalogItem {
   return {
@@ -32,6 +37,7 @@ function bom(
     description: fields.description,
     make: fields.make,
     notes: fields.notes,
+    facetTags: fields.facetTags,
     status: 'active',
     ...stamp(),
   };
@@ -47,6 +53,7 @@ function scope(
     defaultComposeMode?: ComposeMode;
     description?: string;
     notes?: string;
+    facetTags?: MaterialFacetTags;
   }
 ): MaterialCatalogItem {
   return {
@@ -59,6 +66,7 @@ function scope(
     defaultComposeMode: fields.defaultComposeMode ?? 'sum',
     description: fields.description,
     notes: fields.notes,
+    facetTags: fields.facetTags,
     status: 'active',
     ...stamp(),
   };
@@ -125,6 +133,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       description:
         'Galvanised penetrating-type 28 MMS mounting structure (kg of steel).',
       make: 'Galvanized',
+      facetTags: { mounting: ['ground'] },
     }),
     bom('cat-mms-rooftop', 'Module Mounting — Rooftop ballast kit', {
       category: 'mounting',
@@ -133,6 +142,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       gstPercent: 18,
       description: 'Ballasted rooftop MMS (kg steel / ballast composite).',
       defaultComposeMode: 'max',
+      facetTags: { mounting: ['rooftop'] },
     }),
     bom('cat-inv-canopy-mms', 'Inverter Mounting Structure with Canopy', {
       category: 'mounting',
@@ -171,6 +181,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       defaultRate: 150,
       gstPercent: 18,
       description: 'HT-grade earth-pit grid GI strip (kg).',
+      facetTags: { voltageClass: ['HT'] },
     }),
     bom('cat-dcdb', 'Inverter Termination Box (DCDB)', {
       category: 'metering',
@@ -186,6 +197,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       gstPercent: 18,
       description: '250A 4P MCCB & 1000A ACB with metering, SPD, breakers.',
       make: 'L&T / Schneider / Siemens',
+      facetTags: { voltageClass: ['HT'] },
     }),
     bom('cat-ac-ltdb-lt', 'AC LTDB / ACB Panel', {
       category: 'metering',
@@ -194,6 +206,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       gstPercent: 18,
       description: 'LT distribution panel with metering, breakers, SPD.',
       make: 'L&T / Schneider / Siemens',
+      facetTags: { voltageClass: ['LT'] },
     }),
     bom('cat-wms', 'Weather Monitoring System', {
       category: 'monitoring',
@@ -208,6 +221,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       defaultRate: 200_000,
       gstPercent: 18,
       description: 'Plant-wide SCADA control + monitoring.',
+      facetTags: { monitoring: ['basic'] },
     }),
     bom('cat-scada-advanced', 'SCADA — Advanced historian & gateway', {
       category: 'monitoring',
@@ -216,6 +230,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       gstPercent: 18,
       description: 'Historian + dual-site gateway bundle (optional uplift).',
       defaultComposeMode: 'sum',
+      facetTags: { monitoring: ['advanced'] },
     }),
     bom('cat-xfmr-1200', 'Step-Up Power Transformer 1200 kVA', {
       category: 'switchyard',
@@ -224,6 +239,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       gstPercent: 18,
       description: '0.80 / 33 kV oil-cooled step-up transformer.',
       make: 'Esennar',
+      facetTags: { voltageClass: ['HT'] },
     }),
     bom('cat-vcb-33kv', 'VCB Panel 33 kV', {
       category: 'switchyard',
@@ -232,6 +248,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       gstPercent: 18,
       description: 'VCB panel with metering & protection control.',
       make: 'CG / ABB',
+      facetTags: { voltageClass: ['HT'] },
     }),
     bom('cat-ht-switchyard', 'HT Switch Yard', {
       category: 'switchyard',
@@ -239,6 +256,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       defaultRate: 500_000,
       gstPercent: 18,
       description: 'HT switchyard erection.',
+      facetTags: { voltageClass: ['HT'] },
     }),
     bom('cat-svc-epc', 'Installation & Commissioning + Civil', {
       category: 'services',
@@ -260,6 +278,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       defaultRate: 1.0,
       gstPercent: 18,
       description: 'NREDCAP / DISCOM / SLDC + synchronisation, HT.',
+      facetTags: { voltageClass: ['HT'] },
     }),
     bom('cat-svc-approvals-lt', 'Approvals (LT)', {
       category: 'services',
@@ -267,6 +286,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       defaultRate: 0.75,
       gstPercent: 18,
       description: 'NREDCAP / DISCOM + synchronisation, LT.',
+      facetTags: { voltageClass: ['LT'] },
     }),
     bom('cat-civil-dwc', 'DWC Pipe (UV-protected)', {
       category: 'civil',
@@ -301,6 +321,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       defaultAmount: 130_000,
       gstPercent: 18,
       description: 'Regulatory CEIG inspection + approval (HT plants).',
+      facetTags: { voltageClass: ['HT'] },
     }),
     scope('cat-scope-cleaning', 'Module Cleaning System', {
       category: 'services',
@@ -326,6 +347,7 @@ export function seedMaterialCatalog(): MaterialCatalogItem[] {
       gstPercent: 18,
       description: 'CT/PT metering kit + interface work (illustrative).',
       defaultComposeMode: 'sum',
+      facetTags: { businessModel: ['openAccess'] },
     }),
   ];
 }

@@ -25,14 +25,14 @@ export function CostDonut({ slices }: Props) {
 
   if (total === 0) {
     return (
-      <div className="text-on-surface-variant text-center py-md">
+      <div className="text-on-surface-variant text-center py-lg">
         Add costs to see the breakdown.
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-md">
+    <div className="flex flex-col gap-lg">
       <div className="h-[180px] w-full">
         <ResponsiveContainer>
           <PieChart>
@@ -60,7 +60,7 @@ export function CostDonut({ slices }: Props) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <ul className="space-y-2">
+      <ul className="space-y-0.5">
         {data.map((d, i) => {
           const pct = (d.value / total) * 100;
           return (
@@ -68,7 +68,7 @@ export function CostDonut({ slices }: Props) {
               key={d.id}
               className="flex justify-between items-center font-label-sm text-label-sm"
             >
-              <span className="flex items-center gap-2 text-on-surface">
+              <span className="flex items-center gap-1 text-on-surface">
                 <span
                   className="w-3 h-3 rounded-full"
                   style={{ background: PALETTE[i % PALETTE.length] }}

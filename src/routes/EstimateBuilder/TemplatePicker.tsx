@@ -89,9 +89,9 @@ export function TemplatePicker({
 
   if (templates.filter((t) => t.status === 'active').length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-outline bg-surface-container-low p-xl text-center">
+      <div className="rounded-lg border border-dashed border-outline bg-surface-container-low p-2xl text-center">
         <Icon name="info" className="text-4xl text-on-surface-variant" />
-        <p className="font-body-lg text-body-lg text-on-surface-variant mt-2">
+        <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">
           No active templates yet. Open Templates to mark templates Active first.
         </p>
       </div>
@@ -104,8 +104,8 @@ export function TemplatePicker({
   })();
 
   return (
-    <div className="flex flex-col gap-md">
-      <div className="-mx-xs flex flex-nowrap gap-x-lg overflow-x-auto px-xs pb-xs items-start">
+    <div className="flex flex-col gap-lg">
+      <div className="-mx-xs flex flex-nowrap gap-x-xl overflow-x-auto px-xs pb-xs items-start">
         {sortedFacets.map((facet) => {
           const accent = facetStripAccent(facet.id);
 
@@ -115,11 +115,11 @@ export function TemplatePicker({
             >
               <span>{facet.name}</span>
               {facet.required ? (
-                <span className="text-error ml-0.5" aria-hidden>
+                <span className="text-error ml-px" aria-hidden>
                   *
                 </span>
               ) : (
-                <span className="text-body-sm font-normal text-on-surface-variant ml-1">
+                <span className="text-body-sm font-normal text-on-surface-variant ml-0.5">
                   (optional)
                 </span>
               )}
@@ -146,7 +146,7 @@ export function TemplatePicker({
                     return (
                       <div
                         key={kind}
-                        className="w-full max-w-[12rem] rounded-full border border-dashed border-outline-variant px-sm py-xs text-body-sm text-on-surface-variant"
+                        className="w-full max-w-[12rem] rounded-full border border-dashed border-outline-variant px-md py-xs text-body-sm text-on-surface-variant"
                       >
                         {label}: missing
                       </div>
@@ -230,12 +230,12 @@ export function TemplatePicker({
       </div>
 
       {showPreviewStrip && (
-        <div className="flex items-center justify-between rounded-lg bg-surface-container-low p-md border border-outline-variant shadow-card">
+        <div className="flex items-center justify-between rounded-lg bg-surface-container-low p-lg border border-outline-variant shadow-card">
           <span className="font-body-md text-on-surface-variant">Grand total preview</span>
           <span className="font-headline-md text-headline-md text-primary">
             ₹ {formatINR(previewTotal)}
             {!requiredMet && (
-              <span className="text-body-sm font-normal text-on-surface-variant ml-2">
+              <span className="text-body-sm font-normal text-on-surface-variant ml-1">
                 (finish required facets)
               </span>
             )}

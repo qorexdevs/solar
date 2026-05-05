@@ -11,7 +11,7 @@ export function ResetButton({ disabled, onClick }: Props) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`font-label-sm text-label-sm flex items-center gap-1 transition-colors ${
+      className={`font-label-sm text-label-sm flex items-center gap-0.5 transition-colors ${
         disabled
           ? 'text-outline opacity-50 cursor-not-allowed'
           : 'text-primary hover:text-primary-container'

@@ -42,10 +42,10 @@ export function TemplateSummary({ template, editable }: Props) {
   );
 
   return (
-    <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-md flex flex-col gap-sm">
-      <div className="flex flex-wrap items-center justify-between gap-sm">
+    <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-lg flex flex-col gap-md">
+      <div className="flex flex-wrap items-center justify-between gap-md">
         <h3 className="font-headline-md text-headline-md">Base totals @ defaults</h3>
-        <div className="flex items-center gap-sm">
+        <div className="flex items-center gap-md">
           {editable ? (
             <>
               <select
@@ -53,7 +53,7 @@ export function TemplateSummary({ template, editable }: Props) {
                 onChange={(e) =>
                   setStatus(template.id, e.target.value as TemplateStatus)
                 }
-                className="rounded border border-outline bg-surface-container-low px-2 py-1 text-body-sm"
+                className="rounded border border-outline bg-surface-container-low px-1 py-0.5 text-body-sm"
               >
                 {TEMPLATE_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -77,7 +77,7 @@ export function TemplateSummary({ template, editable }: Props) {
       </div>
 
       {totals ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-md">
           <Stat label="Main BOM" value={`₹ ${formatINR(totals.mainBomSubtotal)}`} />
           <Stat label="Main GST" value={`₹ ${formatINR(totals.mainBomGst)}`} />
           <Stat
@@ -98,12 +98,12 @@ export function TemplateSummary({ template, editable }: Props) {
       )}
 
       {issues.length > 0 && (
-        <div className="rounded border border-error/40 bg-error/5 p-sm">
-          <div className="flex items-center gap-1 text-error font-label-sm">
+        <div className="rounded border border-error/40 bg-error/5 p-md">
+          <div className="flex items-center gap-0.5 text-error font-label-sm">
             <Icon name="error" className="text-base" />
             <span>{issues.length} validation issue(s)</span>
           </div>
-          <ul className="mt-1 text-body-sm text-on-surface-variant list-disc pl-5">
+          <ul className="mt-0.5 text-body-sm text-on-surface-variant list-disc pl-2.5">
             {issues.slice(0, 8).map((i, idx) => (
               <li key={idx}>
                 <code className="text-on-surface">{i.path}</code>: {i.message}
@@ -119,7 +119,7 @@ export function TemplateSummary({ template, editable }: Props) {
         {editable ? (
           <textarea
             rows={3}
-            className="w-full mt-2 rounded border border-outline-variant bg-surface-container-lowest px-2 py-1 text-on-surface"
+            className="w-full mt-1 rounded border border-outline-variant bg-surface-container-lowest px-1 py-0.5 text-on-surface"
             value={template.description ?? ''}
             onChange={(e) =>
               update(template.id, { description: e.target.value || undefined })
@@ -127,7 +127,7 @@ export function TemplateSummary({ template, editable }: Props) {
             placeholder="Free-form notes about this scenario template."
           />
         ) : (
-          <p className="mt-2 whitespace-pre-wrap text-body-md text-on-surface">
+          <p className="mt-1 whitespace-pre-wrap text-body-md text-on-surface">
             {template.description?.trim()
               ? template.description
               : 'No notes for this template.'}
@@ -149,7 +149,7 @@ function Stat({
 }) {
   return (
     <div
-      className={`rounded p-sm ${
+      className={`rounded p-md ${
         accent
           ? 'bg-primary text-on-primary'
           : 'bg-surface-container-low text-on-surface'
@@ -162,7 +162,7 @@ function Stat({
       >
         {label}
       </div>
-      <div className="text-headline-sm font-headline-sm mt-1">{value}</div>
+      <div className="text-headline-sm font-headline-sm mt-0.5">{value}</div>
     </div>
   );
 }

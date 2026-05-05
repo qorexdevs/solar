@@ -12,7 +12,7 @@ export function CityCombobox({ value, onPick }: Props) {
   }, []);
   const id = useId();
   return (
-    <label className="flex flex-col gap-1">
+    <label className="flex flex-col gap-0.5">
       <span className="font-label-sm text-label-sm text-on-surface font-semibold">
         Pick a city
       </span>

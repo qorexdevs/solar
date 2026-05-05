@@ -24,16 +24,16 @@ export function IrradianceSection({ estimate, yieldResult }: Props) {
   const annualGHI = snap.record.annual.ghi;
 
   return (
-    <div className="flex flex-col gap-md">
-      <div className="flex items-end justify-between gap-sm">
+    <div className="flex flex-col gap-lg">
+      <div className="flex items-end justify-between gap-md">
         <div>
-          <p className="font-label-sm text-label-sm text-outline mb-1 uppercase tracking-wider">
+          <p className="font-label-sm text-label-sm text-outline mb-0.5 uppercase tracking-wider">
             Site irradiance &amp; yield
           </p>
           <h3 className="font-headline-lg text-headline-lg text-on-surface">
             {estimate.location.label ?? snap.record.name}
           </h3>
-          <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">
+          <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
             {estimate.location.lat.toFixed(3)}, {estimate.location.lng.toFixed(3)} ·
             tilt {estimate.location.tiltDeg}° · azimuth{' '}
             {estimate.location.azimuthDeg}° · {snap.record.climate_zone} climate
@@ -42,7 +42,7 @@ export function IrradianceSection({ estimate, yieldResult }: Props) {
       </div>
 
       {estimate.location.urbanShading && (
-        <div className="rounded-xl border border-error/40 bg-error/5 p-md flex items-start gap-sm">
+        <div className="rounded-xl border border-error/40 bg-error/5 p-lg flex items-start gap-md">
           <Icon name="warning" className="text-error text-[22px] shrink-0" />
           <div>
             <p className="font-body-md text-body-md text-on-surface">
@@ -53,7 +53,7 @@ export function IrradianceSection({ estimate, yieldResult }: Props) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-sm">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-md">
         <KpiCard
           accent="primary"
           icon="wb_sunny"

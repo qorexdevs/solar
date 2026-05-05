@@ -23,3 +23,10 @@ export {
   syntheticMountChoices,
   type MountKind,
 } from './mountSemantic';
+export {
+  applyLineOverrides,
+  hasAnyLineOverride,
+  hasLineOverride,
+  type AppliedOverrides,
+  type DisplayBOM,
+} from './applyLineOverrides';

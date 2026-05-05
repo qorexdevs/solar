@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/Switch';
 import { CityCombobox } from '@/components/irradiance/CityCombobox';
 import {
   optimizeTilt,
+  parseFiniteLatLng,
   simulateYield,
   snapToNearestCity,
 } from '@/lib/irradiance';
@@ -38,11 +39,6 @@ const CoordsInput = lazy(() =>
     default: m.CoordsInput,
   }))
 );
-const SnapIndicator = lazy(() =>
-  import('@/components/irradiance/LocationPicker').then((m) => ({
-    default: m.SnapIndicator,
-  }))
-);
 
 type Props = {
   /** Currently pinned location (or `undefined` if none). */
@@ -68,11 +64,16 @@ export function SiteLocationSection({ location, onChange }: Props) {
 
   const yieldPreview = useMemo(() => {
     if (!location) return null;
-    const snap = snapToNearestCity(location.lat, location.lng);
+    const pair = parseFiniteLatLng(location.lat, location.lng);
+    if (!pair) return null;
+    const snap = snapToNearestCity(pair[0], pair[1]);
     if (!snap) return null;
     return {
       snap,
-      result: simulateYield({ location, record: snap.record }),
+      result: simulateYield({
+        location: { ...location, lat: pair[0], lng: pair[1] },
+        record: snap.record,
+      }),
     };
   }, [location]);
 
@@ -121,177 +122,151 @@ export function SiteLocationSection({ location, onChange }: Props) {
   }
 
   return (
-    <FormSection
-      title="Site location"
-      subtitle="Pin a site to drive yield from real NSRDB India irradiance instead of a flat CUF."
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-md">
-        <div className="flex flex-col gap-sm">
-          <Suspense
-            fallback={
-              <div className="h-[320px] rounded-xl border border-outline-variant/40 bg-surface-container-low/40 flex items-center justify-center text-on-surface-variant">
-                Loading map…
-              </div>
-            }
-          >
-            <LocationPicker
+    <FormSection title="Site location">
+      <div className="flex flex-col gap-lg">
+        <div className="grid grid-cols-1 gap-md">
+          <CityCombobox
+            value={location?.cellId}
+            onPick={(la, ln, name, id) => onPin(la, ln, name, id)}
+          />
+          <Suspense fallback={null}>
+            <CoordsInput
               lat={location?.lat}
               lng={location?.lng}
               onChange={(la, ln) => onPin(la, ln)}
             />
           </Suspense>
-          <Suspense fallback={null}>
-            <SnapIndicator location={location ?? null} />
-          </Suspense>
         </div>
 
-        <div className="flex flex-col gap-sm">
-          <div className="grid grid-cols-1 gap-sm">
-            <CityCombobox
-              value={location?.cellId}
-              onPick={(la, ln, name, id) => onPin(la, ln, name, id)}
-            />
-            <Suspense fallback={null}>
-              <CoordsInput
-                lat={location?.lat}
-                lng={location?.lng}
-                onChange={(la, ln) => onPin(la, ln)}
+        <Suspense
+          fallback={
+            <div className="h-[320px] rounded-xl border border-outline-variant/40 bg-surface-container-low/40 flex items-center justify-center text-on-surface-variant">
+              Loading map…
+            </div>
+          }
+        >
+          <LocationPicker
+            lat={location?.lat}
+            lng={location?.lng}
+            onChange={(la, ln) => onPin(la, ln)}
+          />
+        </Suspense>
+
+        {location && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-md pt-md border-t border-outline-variant/30">
+              <Slider
+                id="loc_tilt"
+                label="Tilt"
+                value={location.tiltDeg}
+                onChange={(n) => patch('tiltDeg', Math.round(n))}
+                min={0}
+                max={45}
+                step={1}
+                variant="plain"
+                suffix="°"
               />
-            </Suspense>
-          </div>
+              <Slider
+                id="loc_az"
+                label="Azimuth"
+                value={location.azimuthDeg}
+                onChange={(n) => patch('azimuthDeg', Math.round(n))}
+                min={90}
+                max={270}
+                step={5}
+                variant="plain"
+                suffix="°"
+              />
+            </div>
 
-          {location && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-sm pt-sm border-t border-outline-variant/30">
-                <Slider
-                  id="loc_tilt"
-                  label="Tilt"
-                  value={location.tiltDeg}
-                  onChange={(n) => patch('tiltDeg', Math.round(n))}
-                  min={0}
-                  max={45}
-                  step={1}
-                  variant="plain"
-                  suffix="°"
-                />
-                <Slider
-                  id="loc_az"
-                  label="Azimuth"
-                  value={location.azimuthDeg}
-                  onChange={(n) => patch('azimuthDeg', Math.round(n))}
-                  min={90}
-                  max={270}
-                  step={5}
-                  variant="plain"
-                  suffix="°"
-                  hint="180° = due south. India is in the northern hemisphere; south-facing is canonical."
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                <SegmentedRow
-                  label="Optimize tilt for"
-                  value={location.tiltPurpose}
-                  options={TILT_PURPOSES}
-                  getLabel={(v) => TILT_PURPOSE_LABELS[v as TiltPurpose]}
-                  onChange={(v) => patch('tiltPurpose', v as TiltPurpose)}
-                  trailing={
-                    <button
-                      type="button"
-                      onClick={applyOptimalTilt}
-                      className="px-3 h-9 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm hover:opacity-90"
-                    >
-                      Apply optimum
-                    </button>
-                  }
-                />
-                <SegmentedRow
-                  label="Soiling environment"
-                  value={location.soilingEnv}
-                  options={SOILING_ENVIRONMENTS}
-                  getLabel={(v) => SOILING_LABELS[v as SoilingEnvironment]}
-                  onChange={(v) => patch('soilingEnv', v as SoilingEnvironment)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                <label className="flex flex-col gap-1">
-                  <span className="font-label-sm text-label-sm text-on-surface font-semibold">
-                    Roof / ground albedo
-                  </span>
-                  <select
-                    value={location.albedoType}
-                    onChange={(e) => {
-                      const t = e.target.value as RoofAlbedoType;
-                      setLocation({
-                        ...location,
-                        albedoType: t,
-                        albedo: ROOF_ALBEDO_VALUES[t],
-                      });
-                    }}
-                    className="h-touch-target rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md"
-                  >
-                    {ROOF_ALBEDO_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {ROOF_ALBEDO_LABELS[t]} (ρ = {ROOF_ALBEDO_VALUES[t].toFixed(2)})
-                      </option>
-                    ))}
-                  </select>
-                  <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    Cool roofs are India's high-albedo default; switch only if the
-                    site really has dark/concrete/green ground.
-                  </span>
-                </label>
-                <label className="flex items-start gap-sm pt-md">
-                  <Switch
-                    checked={location.urbanShading}
-                    onChange={(v) => patch('urbanShading', v)}
-                    label="Urban shading nearby"
-                  />
-                  <span className="font-body-md text-body-md text-on-surface">
-                    Urban shading nearby
-                    <span className="block font-label-sm text-label-sm text-on-surface-variant">
-                      Tall buildings, parapet walls, or trees reduce yield up to
-                      15% — flag here so the warning shows on Results.
-                    </span>
-                  </span>
-                </label>
-              </div>
-
-              {yieldPreview && (
-                <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low/60 p-sm flex items-center justify-between gap-sm">
-                  <div className="flex items-center gap-sm">
-                    <Icon name="auto_graph" className="text-primary text-[22px]" />
-                    <div>
-                      <p className="font-body-md text-body-md text-on-surface">
-                        Implied yield:{' '}
-                        <span className="font-semibold">
-                          {yieldPreview.result.annualSpecificYield.toFixed(0)}{' '}
-                          kWh/kWp/yr
-                        </span>{' '}
-                        · CUF{' '}
-                        <span className="font-semibold">
-                          {yieldPreview.result.impliedCufPct.toFixed(1)}%
-                        </span>
-                      </p>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant">
-                        Snapped to {yieldPreview.snap.record.name}, computed
-                        from monthly GHI + tilt + losses.
-                      </p>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <SegmentedRow
+                label="Optimize tilt for"
+                value={location.tiltPurpose}
+                options={TILT_PURPOSES}
+                getLabel={(v) => TILT_PURPOSE_LABELS[v as TiltPurpose]}
+                onChange={(v) => patch('tiltPurpose', v as TiltPurpose)}
+                trailing={
                   <button
                     type="button"
-                    onClick={() => setLocation(undefined)}
-                    className="px-3 h-9 rounded-full border border-outline-variant text-on-surface font-label-sm text-label-sm hover:bg-surface-variant"
+                    onClick={applyOptimalTilt}
+                    className="px-1.5 h-9 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm hover:opacity-90"
                   >
-                    Clear pin
+                    Apply optimum
                   </button>
+                }
+              />
+              <SegmentedRow
+                label="Soiling environment"
+                value={location.soilingEnv}
+                options={SOILING_ENVIRONMENTS}
+                getLabel={(v) => SOILING_LABELS[v as SoilingEnvironment]}
+                onChange={(v) => patch('soilingEnv', v as SoilingEnvironment)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+              <label className="flex flex-col gap-0.5">
+                <span className="font-label-sm text-label-sm text-on-surface font-semibold">
+                  Roof / ground albedo
+                </span>
+                <select
+                  value={location.albedoType}
+                  onChange={(e) => {
+                    const t = e.target.value as RoofAlbedoType;
+                    setLocation({
+                      ...location,
+                      albedoType: t,
+                      albedo: ROOF_ALBEDO_VALUES[t],
+                    });
+                  }}
+                  className="h-touch-target rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md"
+                >
+                  {ROOF_ALBEDO_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {ROOF_ALBEDO_LABELS[t]} (ρ = {ROOF_ALBEDO_VALUES[t].toFixed(2)})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-md min-h-touch-target">
+                <Switch
+                  checked={location.urbanShading}
+                  onChange={(v) => patch('urbanShading', v)}
+                  label="Urban shading nearby"
+                />
+                <span className="font-body-md text-body-md text-on-surface">
+                  Urban shading nearby
+                </span>
+              </label>
+            </div>
+
+            {yieldPreview && (
+              <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low/60 p-md flex items-center justify-between gap-md">
+                <div className="flex items-center gap-md min-w-0">
+                  <Icon name="auto_graph" className="text-primary text-[22px] shrink-0" />
+                  <p className="font-body-md text-body-md text-on-surface min-w-0">
+                    Implied yield:{' '}
+                    <span className="font-semibold">
+                      {yieldPreview.result.annualSpecificYield.toFixed(0)} kWh/kWp/yr
+                    </span>{' '}
+                    · CUF{' '}
+                    <span className="font-semibold">
+                      {yieldPreview.result.impliedCufPct.toFixed(1)}%
+                    </span>
+                  </p>
                 </div>
-              )}
-            </>
-          )}
-        </div>
+                <button
+                  type="button"
+                  onClick={() => setLocation(undefined)}
+                  className="px-1.5 h-9 rounded-full border border-outline-variant text-on-surface font-label-sm text-label-sm hover:bg-surface-variant shrink-0"
+                >
+                  Clear pin
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </FormSection>
   );
@@ -315,17 +290,17 @@ function SegmentedRow<T extends string>({
   trailing,
 }: SegmentedRowProps<T>) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0.5">
       <span className="font-label-sm text-label-sm text-on-surface font-semibold">
         {label}
       </span>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-1">
         {options.map((opt) => (
           <button
             key={opt}
             type="button"
             onClick={() => onChange(opt)}
-            className={`px-3 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
+            className={`px-1.5 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
               opt === value
                 ? 'bg-primary text-on-primary border-primary'
                 : 'bg-transparent text-on-surface border-outline-variant hover:bg-surface-variant'

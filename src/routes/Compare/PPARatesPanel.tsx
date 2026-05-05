@@ -220,7 +220,7 @@ export function PPARatesPanel() {
 
   if (estimates.length === 0) {
     return (
-      <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-md text-on-surface-variant">
+      <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg text-on-surface-variant">
         You don&apos;t have any estimates yet.{' '}
         <Link className="text-primary underline" to="/estimates/new">
           Create one
@@ -231,16 +231,16 @@ export function PPARatesPanel() {
   }
 
   return (
-    <div className="space-y-md">
-      <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-md shadow-card">
-        <h3 className="font-headline-md text-headline-md text-on-surface mb-sm">
+    <div className="space-y-lg">
+      <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg shadow-card">
+        <h3 className="font-headline-md text-headline-md text-on-surface mb-md">
           Select Estimate
         </h3>
-        <p className="font-label-sm text-label-sm text-on-surface-variant mb-sm">
+        <p className="font-label-sm text-label-sm text-on-surface-variant mb-md">
           Only estimates with finance enabled can be analysed — IRR / NPV /
           payback all depend on the finance layer.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
           {estimates.map((e) => {
             const vTpl = getVoltageClassTemplate(e, templates);
             const isSelected = e.id === selectedId;
@@ -251,7 +251,7 @@ export function PPARatesPanel() {
                 type="button"
                 onClick={() => !disabled && setSelectedId(e.id)}
                 disabled={disabled}
-                className={`text-left rounded-xl p-md flex items-start gap-sm border transition-all ${
+                className={`text-left rounded-xl p-lg flex items-start gap-md border transition-all ${
                   isSelected
                     ? 'border-2 border-primary bg-primary-fixed/20'
                     : disabled
@@ -263,7 +263,7 @@ export function PPARatesPanel() {
                   name={isSelected ? 'check_circle' : 'radio_button_unchecked'}
                   filled={isSelected}
                   className={
-                    isSelected ? 'text-primary mt-1' : 'text-outline-variant mt-1'
+                    isSelected ? 'text-primary mt-0.5' : 'text-outline-variant mt-0.5'
                   }
                 />
                 <div className="flex flex-col gap-xs min-w-0 flex-1">
@@ -280,7 +280,7 @@ export function PPARatesPanel() {
                     <Link
                       to={`/estimates/${e.id}/edit`}
                       onClick={(ev) => ev.stopPropagation()}
-                      className="font-label-sm text-label-sm text-tertiary underline mt-1"
+                      className="font-label-sm text-label-sm text-tertiary underline mt-0.5"
                     >
                       Enable finance →
                     </Link>
@@ -293,12 +293,12 @@ export function PPARatesPanel() {
       </section>
 
       {!estimate ? (
-        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-md text-on-surface-variant">
+        <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg text-on-surface-variant">
           Pick an estimate above to start comparing PPA rates.
         </div>
       ) : !estimate.finance?.enabled ? (
-        <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-md flex flex-col md:flex-row md:items-center md:justify-between gap-sm">
-          <div className="flex items-start gap-sm">
+        <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-lg flex flex-col md:flex-row md:items-center md:justify-between gap-md">
+          <div className="flex items-start gap-md">
             <Icon name="account_balance" className="text-tertiary text-[24px] shrink-0" />
             <p className="font-body-md text-body-md text-on-surface">
               <span className="font-semibold">{estimate.name}</span> doesn&apos;t
@@ -307,7 +307,7 @@ export function PPARatesPanel() {
             </p>
           </div>
           <Link
-            className="px-md py-sm rounded-lg bg-primary text-on-primary font-label-sm hover:bg-primary-container"
+            className="px-lg py-md rounded-lg bg-primary text-on-primary font-label-sm hover:bg-primary-container"
             to={`/estimates/${estimate.id}/edit`}
           >
             Open estimate
@@ -317,8 +317,8 @@ export function PPARatesPanel() {
         <>
           <LCOECallout estimate={estimate} lcoe={lcoe} />
 
-          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-md shadow-card">
-            <div className="flex items-center justify-between mb-sm">
+          <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg shadow-card">
+            <div className="flex items-center justify-between mb-md">
               <div>
                 <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">
                   PPA Rate Scenarios
@@ -328,7 +328,7 @@ export function PPARatesPanel() {
                   through the full finance engine.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 <Button
                   variant="ghost"
                   onClick={resetScenarios}
@@ -347,7 +347,7 @@ export function PPARatesPanel() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-sm">
+            <div className="flex flex-col gap-md">
               {scenarios.map((s, i) => (
                 <PPARateRow
                   key={s.id}
@@ -364,8 +364,8 @@ export function PPARatesPanel() {
           </section>
 
           {evaluated.length >= 1 && (
-            <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-              <div className="flex justify-between items-center mb-2">
+            <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+              <div className="flex justify-between items-center mb-1">
                 <h3 className="font-body-lg text-body-lg font-semibold text-on-surface">
                   Cumulative Cash Flow
                 </h3>
@@ -378,9 +378,9 @@ export function PPARatesPanel() {
                 series={series}
                 annualNetSuffix="__net"
               />
-              <div className="flex flex-wrap gap-4 mt-3 font-label-sm text-label-sm">
+              <div className="flex flex-wrap gap-2 mt-1.5 font-label-sm text-label-sm">
                 {series.map((s) => (
-                  <div key={s.id} className="flex items-center gap-2 text-on-surface">
+                  <div key={s.id} className="flex items-center gap-1 text-on-surface">
                     <span
                       className="w-3 h-3 rounded-full"
                       style={{ background: s.color }}
@@ -398,15 +398,15 @@ export function PPARatesPanel() {
                 <table className="w-full text-left border-collapse min-w-[640px]">
                   <thead>
                     <tr className="bg-surface-container-low border-b border-outline-variant">
-                      <th className="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider sticky left-0 bg-surface-container-low z-10 w-1/4">
+                      <th className="p-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider sticky left-0 bg-surface-container-low z-10 w-1/4">
                         Metric
                       </th>
                       {evaluated.map((r, i) => (
                         <th
                           key={r.scenario.id}
-                          className="p-4 font-body-md text-body-md font-semibold text-primary min-w-[150px]"
+                          className="p-2 font-body-md text-body-md font-semibold text-primary min-w-[150px]"
                         >
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center gap-1">
                             <span
                               className="w-2.5 h-2.5 rounded-full shrink-0"
                               style={{ background: SERIES_COLORS[i % SERIES_COLORS.length] }}
@@ -423,8 +423,8 @@ export function PPARatesPanel() {
                         key={m.id}
                         className="hover:bg-surface-container-lowest transition-colors"
                       >
-                        <td className="p-4 font-label-sm text-label-sm text-on-surface-variant sticky left-0 bg-surface-container-lowest">
-                          <span className="flex items-center gap-2">
+                        <td className="p-2 font-label-sm text-label-sm text-on-surface-variant sticky left-0 bg-surface-container-lowest">
+                          <span className="flex items-center gap-1">
                             <Icon name={m.icon} className="text-[18px]" /> {m.label}
                           </span>
                         </td>
@@ -434,7 +434,7 @@ export function PPARatesPanel() {
                           return (
                             <td
                               key={r.scenario.id}
-                              className="p-4 font-body-md text-body-md text-on-surface"
+                              className="p-2 font-body-md text-body-md text-on-surface"
                             >
                               <BestCell isBest={isBest}>{m.format(r)}</BestCell>
                             </td>
@@ -445,7 +445,7 @@ export function PPARatesPanel() {
                   </tbody>
                 </table>
               </div>
-              <div className="px-4 py-3 text-label-sm text-on-surface-variant border-t border-outline-variant bg-surface-container-low">
+              <div className="px-2 py-1.5 text-label-sm text-on-surface-variant border-t border-outline-variant bg-surface-container-low">
                 Best value for each metric is highlighted. Estimate parameters
                 (CAPEX, financing, lifespan) stay fixed — only the year-1
                 tariff and escalation change between scenarios.
@@ -467,9 +467,9 @@ function LCOECallout({
 }) {
   const currentRate = estimate.finance?.revenue.ppaRate ?? null;
   return (
-    <section className="bg-surface-container-low rounded-xl border border-outline-variant p-md flex flex-col md:flex-row md:items-center gap-md">
-      <div className="flex items-start gap-sm flex-1">
-        <Icon name="straighten" className="text-tertiary text-[24px] shrink-0 mt-1" />
+    <section className="bg-surface-container-low rounded-xl border border-outline-variant p-lg flex flex-col md:flex-row md:items-center gap-lg">
+      <div className="flex items-start gap-md flex-1">
+        <Icon name="straighten" className="text-tertiary text-[24px] shrink-0 mt-0.5" />
         <div>
           <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider">
             LCOE reference
@@ -477,20 +477,20 @@ function LCOECallout({
           <p className="font-headline-md text-headline-md text-on-surface font-semibold">
             {lcoe !== null ? `₹ ${lcoe.toFixed(2)} / kWh` : '—'}
           </p>
-          <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">
+          <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
             Levelized cost — the floor below which the project loses money.
           </p>
         </div>
       </div>
       {currentRate !== null && (
-        <div className="md:border-l md:border-outline-variant md:pl-md">
+        <div className="md:border-l md:border-outline-variant md:pl-lg">
           <p className="font-label-sm text-label-sm text-outline uppercase tracking-wider">
             Estimate&apos;s current PPA
           </p>
           <p className="font-headline-md text-headline-md text-on-surface font-semibold">
             ₹ {currentRate.toFixed(2)} / kWh
           </p>
-          <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">
+          <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
             Used to seed the scenarios below.
           </p>
         </div>

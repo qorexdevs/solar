@@ -27,9 +27,9 @@ export function PnLTable({ finance }: Props) {
   }, [rows]);
 
   return (
-    <section className="bg-surface-container-lowest rounded-xl p-md shadow-card space-y-md">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-        <div className="flex items-center gap-3">
+    <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card space-y-lg">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <h3 className="font-body-lg text-body-lg text-on-surface">P&amp;L by Year</h3>
           <span className="font-label-sm text-label-sm text-on-surface-variant">
             {rows.length} years
@@ -40,7 +40,7 @@ export function PnLTable({ finance }: Props) {
           onClick={() => setIsOpen((v) => !v)}
           aria-expanded={isOpen}
           aria-controls="pnl-table-body"
-          className="text-primary font-label-sm text-label-sm flex items-center gap-1 self-start md:self-auto"
+          className="text-primary font-label-sm text-label-sm flex items-center gap-0.5 self-start md:self-auto"
         >
           <Icon name={isOpen ? 'expand_less' : 'expand_more'} className="text-[18px]" />
           {isOpen ? 'Collapse' : 'Expand'}
@@ -52,35 +52,35 @@ export function PnLTable({ finance }: Props) {
           <table className="w-full text-left border-collapse min-w-[860px]">
             <thead>
               <tr className="border-b border-outline-variant font-label-sm text-label-sm text-outline">
-                <th className="py-2 pr-4 font-medium sticky left-0 bg-surface-container-lowest">
+                <th className="py-1 pr-2 font-medium sticky left-0 bg-surface-container-lowest">
                   Year
                 </th>
-                <th className="py-2 px-3 font-medium text-right">
+                <th className="py-1 px-1.5 font-medium text-right">
                   Revenue
                   <div className="text-[10px] text-outline/70 font-normal normal-case">
                     year · cumulative
                   </div>
                 </th>
-                <th className="py-2 px-3 font-medium text-right">
+                <th className="py-1 px-1.5 font-medium text-right">
                   O&amp;M
                   <div className="text-[10px] text-outline/70 font-normal normal-case">
                     year · cumulative
                   </div>
                 </th>
-                <th className="py-2 px-3 font-medium text-right">
+                <th className="py-1 px-1.5 font-medium text-right">
                   Loan
                   <div className="text-[10px] text-outline/70 font-normal normal-case">
                     year · balance
                   </div>
                 </th>
-                <th className="py-2 px-3 font-medium text-right">Net CF</th>
-                <th className="py-2 px-3 font-medium text-right">Cumulative CF</th>
+                <th className="py-1 px-1.5 font-medium text-right">Net CF</th>
+                <th className="py-1 px-1.5 font-medium text-right">Cumulative CF</th>
               </tr>
             </thead>
             <tbody className="font-body-md text-label-sm">
               {rows.map((r, i) => (
                 <tr key={r.year} className="border-b border-outline-variant/50">
-                  <td className="py-3 pr-4 text-on-surface font-medium sticky left-0 bg-surface-container-lowest">
+                  <td className="py-1.5 pr-2 text-on-surface font-medium sticky left-0 bg-surface-container-lowest">
                     Y{r.year}
                   </td>
                   <PnLCell
@@ -105,7 +105,7 @@ export function PnLTable({ finance }: Props) {
                     }`}
                   />
                   <td
-                    className={`py-3 px-3 text-right ${
+                    className={`py-1.5 px-1.5 text-right ${
                       r.cumulativeCashFlow >= 0 ? 'text-primary' : 'text-error'
                     }`}
                   >
@@ -131,8 +131,8 @@ function PnLCell({
   primaryClass?: string;
 }) {
   return (
-    <td className="py-3 px-3 text-right">
-      <div className="flex justify-end items-baseline gap-2">
+    <td className="py-1.5 px-1.5 text-right">
+      <div className="flex justify-end items-baseline gap-1">
         <span className={primaryClass}>{primary}</span>
         {secondary !== undefined && (
           <span className="text-[10px] text-outline/70">{secondary}</span>

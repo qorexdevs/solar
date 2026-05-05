@@ -84,7 +84,7 @@ export function Export() {
   }
 
   return (
-    <div className="flex flex-col gap-lg">
+    <div className="flex flex-col gap-xl">
       <div className="flex flex-col gap-xs">
         <h1 className="font-headline-xl text-headline-xl text-on-background">
           Export
@@ -111,8 +111,8 @@ export function Export() {
         />
       </div>
 
-      <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-md shadow-card">
-        <h2 className="font-headline-lg text-headline-lg text-on-surface mb-sm">
+      <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg shadow-card">
+        <h2 className="font-headline-lg text-headline-lg text-on-surface mb-md">
           Select Estimate
         </h2>
         {estimates.length === 0 ? (
@@ -124,7 +124,7 @@ export function Export() {
             .
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             {estimates.map((e) => {
               const vTpl = getVoltageClassTemplate(e, templates);
               const isSelected = e.id === selectedId;
@@ -133,7 +133,7 @@ export function Export() {
                   key={e.id}
                   type="button"
                   onClick={() => pickEstimate(e.id)}
-                  className={`text-left rounded-xl p-md flex items-start gap-sm border transition-all ${
+                  className={`text-left rounded-xl p-lg flex items-start gap-md border transition-all ${
                     isSelected
                       ? 'border-2 border-primary bg-primary-fixed/20'
                       : 'border-outline-variant bg-surface hover:border-outline'
@@ -143,7 +143,7 @@ export function Export() {
                     name={isSelected ? 'check_circle' : 'radio_button_unchecked'}
                     filled={isSelected}
                     className={
-                      isSelected ? 'text-primary mt-1' : 'text-outline-variant mt-1'
+                      isSelected ? 'text-primary mt-0.5' : 'text-outline-variant mt-0.5'
                     }
                   />
                   <div className="flex flex-col gap-xs min-w-0">
@@ -166,13 +166,13 @@ export function Export() {
       </section>
 
       {exportTab === 'reports' ? (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-md items-start">
-          <div className="md:col-span-8 flex flex-col gap-md">
-            <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-md shadow-card">
-              <h2 className="font-headline-lg text-headline-lg text-on-surface mb-sm">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-lg items-start">
+          <div className="md:col-span-8 flex flex-col gap-lg">
+            <section className="bg-surface-container-lowest rounded-xl border border-outline-variant p-lg shadow-card">
+              <h2 className="font-headline-lg text-headline-lg text-on-surface mb-md">
                 Format &amp; Details
               </h2>
-              <div className="flex bg-surface-container-low p-xs rounded-lg mb-md border border-outline-variant/50">
+              <div className="flex bg-surface-container-low p-xs rounded-lg mb-lg border border-outline-variant/50">
                 <PillTab
                   active={format === 'pdf'}
                   icon="picture_as_pdf"
@@ -187,7 +187,7 @@ export function Export() {
                 />
               </div>
 
-              <div className="flex flex-col gap-md">
+              <div className="flex flex-col gap-lg">
                 <ToggleRow
                   title={
                     format === 'pdf'
@@ -222,10 +222,10 @@ export function Export() {
             </section>
           </div>
 
-          <aside className="md:col-span-4 md:sticky md:top-24 flex flex-col gap-md">
+          <aside className="md:col-span-4 md:sticky md:top-24 flex flex-col gap-lg">
             <div className="bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden shadow-card-xl">
               <div className="h-32 w-full bg-primary relative">
-                <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 to-transparent flex items-end p-md">
+                <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 to-transparent flex items-end p-lg">
                   <span className="font-headline-lg text-[20px] leading-[26px] text-on-primary font-semibold truncate">
                     {estimate
                       ? `${estimate.name}.${format === 'pdf' ? 'pdf' : 'xlsx'}`
@@ -233,7 +233,7 @@ export function Export() {
                   </span>
                 </div>
               </div>
-              <div className="p-md flex flex-col gap-sm bg-surface-container-lowest">
+              <div className="p-lg flex flex-col gap-md bg-surface-container-lowest">
                 {estimate && results ? (
                   <>
                     <PreviewRow

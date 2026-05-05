@@ -62,7 +62,7 @@ function Metric({
 }) {
   return (
     <div className="min-w-0">
-      <p className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider leading-none mb-0.5">
+      <p className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider leading-none mb-px">
         {label}
       </p>
       <p
@@ -83,7 +83,7 @@ export function EstimateListCards({
   onRemove,
 }: Props) {
   return (
-    <section aria-label="Saved estimates" className="flex flex-col gap-sm">
+    <section aria-label="Saved estimates" className="flex flex-col gap-md">
       {rows.map(({ estimate, results, template }) => {
         const typeStr = typeLabel(template);
         const finance = results?.finance ?? null;
@@ -117,13 +117,13 @@ export function EstimateListCards({
             }}
             className={`bg-surface-container-lowest rounded-lg border border-outline-variant shadow-card overflow-hidden border-l-[3px] ${STATUS_EDGE[estimate.status]} transition-colors hover:bg-surface-container-low/50 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface`}
           >
-            <div className="px-3 py-2.5 min-w-0">
-              <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="px-1.5 py-1 min-w-0">
+              <div className="flex items-center justify-between gap-1 mb-0.5">
                 <StatusTag
                   status={estimate.status}
-                  className="py-px px-1.5 shrink-0 !text-[11px] !leading-4 !font-medium"
+                  className="py-px px-0.5 shrink-0 !text-[11px] !leading-4 !font-medium"
                 />
-                <div className="flex items-center justify-end gap-0.5 shrink-0">
+                <div className="flex items-center justify-end gap-px shrink-0">
                   <button
                     type="button"
                     aria-label={
@@ -131,7 +131,7 @@ export function EstimateListCards({
                     }
                     title={inComparison ? 'In comparison set' : 'Add to comparison'}
                     onClick={() => onToggleCompare(estimate.id)}
-                    className={`p-1.5 transition-colors rounded-full ${
+                    className={`p-0.5 transition-colors rounded-full ${
                       inComparison
                         ? 'text-primary bg-primary-fixed/40'
                         : 'text-on-surface-variant hover:text-primary hover:bg-surface-container'
@@ -148,7 +148,7 @@ export function EstimateListCards({
                     aria-label="Delete estimate"
                     title="Delete"
                     onClick={() => onRemove(estimate.id)}
-                    className="p-1.5 text-on-surface-variant hover:text-error transition-colors rounded-full hover:bg-error-container"
+                    className="p-0.5 text-on-surface-variant hover:text-error transition-colors rounded-full hover:bg-error-container"
                   >
                     <Icon name="delete" className="text-[18px]" />
                   </button>
@@ -157,18 +157,18 @@ export function EstimateListCards({
                     aria-label="Duplicate estimate"
                     title="Duplicate"
                     onClick={() => onDuplicate(estimate.id)}
-                    className="p-1.5 text-on-surface-variant hover:text-secondary-container transition-colors rounded-full hover:bg-surface-container"
+                    className="p-0.5 text-on-surface-variant hover:text-secondary-container transition-colors rounded-full hover:bg-surface-container"
                   >
                     <Icon name="content_copy" className="text-[18px]" />
                   </button>
                 </div>
               </div>
 
-              <p className="font-body-md text-[calc(13px*1.2)] leading-snug font-semibold text-on-surface truncate mb-2 min-w-0">
+              <p className="font-body-md text-[calc(13px*1.2)] leading-snug font-semibold text-on-surface truncate mb-1 min-w-0">
                 {titleText}
               </p>
 
-              <div className="flex flex-nowrap items-start gap-x-3 sm:gap-x-4 pt-2 border-t border-outline-variant/70 min-w-0 w-full overflow-x-auto">
+              <div className="flex flex-nowrap items-start gap-x-3 sm:gap-x-4 pt-1 border-t border-outline-variant/70 min-w-0 w-full overflow-x-auto">
                 <div className="min-w-0 flex-[1_1_0]">
                   <Metric label="Grand total" value={`₹ ${formatINR(estimate.totals.grandTotal)}`} />
                 </div>

@@ -45,9 +45,9 @@ export function EstimateList() {
 
   return (
     <>
-      <section className="mb-md">
-        <h2 className="font-headline-lg text-headline-lg mb-sm">Portfolio Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-sm">
+      <section className="mb-lg">
+        <h2 className="font-headline-lg text-headline-lg mb-md">Portfolio Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
           <SummaryTile
             label="Total Capacity"
             value={formatPlantCapacityKW(summary.totalKW)}
@@ -61,9 +61,9 @@ export function EstimateList() {
         </div>
       </section>
 
-      <div className="flex justify-between items-center mb-sm gap-sm">
+      <div className="flex justify-between items-center mb-md gap-md">
         <h3 className="font-headline-lg text-headline-lg">Saved Estimates</h3>
-        <div className="flex gap-sm">
+        <div className="flex gap-md">
           {comparisonIds.length >= 2 && (
             <Button
               variant="outline"
@@ -113,7 +113,7 @@ export function EstimateList() {
 
       {/* Provide a portfolio total row */}
       {estimates.length > 0 && (
-        <p className="text-on-surface-variant font-label-sm mt-sm">
+        <p className="text-on-surface-variant font-label-sm mt-md">
           Combined grand total across all estimates: ₹ {formatINR(summary.totalGrand)}.
         </p>
       )}

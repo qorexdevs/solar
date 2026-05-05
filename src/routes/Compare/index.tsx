@@ -18,7 +18,7 @@ export function Compare() {
   }
 
   return (
-    <div className="flex flex-col gap-lg">
+    <div className="flex flex-col gap-xl">
       <div className="flex flex-col gap-xs">
         <h1 className="font-headline-xl text-headline-xl text-on-background">
           Compare

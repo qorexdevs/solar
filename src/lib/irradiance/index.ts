@@ -11,6 +11,7 @@ export {
   haversineKm,
   isInIndia,
   listCities,
+  parseFiniteLatLng,
   snapToNearestCity,
   type SnapResult,
 } from './lookup';

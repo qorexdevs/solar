@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
-import { snapToNearestCity } from '@/lib/irradiance';
+import { parseFiniteLatLng, snapToNearestCity } from '@/lib/irradiance';
 import type { ScenarioLocation } from '@/types';
 
 // Leaflet's default marker icon paths break under bundlers; rebind to the
@@ -23,9 +23,15 @@ const INDIA_BOUNDS: L.LatLngBoundsExpression = [
   [37.6, 97.5],
 ];
 
+/** Leaflet throws on NaN; persisted estimates can hold invalid lat/lng or strings. */
+function toPinnedTuple(lat?: unknown, lng?: unknown): [number, number] | null {
+  return parseFiniteLatLng(lat, lng);
+}
+
 type Props = {
-  lat?: number;
-  lng?: number;
+  /** Accepts numbers or numeric strings from persisted estimates. */
+  lat?: unknown;
+  lng?: unknown;
   onChange: (lat: number, lng: number) => void;
   /** Stretch the map to fill its container; defaults to 320 px tall. */
   heightPx?: number;
@@ -40,25 +46,32 @@ function PinHandler({ onChange }: { onChange: (lat: number, lng: number) => void
   return null;
 }
 
-function MapRecenter({ lat, lng }: { lat?: number; lng?: number }) {
+function MapRecenter({ lat, lng }: { lat?: unknown; lng?: unknown }) {
   const map = useMap();
   useEffect(() => {
-    if (lat !== undefined && lng !== undefined) {
-      map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration: 0.4 });
-    }
+    const t = toPinnedTuple(lat, lng);
+    if (!t) return;
+    // `Math.max(undefined, 6)` is NaN — Leaflet flyTo then corrupts LatLng and throws.
+    const rawZoom = map.getZoom();
+    const safeZoom =
+      typeof rawZoom === 'number' && Number.isFinite(rawZoom)
+        ? Math.max(rawZoom, 6)
+        : 6;
+    map.flyTo(t, safeZoom, { duration: 0.4 });
   }, [lat, lng, map]);
   return null;
 }
 
 export function LocationPicker({ lat, lng, onChange, heightPx = 320 }: Props) {
+  const pinnedTuple = toPinnedTuple(lat, lng);
   return (
     <div
       className="relative rounded-xl overflow-hidden border border-outline-variant"
       style={{ height: heightPx }}
     >
       <MapContainer
-        center={lat !== undefined && lng !== undefined ? [lat, lng] : INDIA_CENTER}
-        zoom={lat !== undefined ? 6 : 5}
+        center={pinnedTuple ?? INDIA_CENTER}
+        zoom={pinnedTuple ? 6 : 5}
         maxBounds={INDIA_BOUNDS}
         maxBoundsViscosity={0.7}
         minZoom={4}
@@ -71,9 +84,9 @@ export function LocationPicker({ lat, lng, onChange, heightPx = 320 }: Props) {
         />
         <PinHandler onChange={onChange} />
         <MapRecenter lat={lat} lng={lng} />
-        {lat !== undefined && lng !== undefined && (
+        {pinnedTuple && (
           <Marker
-            position={[lat, lng]}
+            position={pinnedTuple}
             draggable
             eventHandlers={{
               dragend: (ev) => {
@@ -100,10 +113,14 @@ export function CoordsInput({ lat, lng, onChange }: CoordsInputProps) {
   const [lngStr, setLngStr] = useState(lng !== undefined ? String(lng) : '');
 
   useEffect(() => {
-    if (lat !== undefined) setLatStr(String(Number(lat.toFixed(4))));
+    if (lat !== undefined && Number.isFinite(lat)) {
+      setLatStr(String(Number(lat.toFixed(4))));
+    }
   }, [lat]);
   useEffect(() => {
-    if (lng !== undefined) setLngStr(String(Number(lng.toFixed(4))));
+    if (lng !== undefined && Number.isFinite(lng)) {
+      setLngStr(String(Number(lng.toFixed(4))));
+    }
   }, [lng]);
 
   function commit() {
@@ -113,8 +130,8 @@ export function CoordsInput({ lat, lng, onChange }: CoordsInputProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-sm">
-      <label className="flex flex-col gap-1">
+    <div className="grid grid-cols-2 gap-md">
+      <label className="flex flex-col gap-0.5">
         <span className="font-label-sm text-label-sm text-on-surface font-semibold">
           Latitude
         </span>
@@ -130,7 +147,7 @@ export function CoordsInput({ lat, lng, onChange }: CoordsInputProps) {
           className="h-touch-target rounded-lg border-outline-variant bg-surface-bright text-on-surface focus:border-secondary focus:ring-secondary font-body-md text-body-md"
         />
       </label>
-      <label className="flex flex-col gap-1">
+      <label className="flex flex-col gap-0.5">
         <span className="font-label-sm text-label-sm text-on-surface font-semibold">
           Longitude
         </span>
@@ -155,10 +172,12 @@ type SnapPillProps = {
 };
 
 export function SnapIndicator({ location }: SnapPillProps) {
-  const snap = useMemo(
-    () => (location ? snapToNearestCity(location.lat, location.lng) : null),
-    [location]
-  );
+  const snap = useMemo(() => {
+    if (!location) return null;
+    const pair = parseFiniteLatLng(location.lat, location.lng);
+    if (!pair) return null;
+    return snapToNearestCity(pair[0], pair[1]);
+  }, [location]);
   if (!location) {
     return (
       <p className="font-label-sm text-label-sm text-on-surface-variant">

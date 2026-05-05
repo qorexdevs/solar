@@ -25,43 +25,21 @@ const FALLBACK: FacetStripAccent = {
   checkTone: 'text-primary',
 };
 
+/** Shared strip styling for all standard scenario facets (primary palette). */
+const PRIMARY_STRIP: FacetStripAccent = {
+  labelTone: 'text-primary',
+  chipWrap: 'border-primary/35 bg-primary-fixed/35 text-primary',
+  idle:
+    'border-primary/25 bg-primary-fixed/15 text-on-surface hover:bg-primary-fixed/28',
+  selected: 'border-primary bg-primary-fixed/42 text-on-surface shadow-sm',
+  checkTone: 'text-primary',
+};
+
 const ACCENTS: Record<string, FacetStripAccent> = {
-  [VOLTAGE_CLASS_FACET_ID]: {
-    labelTone: 'text-primary',
-    chipWrap: 'border-primary/35 bg-primary-fixed/35 text-primary',
-    idle:
-      'border-primary/25 bg-primary-fixed/15 text-on-surface hover:bg-primary-fixed/28',
-    selected:
-      'border-primary bg-primary-fixed/42 text-on-surface shadow-sm',
-    checkTone: 'text-primary',
-  },
-  [MOUNTING_FACET_ID]: {
-    labelTone: 'text-primary',
-    chipWrap: 'border-primary/35 bg-primary-fixed/35 text-primary',
-    idle:
-      'border-primary/25 bg-primary-fixed/15 text-on-surface hover:bg-primary-fixed/28',
-    selected:
-      'border-primary bg-primary-fixed/42 text-on-surface shadow-sm',
-    checkTone: 'text-primary',
-  },
-  [BUSINESS_MODEL_FACET_ID]: {
-    labelTone: 'text-tertiary',
-    chipWrap: 'border-tertiary/30 bg-tertiary-fixed-dim/35 text-tertiary',
-    idle:
-      'border-tertiary/22 bg-tertiary-fixed-dim/14 text-on-surface hover:bg-tertiary-fixed-dim/26',
-    selected:
-      'border-tertiary bg-tertiary-fixed-dim/42 text-on-surface shadow-sm',
-    checkTone: 'text-tertiary',
-  },
-  [MONITORING_FACET_ID]: {
-    labelTone: 'text-tertiary',
-    chipWrap: 'border-tertiary/30 bg-tertiary-fixed-dim/35 text-tertiary',
-    idle:
-      'border-tertiary/22 bg-tertiary-fixed-dim/14 text-on-surface hover:bg-tertiary-fixed-dim/26',
-    selected:
-      'border-tertiary bg-tertiary-fixed-dim/42 text-on-surface shadow-sm',
-    checkTone: 'text-tertiary',
-  },
+  [VOLTAGE_CLASS_FACET_ID]: PRIMARY_STRIP,
+  [MOUNTING_FACET_ID]: PRIMARY_STRIP,
+  [BUSINESS_MODEL_FACET_ID]: PRIMARY_STRIP,
+  [MONITORING_FACET_ID]: PRIMARY_STRIP,
 };
 
 export function facetStripAccent(facetId: string): FacetStripAccent {
@@ -69,7 +47,7 @@ export function facetStripAccent(facetId: string): FacetStripAccent {
 }
 
 const OPTION_BTN_BASE =
-  'group w-full max-w-[12rem] shrink-0 inline-flex min-h-touch-target items-center justify-between gap-xs rounded-full border px-sm py-xs text-left text-body-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
+  'group w-full max-w-[12rem] shrink-0 inline-flex min-h-touch-target items-center justify-between gap-xs rounded-full border px-md py-xs text-left text-body-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 /** Option pills in TemplatePicker horizontal strip */
 export function facetOptionButtonClass(
@@ -83,5 +61,5 @@ export function facetOptionButtonClass(
 /** “Templates: …” chip links row */
 export function facetSummaryChipClass(facetId: string): string {
   const chip = facetStripAccent(facetId).chipWrap;
-  return `inline-flex max-w-full truncate rounded-full px-3 py-1 border text-body-md cursor-pointer transition-opacity hover:opacity-90 ${chip}`;
+  return `inline-flex max-w-full truncate rounded-full px-1.5 py-0.5 border text-body-md cursor-pointer transition-opacity hover:opacity-90 ${chip}`;
 }

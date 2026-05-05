@@ -21,13 +21,13 @@ export function UnifiedLinesTable({ template, editable }: Props) {
   const sorted = [...template.lines].sort((a, b) => a.sequence - b.sequence);
 
   return (
-    <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-md flex flex-col gap-md">
-      <div className="flex items-center justify-between gap-sm flex-wrap">
+    <section className="rounded-lg border border-outline-variant bg-surface-container-lowest p-lg flex flex-col gap-lg">
+      <div className="flex items-center justify-between gap-md flex-wrap">
         <h3 className="font-headline-md text-headline-md">
           BOM &amp; Scope lines ({sorted.length})
         </h3>
         {editable && (
-          <div className="flex gap-sm">
+          <div className="flex gap-md">
             <Button
               variant="outline"
               iconLeft={<Icon name="add" />}
@@ -57,13 +57,13 @@ export function UnifiedLinesTable({ template, editable }: Props) {
           <table className="w-full text-body-sm font-body-sm text-left">
             <thead className="text-on-surface-variant border-b border-outline-variant">
               <tr>
-                <th className="px-2 py-2">Catalog</th>
-                <th className="px-2 py-2">Kind</th>
-                <th className="px-2 py-2">Qty / ₹</th>
-                <th className="px-2 py-2">Scaling</th>
-                <th className="px-2 py-2 w-28">GST %</th>
-                <th className="px-2 py-2">Optional?</th>
-                {editable && <th className="px-2 py-2"></th>}
+                <th className="px-1 py-1">Catalog</th>
+                <th className="px-1 py-1">Kind</th>
+                <th className="px-1 py-1">Qty / ₹</th>
+                <th className="px-1 py-1">Scaling</th>
+                <th className="px-1 py-1 w-28">GST %</th>
+                <th className="px-1 py-1">Optional?</th>
+                {editable && <th className="px-1 py-1"></th>}
               </tr>
             </thead>
             <tbody>
@@ -73,10 +73,10 @@ export function UnifiedLinesTable({ template, editable }: Props) {
                 return (
                   <Fragment key={line.id}>
                     <tr className="border-b border-outline-variant/40 align-top">
-                      <td className="px-2 py-2">
+                      <td className="px-1 py-1">
                         {editable ? (
                           <select
-                            className="w-full rounded border border-outline-variant bg-surface-container-low px-1 py-1"
+                            className="w-full rounded border border-outline-variant bg-surface-container-low px-0.5 py-0.5"
                             value={line.catalogItemId}
                             onChange={(e) =>
                               updateTemplateLine(template.id, line.id, {
@@ -94,12 +94,12 @@ export function UnifiedLinesTable({ template, editable }: Props) {
                           <span>{cat?.name ?? line.catalogItemId}</span>
                         )}
                       </td>
-                      <td className="px-2 py-2">{kindLabel}</td>
-                      <td className="px-2 py-2">
+                      <td className="px-1 py-1">{kindLabel}</td>
+                      <td className="px-1 py-1">
                         {editable ? (
                           <input
                             type="number"
-                            className="w-28 rounded border border-outline-variant bg-surface-container-low px-1 py-1"
+                            className="w-28 rounded border border-outline-variant bg-surface-container-low px-0.5 py-0.5"
                             value={
                               cat?.kind === 'scope'
                                 ? (line.baseAmount ?? cat.defaultAmount ?? 0)
@@ -126,7 +126,7 @@ export function UnifiedLinesTable({ template, editable }: Props) {
                           line.baseQuantity ?? '—'
                         )}
                       </td>
-                      <td className="px-2 py-2">
+                      <td className="px-1 py-1">
                         {editable ? (
                           <select
                             value={line.scalingType}
@@ -135,7 +135,7 @@ export function UnifiedLinesTable({ template, editable }: Props) {
                                 scalingType: e.target.value as typeof line.scalingType,
                               })
                             }
-                            className="rounded border border-outline-variant bg-surface-container-low px-1 py-1"
+                            className="rounded border border-outline-variant bg-surface-container-low px-0.5 py-0.5"
                           >
                             {Object.entries(SCALING_TYPE_LABELS).map(([k, v]) => (
                               <option key={k} value={k}>
@@ -147,11 +147,11 @@ export function UnifiedLinesTable({ template, editable }: Props) {
                           SCALING_TYPE_LABELS[line.scalingType]
                         )}
                       </td>
-                      <td className="px-2 py-2">
+                      <td className="px-1 py-1">
                         {editable ? (
                           <input
                             type="number"
-                            className="w-16 rounded border border-outline-variant px-1 py-1"
+                            className="w-16 rounded border border-outline-variant px-0.5 py-0.5"
                             value={
                               line.gstPercentOverride ??
                               cat?.gstPercent ??
@@ -167,9 +167,9 @@ export function UnifiedLinesTable({ template, editable }: Props) {
                           line.gstPercentOverride ?? cat?.gstPercent ?? '—'
                         )}
                       </td>
-                      <td className="px-2 py-2">
+                      <td className="px-1 py-1">
                         {editable ? (
-                          <label className="flex items-center gap-1">
+                          <label className="flex items-center gap-0.5">
                             <input
                               type="checkbox"
                               checked={line.isOptional}
@@ -185,11 +185,11 @@ export function UnifiedLinesTable({ template, editable }: Props) {
                         )}
                       </td>
                       {editable && (
-                        <td className="px-2 py-2 text-right">
+                        <td className="px-1 py-1 text-right">
                           <button
                             type="button"
                             aria-label="Remove line"
-                            className="p-1 text-error hover:bg-error/10 rounded"
+                            className="p-0.5 text-error hover:bg-error/10 rounded"
                             onClick={() =>
                               removeTemplateLine(template.id, line.id)
                             }

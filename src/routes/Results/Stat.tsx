@@ -17,11 +17,11 @@ export function Stat({ label, value, before, accent = 'on-surface', icon }: Prop
         : 'text-on-surface';
   return (
     <div className="min-w-0">
-      <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">
+      <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-0.5">
         {label}
       </p>
       <div
-        className={`flex items-baseline gap-2 font-data-display text-body-lg font-semibold ${accentClass}`}
+        className={`flex items-baseline gap-1 font-data-display text-body-lg font-semibold ${accentClass}`}
       >
         {icon && <Icon name={icon} className="text-[18px]" />}
         {before && before !== value && (

@@ -26,18 +26,18 @@ type Props = {
  */
 export function PPARateRow({ scenario, onChange, onRemove, color, index }: Props) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-stretch gap-sm rounded-lg border border-outline-variant bg-surface px-sm py-sm">
-      <div className="flex items-center gap-sm shrink-0 sm:pt-1">
+    <div className="flex flex-col sm:flex-row sm:items-stretch gap-md rounded-lg border border-outline-variant bg-surface px-md py-md">
+      <div className="flex items-center gap-md shrink-0 sm:pt-0.5">
         <span className="w-3 h-3 rounded-full shrink-0" style={{ background: color }} aria-hidden />
         <span className="font-label-sm text-label-sm text-on-surface-variant w-[5.5rem] shrink-0">
           Scenario {index + 1}
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col sm:flex-row gap-sm min-w-0">
+      <div className="flex flex-1 flex-col sm:flex-row gap-md min-w-0">
         <Slider
           id={`ppa-${scenario.id}`}
-          className="flex-1 !p-sm !gap-1"
+          className="flex-1 !p-md !gap-0.5"
           label="Year-1 PPA (₹/kWh)"
           value={scenario.ppaRate}
           onChange={(ppaRate) => onChange({ ...scenario, ppaRate })}
@@ -49,7 +49,7 @@ export function PPARateRow({ scenario, onChange, onRemove, color, index }: Props
         />
         <Slider
           id={`esc-${scenario.id}`}
-          className="flex-1 !p-sm !gap-1"
+          className="flex-1 !p-md !gap-0.5"
           label="Escalation (%/yr)"
           value={scenario.escalationPct}
           onChange={(escalationPct) => onChange({ ...scenario, escalationPct })}
@@ -66,7 +66,7 @@ export function PPARateRow({ scenario, onChange, onRemove, color, index }: Props
             type="button"
             onClick={onRemove}
             aria-label={`Remove scenario ${index + 1}`}
-            className="text-on-surface-variant hover:text-error rounded-full p-1 transition-colors"
+            className="text-on-surface-variant hover:text-error rounded-full p-0.5 transition-colors"
           >
             <Icon name="close" />
           </button>

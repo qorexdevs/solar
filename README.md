@@ -97,6 +97,13 @@ A single-direction data flow:
 For deeper details on the calc pipeline, override flags, and the catalog
 migration story, read [`docs/architecture.md`](docs/architecture.md).
 
+## Design
+
+The visual contract for every component, chart, and route lives in
+[`docs/design.md`](docs/design.md): tokens (light + dark), typography,
+spacing scale, motion, the data-viz system, and short component patterns.
+Read it before adding any UI.
+
 ## Source layout
 
 ```

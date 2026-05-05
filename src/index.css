@@ -3,8 +3,110 @@
 @tailwind utilities;
 
 @layer base {
+  /*
+   * Solar Field palette tokens (see docs/design.md §3).
+   * Stored as space-separated R G B triplets so Tailwind opacity modifiers
+   * (e.g. bg-primary/50) keep working through the rgb(var(--…) / <alpha>)
+   * binding in tailwind.config.ts.
+   */
   :root {
     color-scheme: light;
+
+    --color-primary: 4 120 87;
+    --color-on-primary: 255 255 255;
+    --color-primary-container: 52 211 153;
+    --color-on-primary-container: 2 44 34;
+
+    --color-secondary: 251 191 36;
+    --color-on-secondary: 28 25 23;
+    --color-secondary-container: 254 243 199;
+    --color-on-secondary-container: 69 26 3;
+
+    --color-tertiary: 14 165 233;
+    --color-on-tertiary: 255 255 255;
+    --color-tertiary-container: 224 242 254;
+    --color-on-tertiary-container: 8 47 73;
+
+    --color-background: 248 250 252;
+    --color-surface: 255 255 255;
+    --color-surface-container: 241 245 249;
+    --color-surface-container-high: 226 232 240;
+    --color-surface-container-highest: 203 213 225;
+
+    --color-on-background: 15 23 42;
+    --color-on-surface: 15 23 42;
+    --color-on-surface-variant: 71 85 105;
+
+    --color-outline: 148 163 184;
+    --color-outline-variant: 203 213 225;
+
+    --color-success: 16 185 129;
+    --color-on-success: 255 255 255;
+    --color-success-container: 209 250 229;
+    --color-on-success-container: 2 44 34;
+
+    --color-warning: 245 158 11;
+    --color-on-warning: 28 25 23;
+    --color-warning-container: 254 243 199;
+    --color-on-warning-container: 69 26 3;
+
+    --color-error: 239 68 68;
+    --color-on-error: 255 255 255;
+    --color-error-container: 254 226 226;
+    --color-on-error-container: 127 29 29;
+
+    --color-info: 14 165 233;
+    --color-on-info: 255 255 255;
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    --color-primary: 52 211 153;
+    --color-on-primary: 2 44 34;
+    --color-primary-container: 6 95 70;
+    --color-on-primary-container: 167 243 208;
+
+    --color-secondary: 251 191 36;
+    --color-on-secondary: 28 25 23;
+    --color-secondary-container: 120 53 15;
+    --color-on-secondary-container: 254 243 199;
+
+    --color-tertiary: 125 211 252;
+    --color-on-tertiary: 8 47 73;
+    --color-tertiary-container: 7 89 133;
+    --color-on-tertiary-container: 224 242 254;
+
+    --color-background: 11 20 16;
+    --color-surface: 15 27 22;
+    --color-surface-container: 19 36 29;
+    --color-surface-container-high: 27 51 40;
+    --color-surface-container-highest: 36 67 53;
+
+    --color-on-background: 226 232 240;
+    --color-on-surface: 226 232 240;
+    --color-on-surface-variant: 148 163 184;
+
+    --color-outline: 100 116 139;
+    --color-outline-variant: 51 65 85;
+
+    --color-success: 52 211 153;
+    --color-on-success: 2 44 34;
+    --color-success-container: 6 95 70;
+    --color-on-success-container: 209 250 229;
+
+    --color-warning: 251 191 36;
+    --color-on-warning: 28 25 23;
+    --color-warning-container: 120 53 15;
+    --color-on-warning-container: 254 243 199;
+
+    --color-error: 248 113 113;
+    --color-on-error: 127 29 29;
+    --color-error-container: 127 29 29;
+    --color-on-error-container: 254 226 226;
+
+    --color-info: 125 211 252;
+    --color-on-info: 8 47 73;
   }
 
   html,
@@ -15,6 +117,11 @@
       system-ui,
       -apple-system,
       sans-serif;
+    /* cv11 = single-storey 'a'; tabular numerals globally so figures align */
+    font-feature-settings:
+      'cv11',
+      'ss01',
+      'ss03';
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -48,25 +155,45 @@
   input[type='number'] {
     -moz-appearance: textfield;
   }
+
+  /* Mandatory motion safety; see docs/design.md §8.3 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer utilities {
+  /*
+   * .tabular — apply tabular-nums on any numeric readout (KPIs, P&L cells).
+   * Mandatory for table columns. See docs/design.md §4.3.
+   */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Range input thumb tweaks for touch */
   input[type='range'].range-primary::-webkit-slider-thumb {
     appearance: none;
     width: 20px;
     height: 20px;
     border-radius: 9999px;
-    background: #003527;
+    background: rgb(var(--color-primary));
     cursor: pointer;
     border: 2px solid #ffffff;
-    box-shadow: 0 1px 4px rgba(0, 53, 39, 0.3);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   }
   input[type='range'].range-primary::-moz-range-thumb {
     width: 20px;
     height: 20px;
     border-radius: 9999px;
-    background: #003527;
+    background: rgb(var(--color-primary));
     cursor: pointer;
     border: 2px solid #ffffff;
   }

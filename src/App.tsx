@@ -7,6 +7,7 @@ import { Results } from '@/routes/Results';
 import { Compare } from '@/routes/Compare';
 import { TemplateList } from '@/routes/Templates';
 import { PPARedirect } from '@/routes/Export/PPARedirect';
+import { Settings } from '@/routes/Settings';
 
 const TemplateEditor = lazy(() =>
   import('@/routes/Templates/TemplateEditor').then((m) => ({ default: m.TemplateEditor }))
@@ -17,7 +18,7 @@ const CatalogAdmin = lazy(() =>
 );
 
 function Loading() {
-  return <div className="text-on-surface-variant text-center py-lg">Loading…</div>;
+  return <div className="text-on-surface-variant text-center py-xl">Loading…</div>;
 }
 
 export default function App() {
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/estimates/:id" element={<Results />} />
           <Route path="/estimates/:id/export" element={<Export />} />
           <Route path="/compare" element={<Compare />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/ppa" element={<PPARedirect />} />
           <Route path="/templates" element={<TemplateList />} />
           <Route path="/templates/:id" element={<TemplateEditor />} />

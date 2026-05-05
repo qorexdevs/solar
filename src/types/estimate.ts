@@ -138,6 +138,21 @@ export type EstimateFacetSelections = Record<
 
 export type ComposeOverridesMap = Partial<Record<string, ComposeMode>>;
 
+/**
+ * Transient, per-line manual override of a materialized BOM row. Keyed off
+ * `materialized.id` (a.k.a. `catalogItemId`). Reset whenever the estimate
+ * recomputes (target capacity, selections, optional toggles, compose mode,
+ * version sync) — the UI warns the user before clearing.
+ */
+export type EstimateLineOverride = {
+  itemName?: string;
+  uom?: BOMUom;
+  quantity?: number;
+  rate?: number;
+};
+
+export type EstimateLineOverridesMap = Record<string, EstimateLineOverride>;
+
 export type EstimateStatus = 'draft' | 'feasible' | 'review';
 
 export type Estimate = {
@@ -151,6 +166,12 @@ export type Estimate = {
   selectedOptionsPerTemplate: SelectedOptionsPerTemplate;
   /** User override merge rule for duplicated catalog refs. */
   composeOverrides?: ComposeOverridesMap;
+  /**
+   * Transient per-line manual overrides (qty/rate/uom/itemName) keyed by
+   * materialized line id. Cleared whenever the estimate recomputes; the
+   * UI warns the user before triggering the clear.
+   */
+  lineOverrides?: EstimateLineOverridesMap;
   materialized: MaterializedBOM;
   totals: EstimateTotals;
   finance?: FinanceLayer;

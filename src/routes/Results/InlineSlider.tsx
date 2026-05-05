@@ -32,8 +32,8 @@ export function InlineSlider({
 
   return (
     <div className="flex flex-col gap-xs w-full">
-      <div className="flex justify-between items-center gap-sm">
-        <div className="flex items-center gap-2 min-w-0">
+      <div className="flex justify-between items-center gap-md">
+        <div className="flex items-center gap-1 min-w-0">
           <label
             htmlFor={id}
             className="font-label-sm text-label-sm text-on-surface font-semibold truncate"

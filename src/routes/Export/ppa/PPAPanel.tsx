@@ -73,21 +73,21 @@ export function PPAPanel({ estimate }: Props) {
   if (!estimate) return null;
 
   return (
-    <div className="space-y-md">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="space-y-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
         <div>
-          <p className="font-label-sm text-label-sm text-outline mb-1 uppercase tracking-wider">
+          <p className="font-label-sm text-label-sm text-outline mb-0.5 uppercase tracking-wider">
             PPA Term Sheet Generator
           </p>
           <h2 className="font-headline-lg text-headline-lg text-on-surface">
             Solve for a tariff that hits your target IRR
           </h2>
-          <p className="font-body-md text-on-surface-variant mt-1">
+          <p className="font-body-md text-on-surface-variant mt-0.5">
             Set the term &amp; escalation; the solver finds the year-1 PPA rate that
             drives equity IRR to your target.
           </p>
         </div>
-        <div className="flex gap-sm shrink-0">
+        <div className="flex gap-md shrink-0">
           <Button
             variant="primary"
             iconLeft={<Icon name="picture_as_pdf" />}
@@ -114,7 +114,7 @@ export function PPAPanel({ estimate }: Props) {
 
       {estimate.finance?.enabled && result ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-md">
             <KpiCard
               accent="primary"
               icon="payments"
@@ -144,8 +144,8 @@ export function PPAPanel({ estimate }: Props) {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-md items-start">
-            <section className="bg-surface-container-lowest rounded-xl p-md shadow-card flex flex-col gap-md">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg items-start">
+            <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card flex flex-col gap-lg">
               <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">
                 Contract Parameters
               </h3>
@@ -182,8 +182,8 @@ export function PPAPanel({ estimate }: Props) {
               />
             </section>
 
-            <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-              <div className="flex items-center justify-between mb-sm">
+            <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+              <div className="flex items-center justify-between mb-md">
                 <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">
                   Tariff Schedule
                 </h3>
@@ -195,8 +195,8 @@ export function PPAPanel({ estimate }: Props) {
             </section>
           </div>
 
-          <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-            <div className="flex items-center justify-between mb-sm">
+          <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+            <div className="flex items-center justify-between mb-md">
               <div>
                 <h3 className="font-headline-md text-headline-md text-on-surface font-semibold">
                   Sensitivity: Term × Escalation
@@ -214,14 +214,14 @@ export function PPAPanel({ estimate }: Props) {
             />
           </section>
 
-          <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-            <h3 className="font-headline-md text-headline-md text-on-surface font-semibold mb-sm">
+          <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+            <h3 className="font-headline-md text-headline-md text-on-surface font-semibold mb-md">
               Counterparties &amp; Notes
             </h3>
-            <p className="font-label-sm text-label-sm text-on-surface-variant mb-md">
+            <p className="font-label-sm text-label-sm text-on-surface-variant mb-lg">
               Optional — appears verbatim on the exported term sheet.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-lg">
               <TextField
                 label="Seller (Generator)"
                 value={sellerName}
@@ -235,15 +235,15 @@ export function PPAPanel({ estimate }: Props) {
                 placeholder="e.g. Acme Industrials Ltd."
               />
             </div>
-            <div className="mt-md">
-              <label className="font-label-sm text-label-sm text-on-surface font-semibold block mb-1">
+            <div className="mt-lg">
+              <label className="font-label-sm text-label-sm text-on-surface font-semibold block mb-0.5">
                 Notes
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="w-full rounded-lg border border-outline-variant bg-surface px-md py-sm font-body-md focus:outline-none focus:border-primary"
+                className="w-full rounded-lg border border-outline-variant bg-surface px-lg py-md font-body-md focus:outline-none focus:border-primary"
                 placeholder="Special clauses, conditions precedent, or footnotes."
               />
             </div>
@@ -260,8 +260,8 @@ export function PPAPanel({ estimate }: Props) {
           />
         </>
       ) : (
-        <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-md flex flex-col md:flex-row md:items-center md:justify-between gap-sm">
-          <div className="flex items-start gap-sm">
+        <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-lg flex flex-col md:flex-row md:items-center md:justify-between gap-md">
+          <div className="flex items-start gap-md">
             <Icon name="account_balance" className="text-tertiary text-[24px] shrink-0" />
             <p className="font-body-md text-body-md text-on-surface">
               <span className="font-semibold">{estimate.name}</span> doesn&apos;t
@@ -270,7 +270,7 @@ export function PPAPanel({ estimate }: Props) {
             </p>
           </div>
           <Link
-            className="px-md py-sm rounded-lg bg-primary text-on-primary font-label-sm hover:bg-primary-container"
+            className="px-lg py-md rounded-lg bg-primary text-on-primary font-label-sm hover:bg-primary-container"
             to={`/estimates/${estimate.id}/edit`}
           >
             Open estimate
@@ -289,17 +289,17 @@ function TermPicker({
   onChange: (n: number) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0.5">
       <span className="font-label-sm text-label-sm text-on-surface font-semibold">
         Term length
       </span>
-      <div className="inline-flex flex-wrap gap-2">
+      <div className="inline-flex flex-wrap gap-1">
         {TERM_OPTIONS.map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => onChange(t)}
-            className={`px-3 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
+            className={`px-1.5 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
               t === value
                 ? 'bg-primary text-on-primary border-primary'
                 : 'bg-transparent text-on-surface border-outline-variant hover:bg-surface-variant'
@@ -327,15 +327,15 @@ function IndexationControls({
   inflationPct: number;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       <span className="font-label-sm text-label-sm text-on-surface font-semibold">
         Inflation indexation
       </span>
-      <div className="inline-flex gap-2">
+      <div className="inline-flex gap-1">
         <button
           type="button"
           onClick={() => onKindChange('none')}
-          className={`px-3 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
+          className={`px-1.5 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
             kind === 'none'
               ? 'bg-primary text-on-primary border-primary'
               : 'bg-transparent text-on-surface border-outline-variant hover:bg-surface-variant'
@@ -346,7 +346,7 @@ function IndexationControls({
         <button
           type="button"
           onClick={() => onKindChange('cpi')}
-          className={`px-3 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
+          className={`px-1.5 h-9 rounded-full font-label-sm text-label-sm border transition-colors ${
             kind === 'cpi'
               ? 'bg-primary text-on-primary border-primary'
               : 'bg-transparent text-on-surface border-outline-variant hover:bg-surface-variant'
@@ -384,7 +384,7 @@ function TextField({
   placeholder?: string;
 }) {
   return (
-    <label className="flex flex-col gap-1">
+    <label className="flex flex-col gap-0.5">
       <span className="font-label-sm text-label-sm text-on-surface font-semibold">
         {label}
       </span>
@@ -393,7 +393,7 @@ function TextField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-lg border border-outline-variant bg-surface px-md py-sm font-body-md focus:outline-none focus:border-primary"
+        className="rounded-lg border border-outline-variant bg-surface px-lg py-md font-body-md focus:outline-none focus:border-primary"
       />
     </label>
   );
@@ -410,11 +410,11 @@ function ProjectSummary({
 }) {
   const finance = estimate.finance;
   return (
-    <section className="bg-surface-container-low rounded-xl p-md border border-outline-variant/30">
-      <h3 className="font-body-lg text-body-lg text-on-surface font-semibold mb-2">
+    <section className="bg-surface-container-low rounded-xl p-lg border border-outline-variant/30">
+      <h3 className="font-body-lg text-body-lg text-on-surface font-semibold mb-1">
         Project Snapshot
       </h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-sm font-body-md text-on-surface-variant">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-md font-body-md text-on-surface-variant">
         <Snippet label="Type" value={projectTypeLabel} />
         <Snippet
           label="Capacity"

@@ -34,7 +34,7 @@ export function StatusTag({ status, className = '' }: Props) {
   const cfg = STYLES[status];
   return (
     <span
-      className={`inline-block px-2 py-1 font-label-sm text-label-sm rounded ${cfg.classes} ${className}`}
+      className={`inline-block px-1 py-0.5 font-label-sm text-label-sm rounded ${cfg.classes} ${className}`}
     >
       {cfg.label}
     </span>

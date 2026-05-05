@@ -5,29 +5,70 @@ import type {
   ComposeOverridesMap,
   Estimate,
   EstimateFacetSelections,
+  EstimateLineOverride,
+  EstimateLineOverridesMap,
   FinanceLayer,
   ScenarioTemplate,
   SelectedOptionsPerTemplate,
 } from '@/types';
 import {
+  applyLineOverrides,
   createEstimate,
   defaultFinanceLayer,
   duplicateEstimate,
   recomputeMaterialization,
   type EstimateInit,
 } from '@/lib/estimate';
+import { parseFiniteLatLng } from '@/lib/irradiance';
 import { useTemplateStore } from './templates';
 import { useCatalogStore } from './catalog';
 import { selectFacetsSorted, useFacetStore } from './facets';
 
 export const ESTIMATES_PERSIST_KEY = 'solar-estimates-v2';
 
+function sanitizeEstimateLocation(e: Estimate): Estimate {
+  if (!e.location) return e;
+  const pair = parseFiniteLatLng(e.location.lat, e.location.lng);
+  if (!pair) return { ...e, location: undefined };
+  const [lat, lng] = pair;
+  if (lat === e.location.lat && lng === e.location.lng) return e;
+  return { ...e, location: { ...e.location, lat, lng } };
+}
+
 function rematerialise(estimate: Estimate): Estimate {
-  return recomputeMaterialization(estimate, {
+  // Recomputing always invalidates per-line manual overrides — the UI is
+  // expected to warn the user before invoking actions that hit this path.
+  const next = recomputeMaterialization(estimate, {
     facets: selectFacetsSorted(useFacetStore.getState()),
     templates: useTemplateStore.getState().templates,
     catalogItems: useCatalogStore.getState().items,
   });
+  if (next.lineOverrides && Object.keys(next.lineOverrides).length > 0) {
+    return { ...next, lineOverrides: undefined };
+  }
+  return next;
+}
+
+/**
+ * Recompute totals using the existing materialized BOM + current
+ * `lineOverrides`. Used when the user edits a single cell and we want
+ * KPIs / per-kW rate to update without re-running the composer.
+ */
+function retotalWithOverrides(
+  estimate: Estimate,
+  overrides: EstimateLineOverridesMap | undefined
+): Estimate {
+  const { totals } = applyLineOverrides(
+    estimate.materialized,
+    overrides,
+    estimate.targetCapacityKW
+  );
+  return {
+    ...estimate,
+    lineOverrides: overrides,
+    totals,
+    updatedAt: Date.now(),
+  };
 }
 
 type EstimateState = {
@@ -62,6 +103,13 @@ type EstimateState = {
     catalogItemId: string,
     mode: ComposeMode | undefined
   ) => void;
+  setLineOverride: (
+    id: string,
+    lineId: string,
+    patch: EstimateLineOverride
+  ) => void;
+  clearLineOverride: (id: string, lineId: string) => void;
+  clearAllLineOverrides: (id: string) => void;
   setName: (id: string, name: string) => void;
   setStatus: (id: string, status: Estimate['status']) => void;
   setLocation: (id: string, location: Estimate['location']) => void;
@@ -205,6 +253,57 @@ export const useEstimateStore = create<EstimateState>()(
         }));
       },
 
+      setLineOverride: (id, lineId, patch) => {
+        set((state) => ({
+          estimates: state.estimates.map((e) => {
+            if (e.id !== id) return e;
+            const current = e.lineOverrides?.[lineId] ?? {};
+            const merged: EstimateLineOverride = { ...current, ...patch };
+            // Strip undefined values so an empty patch object collapses
+            // back to "no override" and can be GC'd.
+            const cleaned: EstimateLineOverride = {};
+            if (merged.itemName !== undefined) cleaned.itemName = merged.itemName;
+            if (merged.uom !== undefined) cleaned.uom = merged.uom;
+            if (merged.quantity !== undefined && Number.isFinite(merged.quantity))
+              cleaned.quantity = merged.quantity;
+            if (merged.rate !== undefined && Number.isFinite(merged.rate))
+              cleaned.rate = merged.rate;
+            const nextMap: EstimateLineOverridesMap = {
+              ...(e.lineOverrides ?? {}),
+            };
+            if (Object.keys(cleaned).length === 0) {
+              delete nextMap[lineId];
+            } else {
+              nextMap[lineId] = cleaned;
+            }
+            const lineOverrides =
+              Object.keys(nextMap).length > 0 ? nextMap : undefined;
+            return retotalWithOverrides(e, lineOverrides);
+          }),
+        }));
+      },
+
+      clearLineOverride: (id, lineId) => {
+        set((state) => ({
+          estimates: state.estimates.map((e) => {
+            if (e.id !== id || !e.lineOverrides) return e;
+            const next = { ...e.lineOverrides };
+            delete next[lineId];
+            const lineOverrides = Object.keys(next).length > 0 ? next : undefined;
+            return retotalWithOverrides(e, lineOverrides);
+          }),
+        }));
+      },
+
+      clearAllLineOverrides: (id) => {
+        set((state) => ({
+          estimates: state.estimates.map((e) => {
+            if (e.id !== id || !e.lineOverrides) return e;
+            return retotalWithOverrides(e, undefined);
+          }),
+        }));
+      },
+
       setName: (id, name) => {
         set((state) => ({
           estimates: state.estimates.map((e) =>
@@ -290,6 +389,16 @@ export const useEstimateStore = create<EstimateState>()(
       name: ESTIMATES_PERSIST_KEY,
       storage: createJSONStorage(() => localStorage),
       version: 1,
+      merge: (persistedState, currentState) => {
+        const base =
+          persistedState && typeof persistedState === 'object'
+            ? { ...currentState, ...(persistedState as Partial<EstimateState>) }
+            : currentState;
+        return {
+          ...base,
+          estimates: base.estimates.map(sanitizeEstimateLocation),
+        };
+      },
     }
   )
 );

@@ -9,11 +9,11 @@ export function TariffTable({ schedule }: Props) {
       <table className="w-full text-left font-body-md">
         <thead className="bg-surface-container-low text-on-surface-variant">
           <tr>
-            <th className="px-md py-sm font-label-sm text-label-sm font-semibold">Year</th>
-            <th className="px-md py-sm font-label-sm text-label-sm font-semibold text-right">
+            <th className="px-lg py-md font-label-sm text-label-sm font-semibold">Year</th>
+            <th className="px-lg py-md font-label-sm text-label-sm font-semibold text-right">
               Tariff (₹/kWh)
             </th>
-            <th className="px-md py-sm font-label-sm text-label-sm font-semibold text-right">
+            <th className="px-lg py-md font-label-sm text-label-sm font-semibold text-right">
               vs Y1
             </th>
           </tr>
@@ -26,11 +26,11 @@ export function TariffTable({ schedule }: Props) {
                 key={i}
                 className="border-t border-outline-variant/30 hover:bg-surface-container-low/40"
               >
-                <td className="px-md py-sm">Y{i + 1}</td>
-                <td className="px-md py-sm text-right font-data-display">
+                <td className="px-lg py-md">Y{i + 1}</td>
+                <td className="px-lg py-md text-right font-data-display">
                   ₹{rate.toFixed(3)}
                 </td>
-                <td className="px-md py-sm text-right text-on-surface-variant font-label-sm">
+                <td className="px-lg py-md text-right text-on-surface-variant font-label-sm">
                   {i === 0 ? '—' : `+${delta.toFixed(1)}%`}
                 </td>
               </tr>

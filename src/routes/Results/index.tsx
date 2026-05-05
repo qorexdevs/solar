@@ -116,7 +116,7 @@ export function Results() {
 
   if (!estimate || !results || !baseline) {
     return (
-      <div className="p-md text-on-surface-variant">
+      <div className="p-lg text-on-surface-variant">
         Estimate not found.{' '}
         <Link to="/" className="text-primary underline">
           Back to estimates
@@ -201,31 +201,31 @@ export function Results() {
   const isWhatIfActive = fundingModified || prepayModified;
 
   return (
-    <div className="space-y-md">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="space-y-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-2">
         <div>
-          <p className="font-label-sm text-label-sm text-outline mb-1 uppercase tracking-wider">
+          <p className="font-label-sm text-label-sm text-outline mb-0.5 uppercase tracking-wider">
             Estimate
           </p>
           <h1 className="font-headline-lg text-headline-lg text-on-surface">
             {estimate.name}
           </h1>
-          <div className="flex flex-wrap gap-2 mt-2">
-            <span className="px-2 py-1 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
+          <div className="flex flex-wrap gap-1 mt-1">
+            <span className="px-1 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
               {voltageTemplate
                 ? PROJECT_TYPE_LABELS[voltageTemplate.projectType ?? 'utility']
                 : 'Voltage class unset'}
             </span>
-            <span className="px-2 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">
+            <span className="px-1 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">
               {formatPlantCapacityKW(estimate.targetCapacityKW)}
             </span>
             {voltageTemplate && (
-              <span className="px-2 py-1 rounded bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
+              <span className="px-1 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm">
                 {SYNC_TYPE_LABELS[voltageTemplate.syncType ?? 'Other']} · {voltageTemplate.name}
               </span>
             )}
             {isWhatIfActive && (
-              <span className="px-2 py-1 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-1">
+              <span className="px-1 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm flex items-center gap-0.5">
                 <Icon name="science" className="text-[14px]" />
                 What-if active
                 <button
@@ -235,7 +235,7 @@ export function Results() {
                     setExtraPrepayment(0);
                     setAutoAbsorb(false);
                   }}
-                  className="ml-1 underline"
+                  className="ml-0.5 underline"
                 >
                   reset
                 </button>
@@ -243,7 +243,7 @@ export function Results() {
             )}
           </div>
         </div>
-        <div className="flex gap-sm w-full md:w-auto">
+        <div className="flex gap-md w-full md:w-auto">
           <Button
             variant="outline"
             onClick={() => navigate(`/estimates/${estimate.id}/edit`)}
@@ -268,8 +268,8 @@ export function Results() {
 
       {/* Finance section gating */}
       {!finance ? (
-        <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-md flex flex-col md:flex-row md:items-center md:justify-between gap-sm">
-          <div className="flex items-start gap-sm">
+        <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-lg flex flex-col md:flex-row md:items-center md:justify-between gap-md">
+          <div className="flex items-start gap-md">
             <Icon name="account_balance" className="text-tertiary text-[24px] shrink-0" />
             <div>
               <p className="font-body-md text-body-md text-on-surface">
@@ -290,8 +290,8 @@ export function Results() {
       ) : (
         <>
           {!estimate.location && (
-            <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-md flex flex-col md:flex-row md:items-center md:justify-between gap-sm">
-              <div className="flex items-start gap-sm">
+            <div className="rounded-xl border border-tertiary/40 bg-tertiary/5 p-lg flex flex-col md:flex-row md:items-center md:justify-between gap-md">
+              <div className="flex items-start gap-md">
                 <Icon
                   name="location_searching"
                   className="text-tertiary text-[24px] shrink-0"
@@ -313,9 +313,9 @@ export function Results() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-md">
-            <section className="lg:col-span-2 lg:row-start-1 bg-surface-container-lowest rounded-xl p-md shadow-card">
-              <div className="flex items-center justify-between mb-2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+            <section className="lg:col-span-2 lg:row-start-1 bg-surface-container-lowest rounded-xl p-lg shadow-card">
+              <div className="flex items-center justify-between mb-1">
                 <h3 className="font-body-lg text-body-lg text-on-surface">
                   Cumulative Cash Flow
                 </h3>
@@ -333,21 +333,21 @@ export function Results() {
               />
             </section>
 
-            <section className="lg:col-span-2 lg:row-start-2 bg-surface-container-lowest rounded-xl p-md shadow-card">
-              <h3 className="font-body-lg text-body-lg text-on-surface mb-2">
+            <section className="lg:col-span-2 lg:row-start-2 bg-surface-container-lowest rounded-xl p-lg shadow-card">
+              <h3 className="font-body-lg text-body-lg text-on-surface mb-1">
                 Year-by-year Net Cash Flow
               </h3>
               <YearlyBarChart data={yearlyBarData} />
             </section>
 
-            <section className="lg:col-start-3 lg:row-start-1 lg:row-span-2 h-full bg-surface-container-lowest rounded-xl p-md shadow-card flex flex-col">
-              <h3 className="font-body-lg text-body-lg text-on-surface mb-4">
+            <section className="lg:col-start-3 lg:row-start-1 lg:row-span-2 h-full bg-surface-container-lowest rounded-xl p-lg shadow-card flex flex-col">
+              <h3 className="font-body-lg text-body-lg text-on-surface mb-2">
                 CAPEX Breakdown
               </h3>
               <div className="flex-1">
                 <CostDonut slices={donutSlices} />
               </div>
-              <div className="flex justify-between items-center mt-md pt-sm border-t border-outline-variant/40">
+              <div className="flex justify-between items-center mt-lg pt-md border-t border-outline-variant/40">
                 <span className="font-body-md text-on-surface-variant">Total</span>
                 <span className="font-data-display text-data-display text-primary">
                   {formatINR(results.capex.total)}
@@ -356,9 +356,9 @@ export function Results() {
             </section>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-md items-stretch">
-            <section className="h-full bg-surface-container-lowest rounded-xl p-md shadow-card flex flex-col">
-              <div className="flex justify-between items-center mb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg items-stretch">
+            <section className="h-full bg-surface-container-lowest rounded-xl p-lg shadow-card flex flex-col">
+              <div className="flex justify-between items-center mb-2">
                 <h3 className="font-body-lg text-body-lg text-on-surface">
                   Funding Mix
                 </h3>
@@ -388,7 +388,7 @@ export function Results() {
                       formatBound={(n) => `${n}%`}
                     />
                   </div>
-                  <div className="grid grid-cols-3 gap-sm pt-md mt-md border-t border-outline-variant/40">
+                  <div className="grid grid-cols-3 gap-md pt-lg mt-lg border-t border-outline-variant/40">
                     <Stat
                       label="Equity"
                       value={formatINR(finance.equity)}
@@ -405,12 +405,12 @@ export function Results() {
             </section>
 
             {finance.loanAmount > 0 && (
-              <section className="h-full bg-surface-container-lowest rounded-xl p-md shadow-card flex flex-col">
-                <div className="flex justify-between items-center mb-md">
+              <section className="h-full bg-surface-container-lowest rounded-xl p-lg shadow-card flex flex-col">
+                <div className="flex justify-between items-center mb-lg">
                   <h3 className="font-body-lg text-body-lg text-on-surface">
                     Loan Prepayment
                   </h3>
-                  <div className="flex items-center gap-md">
+                  <div className="flex items-center gap-lg">
                     <ResetButton
                       disabled={!prepayModified}
                       onClick={() => {
@@ -418,7 +418,7 @@ export function Results() {
                         setAutoAbsorb(false);
                       }}
                     />
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label className="flex items-center gap-1 cursor-pointer">
                       <span className="font-label-sm text-label-sm text-on-surface-variant">
                         Auto-absorb
                       </span>
@@ -436,7 +436,7 @@ export function Results() {
 
                 <div className="flex-1 flex items-center">
                   {autoAbsorb ? (
-                    <div className="flex items-start gap-2 w-full">
+                    <div className="flex items-start gap-1 w-full">
                       <Icon name="auto_mode" className="text-primary text-[20px] mt-0.5" />
                       <p className="font-label-sm text-label-sm text-on-surface-variant">
                         <span className="text-on-surface font-semibold">
@@ -465,7 +465,7 @@ export function Results() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-sm pt-md mt-md border-t border-outline-variant/40">
+                <div className="grid grid-cols-3 gap-md pt-lg mt-lg border-t border-outline-variant/40">
                   <Stat
                     label="Loan Retires In"
                     before={`${baselineRetireYear} yrs`}
@@ -514,7 +514,7 @@ function SummaryRow({
   dense?: boolean;
 }) {
   return (
-    <div className="flex justify-between items-center gap-sm min-w-0">
+    <div className="flex justify-between items-center gap-md min-w-0">
       <span
         className={`shrink-0 ${
           dense
@@ -556,26 +556,26 @@ function EstimateTotalsCard({
   return (
     <section
       aria-label="Expense and revenue summary"
-      className="flex flex-col md:flex-row gap-sm items-stretch"
+      className="flex flex-col md:flex-row gap-md items-stretch"
     >
       <article
         aria-labelledby="results-expenses-heading"
-        className="bg-surface-container-lowest rounded-xl p-md shadow-card border-l-4 border-l-primary flex-1 min-w-0 flex flex-col"
+        className="bg-surface-container-lowest rounded-xl p-lg shadow-card border-l-4 border-l-primary flex-1 min-w-0 flex flex-col"
       >
-        <div className="flex items-center gap-2 text-outline mb-2">
+        <div className="flex items-center gap-1 text-outline mb-1">
           <Icon name="payments" />
           <h2 id="results-expenses-heading" className="font-label-sm text-label-sm font-normal">
             Expenses
           </h2>
         </div>
         <div className="font-data-display text-data-display text-on-surface">{`₹ ${formatINR(t.grandTotal)}`}</div>
-        <div className="mt-4 pt-4 border-t border-outline-variant/40 flex flex-col gap-2 flex-1 min-h-0">
+        <div className="mt-2 pt-2 border-t border-outline-variant/40 flex flex-col gap-1 flex-1 min-h-0">
           <SummaryRow dense label="Main BOM" value={`₹ ${formatINR(t.mainBomSubtotal)}`} />
           <SummaryRow dense label="Main GST" value={`₹ ${formatINR(t.mainBomGst)}`} />
           <SummaryRow dense label="Other Scope" value={`₹ ${formatINR(t.otherScopeSubtotal)}`} />
           <SummaryRow dense label="Other GST" value={`₹ ${formatINR(t.otherScopeGst)}`} />
         </div>
-        <div className="mt-4 pt-3 border-t border-outline-variant/40">
+        <div className="mt-2 pt-1.5 border-t border-outline-variant/40">
           <SummaryRow dense label="Per kW" value={`₹ ${formatINR(t.perKwRate)}`} />
         </div>
       </article>
@@ -583,9 +583,9 @@ function EstimateTotalsCard({
       {finance ? (
         <article
           aria-labelledby="results-revenue-heading"
-          className="bg-surface-container-lowest rounded-xl p-md shadow-card border-l-4 border-l-tertiary-container flex-1 min-w-0 flex flex-col"
+          className="bg-surface-container-lowest rounded-xl p-lg shadow-card border-l-4 border-l-tertiary-container flex-1 min-w-0 flex flex-col"
         >
-          <div className="flex items-center gap-2 text-outline mb-2">
+          <div className="flex items-center gap-1 text-outline mb-1">
             <Icon name="solar_power" />
             <h2 id="results-revenue-heading" className="font-label-sm text-label-sm font-normal">
               Revenue
@@ -594,7 +594,7 @@ function EstimateTotalsCard({
           <div className="font-data-display text-data-display text-on-surface">
             ₹ {formatINR(lifetimeRevenue)}
           </div>
-          <div className="mt-4 pt-4 border-t border-outline-variant/40 flex flex-col gap-2 flex-1 min-h-0">
+          <div className="mt-2 pt-2 border-t border-outline-variant/40 flex flex-col gap-1 flex-1 min-h-0">
             <SummaryRow
               dense
               label="Annual generation (Y1)"
@@ -608,7 +608,7 @@ function EstimateTotalsCard({
               />
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-outline-variant/40 flex flex-col gap-2">
+          <div className="mt-2 pt-1.5 border-t border-outline-variant/40 flex flex-col gap-1">
             <SummaryRow
               dense
               label="Internal Rate of Return (IRR)"

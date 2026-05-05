@@ -81,8 +81,8 @@ export function EstimatesPanel() {
   const anyHasFinance = computed.some((c) => c.results.finance);
 
   return (
-    <div className="space-y-md">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
         <div>
           <h2 className="font-headline-lg text-headline-lg text-primary">
             Estimate Comparison
@@ -93,7 +93,7 @@ export function EstimatesPanel() {
               : `Comparing ${selected.map((e) => e.name).join(', ')}.`}
           </p>
         </div>
-        <div className="flex w-full md:w-auto gap-3">
+        <div className="flex w-full md:w-auto gap-1.5">
           <Button
             variant="outline"
             onClick={() => navigate('/')}
@@ -109,11 +109,11 @@ export function EstimatesPanel() {
         </div>
       </div>
 
-      <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-        <h3 className="font-body-lg text-body-lg font-semibold text-on-surface mb-3">
+      <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+        <h3 className="font-body-lg text-body-lg font-semibold text-on-surface mb-1.5">
           Select estimates to compare
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
           {estimates.map((e) => {
             const isSelected = selectedIds.includes(e.id);
             return (
@@ -121,13 +121,13 @@ export function EstimatesPanel() {
                 key={e.id}
                 type="button"
                 onClick={() => toggleCompare(e.id)}
-                className={`text-left p-sm rounded-lg border transition-all ${
+                className={`text-left p-md rounded-lg border transition-all ${
                   isSelected
                     ? 'border-primary bg-primary-fixed/30'
                     : 'border-outline-variant bg-surface-bright hover:border-outline'
                 }`}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-1">
                   <Icon
                     name={isSelected ? 'check_circle' : 'radio_button_unchecked'}
                     filled={isSelected}
@@ -153,8 +153,8 @@ export function EstimatesPanel() {
       {selected.length >= 1 && (
         <>
           {anyHasFinance && (
-            <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-              <div className="flex justify-between items-center mb-2">
+            <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+              <div className="flex justify-between items-center mb-1">
                 <h3 className="font-body-lg text-body-lg font-semibold text-on-surface">
                   Cumulative Cash Flow (finance-enabled estimates only)
                 </h3>
@@ -163,9 +163,9 @@ export function EstimatesPanel() {
                 </span>
               </div>
               <MultiCashFlowChart data={chartData} series={series} />
-              <div className="flex flex-wrap gap-4 mt-3 font-label-sm text-label-sm">
+              <div className="flex flex-wrap gap-2 mt-1.5 font-label-sm text-label-sm">
                 {series.map((s) => (
-                  <div key={s.id} className="flex items-center gap-2 text-on-surface">
+                  <div key={s.id} className="flex items-center gap-1 text-on-surface">
                     <span
                       className="w-3 h-3 rounded-full"
                       style={{ background: s.color }}
@@ -182,13 +182,13 @@ export function EstimatesPanel() {
               <table className="w-full text-left border-collapse min-w-[640px]">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="p-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider sticky left-0 bg-surface-container-low z-10 w-1/4">
+                    <th className="p-2 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider sticky left-0 bg-surface-container-low z-10 w-1/4">
                       Metric
                     </th>
                     {selected.map((e) => (
                       <th
                         key={e.id}
-                        className="p-4 font-body-md text-body-md font-semibold text-primary min-w-[150px]"
+                        className="p-2 font-body-md text-body-md font-semibold text-primary min-w-[150px]"
                       >
                         <Link to={`/estimates/${e.id}`} className="hover:underline">
                           {e.name}
@@ -203,11 +203,11 @@ export function EstimatesPanel() {
                       key={m.id}
                       className="hover:bg-surface-container-lowest transition-colors"
                     >
-                      <td className="p-4 font-label-sm text-label-sm text-on-surface-variant sticky left-0 bg-surface-container-lowest">
-                        <span className="flex items-center gap-2">
+                      <td className="p-2 font-label-sm text-label-sm text-on-surface-variant sticky left-0 bg-surface-container-lowest">
+                        <span className="flex items-center gap-1">
                           <Icon name={m.icon} className="text-[18px]" /> {m.label}
                           {m.requiresFinance && (
-                            <span className="text-[10px] px-1 py-0.5 rounded bg-tertiary/10 text-tertiary">
+                            <span className="text-[10px] px-0.5 py-px rounded bg-tertiary/10 text-tertiary">
                               finance
                             </span>
                           )}
@@ -219,7 +219,7 @@ export function EstimatesPanel() {
                         return (
                           <td
                             key={estimate.id}
-                            className="p-4 font-body-md text-body-md text-on-surface"
+                            className="p-2 font-body-md text-body-md text-on-surface"
                           >
                             <BestCell isBest={isBest}>
                               {m.format(results, estimate)}
@@ -232,7 +232,7 @@ export function EstimatesPanel() {
                 </tbody>
               </table>
             </div>
-            <div className="px-4 py-3 text-label-sm text-on-surface-variant border-t border-outline-variant bg-surface-container-low">
+            <div className="px-2 py-1.5 text-label-sm text-on-surface-variant border-t border-outline-variant bg-surface-container-low">
               Best value for each metric is highlighted. Finance metrics are
               only computed when an estimate has its finance layer enabled.
             </div>

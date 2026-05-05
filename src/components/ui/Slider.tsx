@@ -25,6 +25,12 @@ type Props = {
   formatValue?: (n: number) => string;
   className?: string;
   minMaxFormat?: (n: number) => string;
+  /** Default `card`: bordered padded container. `minimal`: track only (e.g. under a custom header). */
+  variantChrome?: 'card' | 'minimal';
+  /** Min/max labels under the track (default true). */
+  showBounds?: boolean;
+  /** Exposed on the range input when `label` is not rendered (a11y). */
+  ariaLabel?: string;
 };
 
 function defaultFormat(variant: Variant, suffix?: string) {
@@ -67,6 +73,9 @@ export function Slider({
   formatValue,
   className = '',
   minMaxFormat,
+  variantChrome = 'card',
+  showBounds = true,
+  ariaLabel,
 }: Props) {
   const fmt = formatValue ?? defaultFormat(variant, suffix);
   const fmtBound = minMaxFormat ?? fmt;
@@ -75,26 +84,32 @@ export function Slider({
   const clamped = Math.min(safeMax, Math.max(min, Number.isFinite(value) ? value : min));
   const pct = ((clamped - min) / (safeMax - min)) * 100;
 
+  const showHeaderRow = Boolean(label) || Boolean(tooltip);
+  const chrome =
+    variantChrome === 'minimal'
+      ? 'flex flex-col gap-xs'
+      : 'flex flex-col gap-xs bg-surface-container-low p-lg rounded-xl border border-outline-variant/20';
+
   return (
-    <div
-      className={`flex flex-col gap-xs bg-surface-container-low p-md rounded-xl border border-outline-variant/20 ${className}`}
-    >
-      <div className="flex justify-between items-center gap-sm">
-        <div className="flex items-center gap-2 min-w-0">
-          {label && (
-            <label
-              htmlFor={id}
-              className="font-label-sm text-label-sm text-on-surface font-semibold truncate"
-            >
-              {label}
-            </label>
-          )}
-          {tooltip && <Tooltip label={tooltip.label} content={tooltip.content} />}
+    <div className={`${chrome} ${className}`.trim()}>
+      {showHeaderRow && (
+        <div className="flex justify-between items-center gap-md">
+          <div className="flex items-center gap-1 min-w-0">
+            {label && (
+              <label
+                htmlFor={id}
+                className="font-label-sm text-label-sm text-on-surface font-semibold truncate"
+              >
+                {label}
+              </label>
+            )}
+            {tooltip && <Tooltip label={tooltip.label} content={tooltip.content} />}
+          </div>
+          <span className="font-data-display text-body-lg text-primary font-semibold whitespace-nowrap">
+            {fmt(clamped)}
+          </span>
         </div>
-        <span className="font-data-display text-body-lg text-primary font-semibold whitespace-nowrap">
-          {fmt(clamped)}
-        </span>
-      </div>
+      )}
       <div className="relative w-full h-8 flex items-center">
         <input
           id={id}
@@ -103,6 +118,10 @@ export function Slider({
           max={safeMax}
           step={step}
           value={clamped}
+          aria-label={
+            ariaLabel ??
+            (typeof label === 'string' ? label : undefined)
+          }
           onChange={(e) => onChange(Number(e.target.value))}
           className="range-primary w-full h-2 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-primary"
           style={{
@@ -110,16 +129,18 @@ export function Slider({
           }}
         />
       </div>
-      <div className="grid grid-cols-2 gap-x-2 font-label-sm text-label-sm text-on-surface-variant min-w-0">
-        <span className="justify-self-start text-left whitespace-nowrap min-w-0">
-          {fmtBound(min)}
-        </span>
-        <span className="justify-self-end text-right whitespace-nowrap min-w-0">
-          {fmtBound(safeMax)}
-        </span>
-      </div>
+      {showBounds && (
+        <div className="grid grid-cols-2 gap-x-2 font-label-sm text-label-sm text-on-surface-variant min-w-0">
+          <span className="justify-self-start text-left whitespace-nowrap min-w-0">
+            {fmtBound(min)}
+          </span>
+          <span className="justify-self-end text-right whitespace-nowrap min-w-0">
+            {fmtBound(safeMax)}
+          </span>
+        </div>
+      )}
       {hint && (
-        <p className="font-label-sm text-label-sm text-on-surface-variant mt-1">{hint}</p>
+        <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">{hint}</p>
       )}
     </div>
   );

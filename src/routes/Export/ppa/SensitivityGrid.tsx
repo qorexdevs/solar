@@ -42,13 +42,13 @@ export function SensitivityGrid({ estimate, indexation, targetIRR }: Props) {
       <table className="w-full text-center font-body-md">
         <thead className="bg-surface-container-low text-on-surface-variant">
           <tr>
-            <th className="px-md py-sm font-label-sm text-label-sm font-semibold text-left">
+            <th className="px-lg py-md font-label-sm text-label-sm font-semibold text-left">
               Term ↓ / Escalation →
             </th>
             {ESCALATIONS.map((e) => (
               <th
                 key={e}
-                className="px-md py-sm font-label-sm text-label-sm font-semibold"
+                className="px-lg py-md font-label-sm text-label-sm font-semibold"
               >
                 {e}%
               </th>
@@ -58,7 +58,7 @@ export function SensitivityGrid({ estimate, indexation, targetIRR }: Props) {
         <tbody>
           {TERMS.map((t, ti) => (
             <tr key={t} className="border-t border-outline-variant/30">
-              <td className="px-md py-sm text-left font-label-sm font-semibold text-on-surface">
+              <td className="px-lg py-md text-left font-label-sm font-semibold text-on-surface">
                 {t} yrs
               </td>
               {ESCALATIONS.map((_, ei) => {
@@ -70,7 +70,7 @@ export function SensitivityGrid({ estimate, indexation, targetIRR }: Props) {
                   <td
                     key={ei}
                     style={{ backgroundColor: bg }}
-                    className="px-md py-sm font-data-display"
+                    className="px-lg py-md font-data-display"
                   >
                     {Number.isFinite(v) ? `₹${v.toFixed(2)}` : '—'}
                   </td>

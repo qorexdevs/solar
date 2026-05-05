@@ -20,11 +20,11 @@ export function FormSection({
 }: Props) {
   if (collapsible) {
     return (
-      <div className="flex flex-col gap-sm">
+      <div className="flex flex-col gap-md">
         <button
           type="button"
           onClick={onToggle}
-          className="flex items-center justify-between gap-sm text-left rounded-lg p-2 hover:bg-surface-container-low/50"
+          className="flex items-center justify-between gap-md text-left rounded-lg p-1 hover:bg-surface-container-low/50"
           aria-expanded={open}
         >
           <div className="flex flex-col">
@@ -47,8 +47,8 @@ export function FormSection({
     );
   }
   return (
-    <div className="flex flex-col gap-sm">
-      <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-md">
+      <div className="flex flex-col gap-0.5">
         <h2 className="font-headline-md text-headline-md text-on-surface font-semibold">
           {title}
         </h2>

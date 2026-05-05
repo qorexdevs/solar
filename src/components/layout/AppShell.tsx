@@ -7,7 +7,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="bg-background text-on-background min-h-screen pt-16 pb-24 md:pb-8">
       <TopBar />
-      <main className="max-w-container-max mx-auto px-md py-md">{children}</main>
+      <main className="max-w-container-max mx-auto px-lg py-lg">{children}</main>
       <BottomNav />
       <PWAInstallPrompt />
     </div>

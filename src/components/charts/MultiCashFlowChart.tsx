@@ -48,11 +48,11 @@ function AnnualNetTooltip({
 
   return (
     <div
-      className="rounded-lg border bg-surface p-2 shadow-sm text-on-surface"
+      className="rounded-lg border bg-surface p-1 shadow-sm text-on-surface"
       style={{ borderColor: TOOLTIP_CONTENT_STYLE.borderColor, fontSize: 13 }}
     >
-      <p className="font-semibold mb-2">Year {label}</p>
-      <ul className="space-y-2 m-0 p-0 list-none">
+      <p className="font-semibold mb-1">Year {label}</p>
+      <ul className="space-y-1 m-0 p-0 list-none">
         {series.map((s) => {
           const cum = row[s.id];
           const netKey = `${s.id}${suffix}`;
@@ -60,11 +60,11 @@ function AnnualNetTooltip({
           const hasNet = typeof net === 'number' && Number.isFinite(net);
           return (
             <li key={s.id}>
-              <div className="flex items-center gap-2 font-medium text-body-md">
+              <div className="flex items-center gap-1 font-medium text-body-md">
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
                 <span className="truncate">{s.name}</span>
               </div>
-              <div className="pl-4 mt-0.5 text-label-sm text-on-surface-variant space-y-0.5">
+              <div className="pl-2 mt-1 text-label-sm text-on-surface-variant space-y-1">
                 <div>Cumulative: {formatINR(typeof cum === 'number' ? cum : NaN)}</div>
                 {hasNet && <div>Annual net: {formatINR(net)}</div>}
               </div>

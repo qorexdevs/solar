@@ -43,7 +43,7 @@ export function Tooltip({ label, content, className = '' }: Props) {
           e.preventDefault();
           setOpen((v) => !v);
         }}
-        className="text-secondary hover:text-secondary-container transition-colors p-1 rounded-full"
+        className="text-secondary hover:text-secondary-container transition-colors p-0.5 rounded-full"
       >
         <Icon name="help" className="text-[16px]" />
       </button>
@@ -51,7 +51,7 @@ export function Tooltip({ label, content, className = '' }: Props) {
         <span
           id={id}
           role="tooltip"
-          className="absolute z-30 left-1/2 -translate-x-1/2 top-full mt-1 w-64 max-w-[80vw] rounded-lg bg-inverse-surface text-inverse-on-surface text-[13px] leading-snug p-3 shadow-elevated"
+          className="absolute z-30 left-1/2 -translate-x-1/2 top-full mt-0.5 w-64 max-w-[80vw] rounded-lg bg-inverse-surface text-inverse-on-surface text-[13px] leading-snug p-1.5 shadow-elevated"
         >
           {content}
         </span>

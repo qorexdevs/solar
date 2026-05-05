@@ -12,7 +12,7 @@ export function PillTab({ active, icon, label, onClick }: Props) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 flex justify-center items-center gap-xs py-sm h-touch-target rounded transition-all ${
+      className={`flex-1 flex justify-center items-center gap-xs py-md h-touch-target rounded transition-all ${
         active
           ? 'bg-surface-container-lowest text-primary font-bold shadow-sm'
           : 'text-on-surface-variant hover:text-on-surface'

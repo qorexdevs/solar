@@ -27,14 +27,14 @@ export function KpiCard({
 }: Props) {
   return (
     <div
-      className={`bg-surface-container-lowest rounded-xl p-md shadow-card border-l-4 ${ACCENTS[accent]} ${className}`}
+      className={`bg-surface-container-lowest rounded-xl p-lg shadow-card border-l-4 ${ACCENTS[accent]} ${className}`}
     >
-      <div className="flex items-center gap-2 text-outline mb-2">
+      <div className="flex items-center gap-1 text-outline mb-1">
         {icon && <Icon name={icon} />}
         <span className="font-label-sm text-label-sm">{label}</span>
       </div>
       <div className="font-data-display text-data-display text-on-surface">{value}</div>
-      {hint && <p className="font-label-sm text-label-sm text-outline mt-1">{hint}</p>}
+      {hint && <p className="font-label-sm text-label-sm text-outline mt-0.5">{hint}</p>}
     </div>
   );
 }

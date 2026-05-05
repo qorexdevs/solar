@@ -182,17 +182,17 @@ type SectionProps = {
 
 export function IrradianceCharts({ yieldResult, record }: SectionProps) {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-md">
-      <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-        <h4 className="font-body-lg text-body-lg text-on-surface mb-2">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-lg">
+      <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+        <h4 className="font-body-lg text-body-lg text-on-surface mb-1">
           Daily climatology — typical year
         </h4>
         <DailyClimatologyChart
           dailyTypicalYear={yieldResult.dailyTypicalYear}
         />
       </section>
-      <section className="bg-surface-container-lowest rounded-xl p-md shadow-card">
-        <h4 className="font-body-lg text-body-lg text-on-surface mb-2">
+      <section className="bg-surface-container-lowest rounded-xl p-lg shadow-card">
+        <h4 className="font-body-lg text-body-lg text-on-surface mb-1">
           Monthly GHI vs POA
         </h4>
         <MonthlyBarChart

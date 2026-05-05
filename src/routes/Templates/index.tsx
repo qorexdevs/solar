@@ -87,8 +87,8 @@ export function TemplateList() {
   }
 
   return (
-    <div className="flex flex-col gap-lg">
-      <div className="flex flex-col gap-sm">
+    <div className="flex flex-col gap-xl">
+      <div className="flex flex-col gap-md">
         <h1 className="font-headline-xl text-headline-xl text-primary">
           Scenario Templates
         </h1>
@@ -106,13 +106,13 @@ export function TemplateList() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-sm justify-between">
-        <div className="flex flex-wrap items-center gap-sm">
+      <div className="flex flex-wrap items-center gap-md justify-between">
+        <div className="flex flex-wrap items-center gap-md">
           <label className="font-label-sm text-label-sm text-on-surface-variant">
             Status
           </label>
           <select
-            className="rounded border border-outline bg-surface-container-low px-3 py-2 font-body-sm text-body-sm"
+            className="rounded border border-outline bg-surface-container-low px-1.5 py-1 font-body-sm text-body-sm"
             value={filter}
             onChange={(e) => setFilter(e.target.value as 'all' | TemplateStatus)}
           >
@@ -123,11 +123,11 @@ export function TemplateList() {
               </option>
             ))}
           </select>
-          <label className="font-label-sm text-label-sm text-on-surface-variant ml-md">
+          <label className="font-label-sm text-label-sm text-on-surface-variant ml-lg">
             Facet
           </label>
           <select
-            className="rounded border border-outline bg-surface-container-low px-3 py-2 font-body-sm text-body-sm"
+            className="rounded border border-outline bg-surface-container-low px-1.5 py-1 font-body-sm text-body-sm"
             value={facetFilter}
             onChange={(e) => setFacetFilter(e.target.value)}
           >
@@ -149,7 +149,7 @@ export function TemplateList() {
       </div>
 
       {visible.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-outline-variant p-lg text-center text-on-surface-variant">
+        <div className="rounded-xl border border-dashed border-outline-variant p-xl text-center text-on-surface-variant">
           <p>
             No templates {filter === 'all' ? '' : `with status “${filter}”`}{' '}
             {facetFilter === 'all' ? '' : 'for this facet '}
@@ -161,15 +161,15 @@ export function TemplateList() {
           <table className="w-full text-left text-body-sm font-body-sm">
             <thead className="bg-surface-container-low text-on-surface-variant">
               <tr>
-                <th className="px-md py-sm">Name</th>
-                <th className="px-md py-sm">Facet</th>
-                <th className="px-md py-sm">Voltage context</th>
-                <th className="px-md py-sm text-right">Base capacity</th>
-                <th className="px-md py-sm">Version</th>
-                <th className="px-md py-sm">Status</th>
-                <th className="px-md py-sm text-right">Preview total*</th>
-                <th className="px-md py-sm">Updated</th>
-                <th className="px-md py-sm text-right">Actions</th>
+                <th className="px-lg py-md">Name</th>
+                <th className="px-lg py-md">Facet</th>
+                <th className="px-lg py-md">Voltage context</th>
+                <th className="px-lg py-md text-right">Base capacity</th>
+                <th className="px-lg py-md">Version</th>
+                <th className="px-lg py-md">Status</th>
+                <th className="px-lg py-md text-right">Preview total*</th>
+                <th className="px-lg py-md">Updated</th>
+                <th className="px-lg py-md text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
@@ -188,7 +188,7 @@ export function TemplateList() {
                     : '—';
                 return (
                   <tr key={tpl.id} className="hover:bg-surface-container-low">
-                    <td className="px-md py-sm">
+                    <td className="px-lg py-md">
                       <button
                         className="text-primary hover:underline text-left"
                         onClick={() => navigate(`/templates/${tpl.id}`)}
@@ -198,20 +198,20 @@ export function TemplateList() {
                         </span>
                       </button>
                       {tpl.description && (
-                        <div className="text-on-surface-variant text-body-sm mt-1 line-clamp-1">
+                        <div className="text-on-surface-variant text-body-sm mt-0.5 line-clamp-1">
                           {tpl.description}
                         </div>
                       )}
                     </td>
-                    <td className="px-md py-sm text-on-surface-variant">{facetName}</td>
-                    <td className="px-md py-sm text-on-surface-variant text-body-sm">
+                    <td className="px-lg py-md text-on-surface-variant">{facetName}</td>
+                    <td className="px-lg py-md text-on-surface-variant text-body-sm">
                       {voltageLabel}
                     </td>
-                    <td className="px-md py-sm text-right">
+                    <td className="px-lg py-md text-right">
                       {formatPlantCapacityKW(tpl.baseCapacityKW)}
                     </td>
-                    <td className="px-md py-sm text-on-surface-variant">{tpl.version}</td>
-                    <td className="px-md py-sm">
+                    <td className="px-lg py-md text-on-surface-variant">{tpl.version}</td>
+                    <td className="px-lg py-md">
                       <select
                         value={tpl.status}
                         onChange={(e) =>
@@ -229,23 +229,23 @@ export function TemplateList() {
                         <StatusTag status={tpl.status} />
                       </div>
                     </td>
-                    <td className="px-md py-sm text-right">
+                    <td className="px-lg py-md text-right">
                       ₹ {formatINR(baseTotal)}
                     </td>
-                    <td className="px-md py-sm text-on-surface-variant">
+                    <td className="px-lg py-md text-on-surface-variant">
                       {new Date(tpl.updatedAt).toLocaleDateString('en-IN')}
                     </td>
-                    <td className="px-md py-sm">
-                      <div className="flex justify-end gap-1">
+                    <td className="px-lg py-md">
+                      <div className="flex justify-end gap-0.5">
                         <button
-                          className="p-2 rounded hover:bg-surface-variant"
+                          className="p-1 rounded hover:bg-surface-variant"
                           title="Generate estimate (other facets use defaults)"
                           onClick={() => handleGenerateEstimate(tpl)}
                         >
                           <Icon name="bolt" />
                         </button>
                         <button
-                          className="p-2 rounded hover:bg-surface-variant"
+                          className="p-1 rounded hover:bg-surface-variant"
                           title="Duplicate"
                           onClick={() => {
                             const copy = duplicateTemplate(tpl.id);
@@ -255,7 +255,7 @@ export function TemplateList() {
                           <Icon name="content_copy" />
                         </button>
                         <button
-                          className="p-2 rounded hover:bg-error/10 text-error"
+                          className="p-1 rounded hover:bg-error/10 text-error"
                           title="Delete"
                           onClick={() => {
                             if (confirm(`Delete "${tpl.name}"?`)) {

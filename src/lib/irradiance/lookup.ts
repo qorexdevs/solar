@@ -3,6 +3,28 @@ import type { IrradianceRecord } from '@/types';
 
 const EARTH_RADIUS_KM = 6371;
 
+/**
+ * Coerce UI / persisted lat,lng (numbers or numeric strings) into a finite pair.
+ * Invalid combinations return null so Leaflet never receives NaN.
+ */
+export function parseFiniteLatLng(
+  lat: unknown,
+  lng: unknown
+): [number, number] | null {
+  const toNum = (v: unknown): number | null => {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (typeof v === 'string' && v.trim() !== '') {
+      const n = Number(v);
+      if (Number.isFinite(n)) return n;
+    }
+    return null;
+  };
+  const la = toNum(lat);
+  const ln = toNum(lng);
+  if (la === null || ln === null) return null;
+  return [la, ln];
+}
+
 /** Great-circle distance in km using the standard haversine formula. */
 export function haversineKm(
   lat1: number,

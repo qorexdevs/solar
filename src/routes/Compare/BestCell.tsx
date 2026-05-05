@@ -13,7 +13,7 @@ type Props = {
 export function BestCell({ isBest, children }: Props) {
   if (!isBest) return <>{children}</>;
   return (
-    <span className="inline-flex items-center gap-2 bg-primary-fixed-dim/30 text-on-primary-fixed-variant px-2 py-1 rounded border-l-2 border-primary">
+    <span className="inline-flex items-center gap-1 bg-primary-fixed-dim/30 text-on-primary-fixed-variant px-1 py-0.5 rounded border-l-2 border-primary">
       <Icon name="star" className="text-[14px]" /> {children}
     </span>
   );

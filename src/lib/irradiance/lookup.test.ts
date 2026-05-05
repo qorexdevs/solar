@@ -4,6 +4,7 @@ import {
   haversineKm,
   isInIndia,
   listCities,
+  parseFiniteLatLng,
   snapToNearestCity,
 } from './lookup';
 
@@ -28,6 +29,22 @@ describe('isInIndia', () => {
   });
   it('rejects Pacific Ocean', () => {
     expect(isInIndia(0, 180)).toBe(false);
+  });
+});
+
+describe('parseFiniteLatLng', () => {
+  it('returns tuple for finite numbers', () => {
+    expect(parseFiniteLatLng(19.076, 72.8777)).toEqual([19.076, 72.8777]);
+  });
+  it('coerces numeric strings', () => {
+    expect(parseFiniteLatLng('19.076', '72.8777')).toEqual([19.076, 72.8777]);
+  });
+  it('rejects NaN', () => {
+    expect(parseFiniteLatLng(NaN, 72)).toBeNull();
+    expect(parseFiniteLatLng(28, Number.NaN)).toBeNull();
+  });
+  it('rejects empty strings', () => {
+    expect(parseFiniteLatLng('', 72)).toBeNull();
   });
 });
 

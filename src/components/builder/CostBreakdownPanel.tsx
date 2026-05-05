@@ -60,18 +60,18 @@ export function CostBreakdownPanel({
   }, [materialized]);
 
   return (
-    <div className="flex flex-col gap-md">
+    <div className="flex flex-col gap-lg">
       <div className="rounded-xl border border-outline-variant/30 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-body-md">
             <thead>
               <tr className="text-left text-on-surface-variant bg-surface-container-low/20 border-b border-outline-variant/30">
-                <th className="px-3 py-2">Item</th>
-                <th className="px-3 py-2 text-right">Qty</th>
-                <th className="px-3 py-2 text-right">Rate (₹)</th>
-                <th className="px-3 py-2 text-right">GST</th>
-                <th className="px-3 py-2 text-right">Subtotal</th>
-                <th className="px-3 py-2 text-right">Total</th>
+                <th className="px-1.5 py-1">Item</th>
+                <th className="px-1.5 py-1 text-right">Qty</th>
+                <th className="px-1.5 py-1 text-right">Rate (₹)</th>
+                <th className="px-1.5 py-1 text-right">GST</th>
+                <th className="px-1.5 py-1 text-right">Subtotal</th>
+                <th className="px-1.5 py-1 text-right">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -87,9 +87,9 @@ export function CostBreakdownPanel({
                 return (
                   <Fragment key={cat}>
                     <tr className="bg-surface-container-low/40 border-b border-outline-variant/30">
-                      <td colSpan={6} className="px-md py-sm">
-                        <div className="flex items-center justify-between gap-sm flex-wrap">
-                          <div className="flex items-center gap-sm flex-wrap">
+                      <td colSpan={6} className="px-lg py-md">
+                        <div className="flex items-center justify-between gap-md flex-wrap">
+                          <div className="flex items-center gap-md flex-wrap">
                             <span className="font-body-md font-semibold text-on-surface">
                               {label}
                             </span>
@@ -128,7 +128,7 @@ export function CostBreakdownPanel({
         </div>
       </div>
 
-      <div className="bg-surface-container-low rounded-xl p-md flex flex-col gap-1 border border-outline-variant/30">
+      <div className="bg-surface-container-low rounded-xl p-lg flex flex-col gap-0.5 border border-outline-variant/30">
         <div className="flex justify-between items-center">
           <span className="font-body-md text-on-surface-variant">
             Main BOM subtotal
@@ -161,7 +161,7 @@ export function CostBreakdownPanel({
             ₹ {formatINR(breakdown.otherTax)}
           </span>
         </div>
-        <div className="flex justify-between items-center pt-1 border-t border-outline-variant/30 mt-1">
+        <div className="flex justify-between items-center pt-0.5 border-t border-outline-variant/30 mt-0.5">
           <span className="font-body-md text-on-surface">Grand total</span>
           <span className="font-data-display text-data-display text-primary">
             ₹ {formatINR(breakdown.total)}
@@ -187,7 +187,7 @@ function MainBodyRow({
         line.included ? '' : 'opacity-40'
       }`}
     >
-      <td className="px-3 py-3 max-w-[280px]">
+      <td className="px-1.5 py-1.5 max-w-[280px]">
         <div className="font-body-md font-semibold text-on-surface">
           {line.itemName}
         </div>
@@ -195,17 +195,17 @@ function MainBodyRow({
           <div className="font-label-sm text-on-surface-variant">{line.make}</div>
         )}
         {line.contributedBy.length > 1 && (
-          <div className="text-label-sm text-on-surface-variant mt-1">
+          <div className="text-label-sm text-on-surface-variant mt-0.5">
             Merged ({line.composeMode}) · {line.contributedBy.length} contributions
           </div>
         )}
-        <div className="flex flex-wrap gap-1 mt-1 items-center">
+        <div className="flex flex-wrap gap-0.5 mt-0.5 items-center">
           {line.contributedBy.length > 1 && onComposeModeChange && (
-            <span className="flex items-center gap-1 mr-1">
+            <span className="flex items-center gap-0.5 mr-0.5">
               <span className="text-label-sm text-on-surface-variant">Merge</span>
               <button
                 type="button"
-                className={`px-2 py-0.5 rounded font-label-sm ${
+                className={`px-1 py-px rounded font-label-sm ${
                   (overrideMode ?? line.composeMode) === 'max'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-surface-container-low text-on-surface-variant'
@@ -221,7 +221,7 @@ function MainBodyRow({
               </button>
               <button
                 type="button"
-                className={`px-2 py-0.5 rounded font-label-sm ${
+                className={`px-1 py-px rounded font-label-sm ${
                   (overrideMode ?? line.composeMode) === 'sum'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-surface-container-low text-on-surface-variant'
@@ -239,32 +239,32 @@ function MainBodyRow({
           )}
           <ScalingBadge scalingType={line.scalingType} />
           {line.applicabilityFiltered && (
-            <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
+            <span className="px-1 py-px rounded bg-surface-container-low text-on-surface-variant font-label-sm">
               Sync gated
             </span>
           )}
           {line.userExcluded && (
-            <span className="px-2 py-0.5 rounded bg-error-container/40 text-on-error-container font-label-sm">
+            <span className="px-1 py-px rounded bg-error-container/40 text-on-error-container font-label-sm">
               User excluded
             </span>
           )}
         </div>
       </td>
-      <td className="px-3 py-3 text-right">
+      <td className="px-1.5 py-1.5 text-right">
         <div className="font-body-md text-on-surface">
           {formatIndianGroup(Math.round(line.quantity))} {BOM_UOM_LABELS[line.uom]}
         </div>
       </td>
-      <td className="px-3 py-3 text-right text-on-surface">
+      <td className="px-1.5 py-1.5 text-right text-on-surface">
         ₹ {formatINR(line.rate)}
       </td>
-      <td className="px-3 py-3 text-right text-on-surface-variant">
+      <td className="px-1.5 py-1.5 text-right text-on-surface-variant">
         {formatPercent(line.gstPercent)}
       </td>
-      <td className="px-3 py-3 text-right text-on-surface">
+      <td className="px-1.5 py-1.5 text-right text-on-surface">
         ₹ {formatINR(line.subtotal)}
       </td>
-      <td className="px-3 py-3 text-right font-data-display text-on-surface">
+      <td className="px-1.5 py-1.5 text-right font-data-display text-on-surface">
         ₹ {formatINR(line.total)}
       </td>
     </tr>
@@ -286,22 +286,22 @@ function ScopeBodyRow({
         item.included ? '' : 'opacity-40'
       }`}
     >
-      <td className="px-3 py-3 max-w-[280px]">
+      <td className="px-1.5 py-1.5 max-w-[280px]">
         <div className="font-body-md font-semibold text-on-surface">
           {item.scopeName}
         </div>
         {item.contributedBy.length > 1 && (
-          <div className="text-label-sm text-on-surface-variant mt-1">
+          <div className="text-label-sm text-on-surface-variant mt-0.5">
             Merged ({item.composeMode}) · {item.contributedBy.length} contributions
           </div>
         )}
-        <div className="flex flex-wrap gap-1 mt-1 items-center">
+        <div className="flex flex-wrap gap-0.5 mt-0.5 items-center">
           {item.contributedBy.length > 1 && onComposeModeChange && (
-            <span className="flex items-center gap-1 mr-1">
+            <span className="flex items-center gap-0.5 mr-0.5">
               <span className="text-label-sm text-on-surface-variant">Merge</span>
               <button
                 type="button"
-                className={`px-2 py-0.5 rounded font-label-sm ${
+                className={`px-1 py-px rounded font-label-sm ${
                   (overrideMode ?? item.composeMode) === 'max'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-surface-container-low text-on-surface-variant'
@@ -317,7 +317,7 @@ function ScopeBodyRow({
               </button>
               <button
                 type="button"
-                className={`px-2 py-0.5 rounded font-label-sm ${
+                className={`px-1 py-px rounded font-label-sm ${
                   (overrideMode ?? item.composeMode) === 'sum'
                     ? 'bg-primary/15 text-primary'
                     : 'bg-surface-container-low text-on-surface-variant'
@@ -335,30 +335,30 @@ function ScopeBodyRow({
           )}
           <ScalingBadge scalingType={item.scalingType} />
           {item.applicabilityFiltered && (
-            <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
+            <span className="px-1 py-px rounded bg-surface-container-low text-on-surface-variant font-label-sm">
               Sync gated
             </span>
           )}
           {item.userExcluded && (
-            <span className="px-2 py-0.5 rounded bg-error-container/40 text-on-error-container font-label-sm">
+            <span className="px-1 py-px rounded bg-error-container/40 text-on-error-container font-label-sm">
               User excluded
             </span>
           )}
         </div>
       </td>
-      <td className="px-3 py-3 text-right font-body-md text-on-surface-variant">
+      <td className="px-1.5 py-1.5 text-right font-body-md text-on-surface-variant">
         {PLACEHOLDER}
       </td>
-      <td className="px-3 py-3 text-right font-body-md text-on-surface-variant">
+      <td className="px-1.5 py-1.5 text-right font-body-md text-on-surface-variant">
         {PLACEHOLDER}
       </td>
-      <td className="px-3 py-3 text-right text-on-surface-variant">
+      <td className="px-1.5 py-1.5 text-right text-on-surface-variant">
         {formatPercent(item.gstPercent)}
       </td>
-      <td className="px-3 py-3 text-right text-on-surface">
+      <td className="px-1.5 py-1.5 text-right text-on-surface">
         ₹ {formatINR(item.amount)}
       </td>
-      <td className="px-3 py-3 text-right font-data-display text-on-surface">
+      <td className="px-1.5 py-1.5 text-right font-data-display text-on-surface">
         ₹ {formatINR(item.total)}
       </td>
     </tr>
@@ -368,7 +368,7 @@ function ScopeBodyRow({
 function ScalingBadge({ scalingType }: { scalingType: ScalingType }) {
   const label = SCALING_TYPE_LABELS[scalingType];
   return (
-    <span className="px-2 py-0.5 rounded bg-surface-container-low text-on-surface-variant font-label-sm">
+    <span className="px-1 py-px rounded bg-surface-container-low text-on-surface-variant font-label-sm">
       {label}
     </span>
   );

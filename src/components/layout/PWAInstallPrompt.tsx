@@ -34,17 +34,17 @@ export function PWAInstallPrompt() {
   if (!visible || !event) return null;
 
   return (
-    <div className="fixed bottom-28 md:bottom-6 right-4 left-4 md:left-auto md:max-w-sm z-30 bg-primary text-on-primary rounded-xl shadow-elevated p-md flex items-start gap-sm">
-      <Icon name="install_mobile" className="text-2xl mt-1" />
+    <div className="fixed bottom-28 md:bottom-6 right-4 left-4 md:left-auto md:max-w-md z-30 bg-primary text-on-primary rounded-xl shadow-elevated p-lg flex items-start gap-md">
+      <Icon name="install_mobile" className="text-2xl mt-0.5" />
       <div className="flex-1">
         <p className="font-body-md font-semibold">Install SolarCalc</p>
-        <p className="font-label-sm text-label-sm text-primary-fixed-dim mt-1">
+        <p className="font-label-sm text-label-sm text-primary-fixed-dim mt-0.5">
           Add to your home screen for offline access to your scenarios.
         </p>
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-1 mt-1">
           <button
             type="button"
-            className="px-3 py-1.5 rounded-lg bg-on-primary text-primary font-label-sm text-label-sm font-semibold"
+            className="px-1.5 py-0.5 rounded-lg bg-on-primary text-primary font-label-sm text-label-sm font-semibold"
             onClick={async () => {
               await event.prompt();
               const { outcome } = await event.userChoice;
@@ -58,7 +58,7 @@ export function PWAInstallPrompt() {
           </button>
           <button
             type="button"
-            className="px-3 py-1.5 rounded-lg border border-on-primary/40 text-on-primary font-label-sm text-label-sm"
+            className="px-1.5 py-0.5 rounded-lg border border-on-primary/40 text-on-primary font-label-sm text-label-sm"
             onClick={() => {
               setVisible(false);
               localStorage.setItem(DISMISSED_KEY, '1');
