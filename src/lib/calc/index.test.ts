@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   annualEnergyKWh,
+  annualEnergyKWhFromYield,
   breakEvenYear,
   capexBreakdown,
   co2Equivalents,
@@ -13,6 +14,7 @@ import {
   npv,
   paybackYears,
   solvePPARate,
+  specificYieldKWhPerKWpYr,
   tariffSchedule,
   withPPARate,
   yearlyCashFlows,
@@ -60,6 +62,16 @@ describe('annualEnergyKWh', () => {
   });
   it('scales linearly with size', () => {
     expect(annualEnergyKWh(2, 20)).toBeCloseTo(2 * annualEnergyKWh(1, 20), 6);
+  });
+});
+
+describe('specificYieldKWhPerKWpYr', () => {
+  it('inverts annualEnergyKWhFromYield', () => {
+    const energy = annualEnergyKWhFromYield(2, 1500);
+    expect(specificYieldKWhPerKWpYr(2, energy)).toBeCloseTo(1500, 6);
+  });
+  it('returns 0 for non-positive size', () => {
+    expect(specificYieldKWhPerKWpYr(0, 1000)).toBe(0);
   });
 });
 

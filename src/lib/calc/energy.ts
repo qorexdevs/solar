@@ -17,6 +17,16 @@ export function annualEnergyKWhFromYield(
   return sizeMW * 1000 * specificYieldKWhPerKWpYr;
 }
 
+/**
+ * Specific yield (kWh/kWp/yr) for a plant: annual energy per installed kWp.
+ * Inverse of `annualEnergyKWhFromYield`, handy for benchmarking a site
+ * against the ~1400-1700 typical range in India. Zero size yields 0.
+ */
+export function specificYieldKWhPerKWpYr(sizeMW: number, annualKWh: number): number {
+  if (sizeMW <= 0) return 0;
+  return annualKWh / (sizeMW * 1000);
+}
+
 /** Yearly energy with geometric panel degradation, length = lifespanYears. */
 export function yearlyEnergy(
   lifespanYears: number,

@@ -30,6 +30,7 @@ export {
 export {
   annualEnergyKWh,
   annualEnergyKWhFromYield,
+  specificYieldKWhPerKWpYr,
   yearlyEnergy,
   yearlyRevenue,
 } from './energy';
