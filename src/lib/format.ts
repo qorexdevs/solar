@@ -80,6 +80,12 @@ export function formatRate(rate: number, decimals = 1): string {
   return `${trim(rate * 100, decimals)}%`;
 }
 
+/** Tariff or levelized cost as ₹ per kWh, e.g. 2.5 -> "₹2.50/kWh". */
+export function formatPerKWh(rate: number, decimals = 2): string {
+  if (!Number.isFinite(rate)) return '—';
+  return `₹${rate.toFixed(decimals)}/kWh`;
+}
+
 export function formatYears(years: number | null, decimals = 1): string {
   if (years === null || !Number.isFinite(years)) return '—';
   return `${trim(years, decimals)} yrs`;

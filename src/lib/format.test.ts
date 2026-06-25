@@ -5,6 +5,7 @@ import {
   formatIndianGroup,
   formatKWh,
   formatPercent,
+  formatPerKWh,
   formatPlantCapacityKW,
   formatRate,
   formatTonnes,
@@ -58,6 +59,18 @@ describe('formatPercent / formatRate / formatYears', () => {
   it('formatYears', () => {
     expect(formatYears(6.2)).toBe('6.2 yrs');
     expect(formatYears(null)).toBe('—');
+  });
+});
+
+describe('formatPerKWh', () => {
+  it('keeps two decimals so 2.5 reads as a tariff', () => {
+    expect(formatPerKWh(2.5)).toBe('₹2.50/kWh');
+    expect(formatPerKWh(3.456)).toBe('₹3.46/kWh');
+    expect(formatPerKWh(0)).toBe('₹0.00/kWh');
+  });
+  it('returns the dash for non-finite rates', () => {
+    expect(formatPerKWh(Infinity)).toBe('—');
+    expect(formatPerKWh(NaN)).toBe('—');
   });
 });
 

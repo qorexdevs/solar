@@ -1,5 +1,6 @@
 import { Icon } from '@/components/ui/Icon';
 import { Slider } from '@/components/ui/Slider';
+import { formatPerKWh } from '@/lib/format';
 import type { RateScenario } from './ppaRates';
 
 /** Bisection solver in ppa.ts probes up to ~25 ₹/kWh; slider caps at 15 for UX. */
@@ -28,7 +29,11 @@ export function PPARateRow({ scenario, onChange, onRemove, color, index }: Props
   return (
     <div className="flex flex-col sm:flex-row sm:items-stretch gap-md rounded-lg border border-outline-variant bg-surface px-md py-md">
       <div className="flex items-center gap-md shrink-0 sm:pt-0.5">
-        <span className="w-3 h-3 rounded-full shrink-0" style={{ background: color }} aria-hidden />
+        <span
+          className="w-3 h-3 rounded-full shrink-0"
+          style={{ background: color }}
+          aria-hidden
+        />
         <span className="font-label-sm text-label-sm text-on-surface-variant w-[5.5rem] shrink-0">
           Scenario {index + 1}
         </span>
@@ -45,7 +50,7 @@ export function PPARateRow({ scenario, onChange, onRemove, color, index }: Props
           max={PPA_RATE_MAX}
           step={PPA_RATE_STEP}
           variant="plain"
-          formatValue={(n) => `₹${n.toFixed(2)}/kWh`}
+          formatValue={(n) => formatPerKWh(n)}
         />
         <Slider
           id={`esc-${scenario.id}`}

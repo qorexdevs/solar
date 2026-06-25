@@ -7,6 +7,7 @@ import { lcoeINRPerKWh } from '@/lib/calc';
 import {
   formatINR,
   formatPercent,
+  formatPerKWh,
   formatPlantCapacityKW,
   formatRate,
   formatTonnes,
@@ -72,8 +73,7 @@ const METRIC_ROWS: RowMetric[] = [
     id: 'npv',
     label: 'NPV',
     icon: 'functions',
-    format: (r) =>
-      r.results.finance ? `₹ ${formatINR(r.results.finance.npv)}` : '—',
+    format: (r) => (r.results.finance ? `₹ ${formatINR(r.results.finance.npv)}` : '—'),
     numeric: (r) => (r.results.finance ? r.results.finance.npv : null),
     dir: 'higher',
   },
@@ -81,7 +81,8 @@ const METRIC_ROWS: RowMetric[] = [
     id: 'payback',
     label: 'Payback',
     icon: 'update',
-    format: (r) => (r.results.finance ? formatYears(r.results.finance.paybackYears) : '—'),
+    format: (r) =>
+      r.results.finance ? formatYears(r.results.finance.paybackYears) : '—',
     numeric: (r) => (r.results.finance ? r.results.finance.paybackYears : null),
     dir: 'lower',
   },
@@ -91,14 +92,15 @@ const METRIC_ROWS: RowMetric[] = [
     icon: 'request_quote',
     format: (r) =>
       r.results.finance ? `₹ ${formatINR(r.results.finance.revenue[0] ?? 0)}` : '—',
-    numeric: (r) => (r.results.finance ? r.results.finance.revenue[0] ?? null : null),
+    numeric: (r) => (r.results.finance ? (r.results.finance.revenue[0] ?? null) : null),
     dir: 'higher',
   },
   {
     id: 'co2',
     label: 'Lifetime CO₂',
     icon: 'co2',
-    format: (r) => (r.results.finance ? formatTonnes(r.results.finance.co2.cumulative) : '—'),
+    format: (r) =>
+      r.results.finance ? formatTonnes(r.results.finance.co2.cumulative) : '—',
     numeric: (r) => (r.results.finance ? r.results.finance.co2.cumulative : null),
     dir: 'higher',
   },
@@ -237,8 +239,8 @@ export function PPARatesPanel() {
           Select Estimate
         </h3>
         <p className="font-label-sm text-label-sm text-on-surface-variant mb-md">
-          Only estimates with finance enabled can be analysed — IRR / NPV /
-          payback all depend on the finance layer.
+          Only estimates with finance enabled can be analysed — IRR / NPV / payback all
+          depend on the finance layer.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
           {estimates.map((e) => {
@@ -301,9 +303,9 @@ export function PPARatesPanel() {
           <div className="flex items-start gap-md">
             <Icon name="account_balance" className="text-tertiary text-[24px] shrink-0" />
             <p className="font-body-md text-body-md text-on-surface">
-              <span className="font-semibold">{estimate.name}</span> doesn&apos;t
-              have a finance layer enabled. Open the estimate and toggle finance
-              modeling on to compare PPA rates.
+              <span className="font-semibold">{estimate.name}</span> doesn&apos;t have a
+              finance layer enabled. Open the estimate and toggle finance modeling on to
+              compare PPA rates.
             </p>
           </div>
           <Link
@@ -324,8 +326,8 @@ export function PPARatesPanel() {
                   PPA Rate Scenarios
                 </h3>
                 <p className="font-label-sm text-label-sm text-on-surface-variant">
-                  Up to {MAX_SCENARIOS} scenarios. Each row is recomputed
-                  through the full finance engine.
+                  Up to {MAX_SCENARIOS} scenarios. Each row is recomputed through the full
+                  finance engine.
                 </p>
               </div>
               <div className="flex gap-1">
@@ -353,9 +355,7 @@ export function PPARatesPanel() {
                   key={s.id}
                   scenario={s}
                   onChange={(next) => updateScenario(s.id, next)}
-                  onRemove={
-                    scenarios.length > 1 ? () => removeScenario(s.id) : undefined
-                  }
+                  onRemove={scenarios.length > 1 ? () => removeScenario(s.id) : undefined}
                   color={SERIES_COLORS[i % SERIES_COLORS.length]}
                   index={i}
                 />
@@ -409,7 +409,9 @@ export function PPARatesPanel() {
                           <span className="flex items-center gap-1">
                             <span
                               className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ background: SERIES_COLORS[i % SERIES_COLORS.length] }}
+                              style={{
+                                background: SERIES_COLORS[i % SERIES_COLORS.length],
+                              }}
                             />
                             Scenario {i + 1}
                           </span>
@@ -446,9 +448,9 @@ export function PPARatesPanel() {
                 </table>
               </div>
               <div className="px-2 py-1.5 text-label-sm text-on-surface-variant border-t border-outline-variant bg-surface-container-low">
-                Best value for each metric is highlighted. Estimate parameters
-                (CAPEX, financing, lifespan) stay fixed — only the year-1
-                tariff and escalation change between scenarios.
+                Best value for each metric is highlighted. Estimate parameters (CAPEX,
+                financing, lifespan) stay fixed — only the year-1 tariff and escalation
+                change between scenarios.
               </div>
             </section>
           )}
@@ -458,13 +460,7 @@ export function PPARatesPanel() {
   );
 }
 
-function LCOECallout({
-  estimate,
-  lcoe,
-}: {
-  estimate: Estimate;
-  lcoe: number | null;
-}) {
+function LCOECallout({ estimate, lcoe }: { estimate: Estimate; lcoe: number | null }) {
   const currentRate = estimate.finance?.revenue.ppaRate ?? null;
   return (
     <section className="bg-surface-container-low rounded-xl border border-outline-variant p-lg flex flex-col md:flex-row md:items-center gap-lg">
@@ -475,7 +471,7 @@ function LCOECallout({
             LCOE reference
           </p>
           <p className="font-headline-md text-headline-md text-on-surface font-semibold">
-            {lcoe !== null ? `₹ ${lcoe.toFixed(2)} / kWh` : '—'}
+            {lcoe !== null ? formatPerKWh(lcoe) : '—'}
           </p>
           <p className="font-label-sm text-label-sm text-on-surface-variant mt-0.5">
             Levelized cost — the floor below which the project loses money.

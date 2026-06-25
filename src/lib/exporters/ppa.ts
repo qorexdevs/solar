@@ -1,13 +1,15 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import type { Estimate } from '@/types';
-import {
-  type Indexation,
-  lcoeINRPerKWh,
-  type PPASolveResult,
-} from '@/lib/calc';
+import { type Indexation, lcoeINRPerKWh, type PPASolveResult } from '@/lib/calc';
 import { safeFileName } from '@/lib/filename';
-import { formatINR, formatPercent, formatPlantCapacityKW, formatRate } from '@/lib/format';
+import {
+  formatINR,
+  formatPercent,
+  formatPerKWh,
+  formatPlantCapacityKW,
+  formatRate,
+} from '@/lib/format';
 
 export type PPATermSheetInputs = {
   estimate: Estimate;
@@ -147,7 +149,7 @@ function addPartiesPage(
       ['Total CAPEX (incl. GST)', `₹ ${formatINR(inputs.estimate.totals.grandTotal)}`],
       ['Per kW rate', `₹ ${formatINR(inputs.estimate.totals.perKwRate)}`],
       ['Project lifespan', finance ? `${finance.basics.lifespanYears} years` : '—'],
-      ['LCOE (reference)', `₹${lcoe.toFixed(2)} / kWh`],
+      ['LCOE (reference)', formatPerKWh(lcoe)],
     ],
     theme: 'grid',
     headStyles: { fillColor: COLORS.primary, textColor: 255, fontStyle: 'bold' },
@@ -156,11 +158,7 @@ function addPartiesPage(
   });
 }
 
-function addTariffSchedulePage(
-  doc: jsPDF,
-  inputs: PPATermSheetInputs,
-  margin: number
-) {
+function addTariffSchedulePage(doc: jsPDF, inputs: PPATermSheetInputs, margin: number) {
   doc.addPage();
   doc.setTextColor(COLORS.primary);
   doc.setFont('helvetica', 'bold');
@@ -183,11 +181,7 @@ function addTariffSchedulePage(
   });
 }
 
-function addCommercialTermsPage(
-  doc: jsPDF,
-  inputs: PPATermSheetInputs,
-  margin: number
-) {
+function addCommercialTermsPage(doc: jsPDF, inputs: PPATermSheetInputs, margin: number) {
   doc.addPage();
   doc.setTextColor(COLORS.primary);
   doc.setFont('helvetica', 'bold');
