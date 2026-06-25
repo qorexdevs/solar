@@ -14,7 +14,12 @@ export {
   type CapexLineSummary,
 } from './capex';
 export { cumulativeCF, irr, npv, yearlyCashFlows } from './cashflow';
-export { CO2_FACTOR_KG_PER_KWH, co2Tonnes } from './co2';
+export {
+  CO2_FACTOR_KG_PER_KWH,
+  TONNES_CO2_PER_TREE_YEAR,
+  co2Tonnes,
+  co2Equivalents,
+} from './co2';
 export {
   computeEstimate,
   type ComputedResults,

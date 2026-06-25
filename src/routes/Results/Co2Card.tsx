@@ -1,4 +1,5 @@
 import { Icon } from '@/components/ui/Icon';
+import { co2Equivalents } from '@/lib/calc';
 import { formatTonnes } from '@/lib/format';
 
 type Props = {
@@ -8,6 +9,8 @@ type Props = {
 };
 
 export function Co2Card({ annualYear1, cumulative, lifespanYears }: Props) {
+  const treesPerYear = co2Equivalents(annualYear1).trees;
+  const cars = co2Equivalents(cumulative).cars;
   return (
     <section className="bg-primary-container rounded-xl p-lg text-on-primary shadow-card relative overflow-hidden">
       <div aria-hidden className="absolute right-[-20px] top-[-20px] opacity-10">
@@ -25,8 +28,8 @@ export function Co2Card({ annualYear1, cumulative, lifespanYears }: Props) {
           <p className="font-label-sm text-label-sm text-on-primary/80 mt-0.5">
             Cumulative over {lifespanYears} years:{' '}
             <span className="font-semibold">{formatTonnes(cumulative)}</span>
-            {' · '}≈ {Math.round(annualYear1 / 0.06).toLocaleString('en-IN')} trees
-            planted annually
+            {' · '}≈ {treesPerYear.toLocaleString('en-IN')} trees planted annually
+            {' · '}like {cars.toLocaleString('en-IN')} cars off the road
           </p>
         </div>
       </div>

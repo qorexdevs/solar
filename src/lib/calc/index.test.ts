@@ -3,6 +3,7 @@ import {
   annualEnergyKWh,
   breakEvenYear,
   capexBreakdown,
+  co2Equivalents,
   co2Tonnes,
   computeEstimate,
   cumulativeCF,
@@ -318,6 +319,20 @@ describe('co2Tonnes', () => {
   });
 });
 
+describe('co2Equivalents', () => {
+  it('converts tonnes to trees, cars and km', () => {
+    const r = co2Equivalents(46);
+    expect(r.trees).toBe(767);
+    expect(r.cars).toBe(10);
+    expect(r.kmDriven).toBe(383333);
+  });
+  it('clamps non-positive and non-finite input to zero', () => {
+    expect(co2Equivalents(0)).toEqual({ trees: 0, cars: 0, kmDriven: 0 });
+    expect(co2Equivalents(-5)).toEqual({ trees: 0, cars: 0, kmDriven: 0 });
+    expect(co2Equivalents(NaN)).toEqual({ trees: 0, cars: 0, kmDriven: 0 });
+  });
+});
+
 /* ------------------------------------------------------------------------ */
 /* computeEstimate — finance gating                                          */
 /* ------------------------------------------------------------------------ */
@@ -339,16 +354,10 @@ describe('computeEstimate', () => {
     const out = computeEstimate(est);
     expect(out.finance).not.toBeNull();
     if (!out.finance) return;
-    expect(out.finance.equity + out.finance.loanAmount).toBeCloseTo(
-      out.capex.total,
-      4
-    );
+    expect(out.finance.equity + out.finance.loanAmount).toBeCloseTo(out.capex.total, 4);
     expect(out.finance.energy[0]).toBeGreaterThan(0);
     expect(out.finance.pnl).toHaveLength(25);
-    expect(out.finance.om[0]).toBeCloseTo(
-      (out.capex.total * 1.0) / 100,
-      4
-    );
+    expect(out.finance.om[0]).toBeCloseTo((out.capex.total * 1.0) / 100, 4);
   });
 
   it('totals.grandTotal matches capex.total within rounding', () => {
