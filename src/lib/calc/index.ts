@@ -13,7 +13,14 @@ export {
   type CapexCategoryGroup,
   type CapexLineSummary,
 } from './capex';
-export { cumulativeCF, irr, npv, profitabilityIndex, yearlyCashFlows } from './cashflow';
+export {
+  cumulativeCF,
+  equityMultiple,
+  irr,
+  npv,
+  profitabilityIndex,
+  yearlyCashFlows,
+} from './cashflow';
 export { avgDSCR, dscrSeries, minDSCR } from './dscr';
 export {
   CO2_FACTOR_KG_PER_KWH,

@@ -629,6 +629,13 @@ function EstimateTotalsCard({
               label="Net Present Value (NPV)"
               value={formatINR(finance.npv)}
             />
+            {Number.isFinite(finance.equityMultiple) && (
+              <SummaryRow
+                dense
+                label="Equity Multiple"
+                value={`${finance.equityMultiple.toFixed(2)}×`}
+              />
+            )}
             {finance.dscr.min !== null && (
               <SummaryRow
                 dense

@@ -49,6 +49,19 @@ export function profitabilityIndex(
   return (npv(cashflows, discountPct, equity) + equity) / equity;
 }
 
+/**
+ * Equity multiple (MOIC): total undiscounted cash returned to equity over the
+ * life per rupee of equity invested, Σ CF_t / equity. A 2.0× means the project
+ * pays back twice the equity over its life. Returns NaN when there is no equity
+ * at risk (fully debt-financed), since the ratio is undefined.
+ */
+export function equityMultiple(cashflows: number[], equity: number): number {
+  if (equity <= 0) return NaN;
+  let total = 0;
+  for (const cf of cashflows) total += cf;
+  return total / equity;
+}
+
 /** NPV given a vector that already includes the year-0 cash flow (negative equity). */
 function npvFromVector(allFlows: number[], r: number): number {
   let total = 0;

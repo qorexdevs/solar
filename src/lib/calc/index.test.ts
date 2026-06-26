@@ -18,6 +18,7 @@ import {
   loanSchedule,
   npv,
   paybackYears,
+  equityMultiple,
   profitabilityIndex,
   solvePPARate,
   specificYieldKWhPerKWpYr,
@@ -330,6 +331,18 @@ describe('profitabilityIndex', () => {
   });
   it('is NaN without equity at risk', () => {
     expect(profitabilityIndex([100], 10, 0)).toBeNaN();
+  });
+});
+
+describe('equityMultiple', () => {
+  it('is total undiscounted cash returned over equity invested', () => {
+    expect(equityMultiple([100, 100, 100], 200)).toBeCloseTo(1.5, 6);
+  });
+  it('is 1 when the cash returned equals the equity', () => {
+    expect(equityMultiple([40, 60], 100)).toBeCloseTo(1, 6);
+  });
+  it('is NaN without equity at risk', () => {
+    expect(equityMultiple([100], 0)).toBeNaN();
   });
 });
 

@@ -10,7 +10,14 @@ import type {
 } from '@/types';
 import { simulateYield, snapToNearestCity } from '@/lib/irradiance';
 import { capexBreakdown, type CapexBreakdown } from './capex';
-import { cumulativeCF, irr, npv, profitabilityIndex, yearlyCashFlows } from './cashflow';
+import {
+  cumulativeCF,
+  equityMultiple,
+  irr,
+  npv,
+  profitabilityIndex,
+  yearlyCashFlows,
+} from './cashflow';
 import { avgDSCR, dscrSeries, minDSCR } from './dscr';
 import { lcoeFromSeries } from './lcoe';
 import { co2Tonnes } from './co2';
@@ -54,6 +61,8 @@ export type FinanceResults = {
   npv: number;
   irr: number;
   profitabilityIndex: number;
+  /** Total undiscounted cash returned to equity per rupee invested (MOIC). */
+  equityMultiple: number;
   /** Per-year debt service coverage (null in years without debt service). */
   dscr: { series: Array<number | null>; min: number | null; avg: number | null };
   /** Levelized cost of energy in ₹/kWh over the lifetime. */
@@ -241,6 +250,7 @@ function computeFinance(
     npv: npv(cashflows, basics.discountPct, equity),
     irr: irr(cashflows, equity),
     profitabilityIndex: profitabilityIndex(cashflows, basics.discountPct, equity),
+    equityMultiple: equityMultiple(cashflows, equity),
     dscr: { series: dscr, min: minDSCR(dscr), avg: avgDSCR(dscr) },
     lcoe: lcoeFromSeries(capex.total, omArr, energy, basics.discountPct),
     paybackYears: paybackYears(cumCF),

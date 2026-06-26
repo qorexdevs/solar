@@ -91,6 +91,21 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'equityMultiple',
+    label: 'Equity multiple',
+    icon: 'savings',
+    format: (r) =>
+      r.finance && Number.isFinite(r.finance.equityMultiple)
+        ? `${r.finance.equityMultiple.toFixed(2)}×`
+        : '—',
+    numeric: (r) =>
+      r.finance && Number.isFinite(r.finance.equityMultiple)
+        ? r.finance.equityMultiple
+        : null,
+    dir: 'higher',
+    requiresFinance: true,
+  },
+  {
     id: 'minDscr',
     label: 'Min DSCR',
     icon: 'account_balance',
