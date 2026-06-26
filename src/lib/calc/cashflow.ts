@@ -34,6 +34,21 @@ export function npv(cashflows: number[], discountPct: number, equity: number): n
   return total;
 }
 
+/**
+ * Profitability index: present value of the operating cash inflows per rupee
+ * of equity, PI = (NPV + equity) / equity. PI > 1 means the discounted inflows
+ * exceed the equity, the same go/no-go signal as NPV > 0. Returns NaN when there
+ * is no equity at risk (fully debt-financed), since the ratio is undefined.
+ */
+export function profitabilityIndex(
+  cashflows: number[],
+  discountPct: number,
+  equity: number
+): number {
+  if (equity <= 0) return NaN;
+  return (npv(cashflows, discountPct, equity) + equity) / equity;
+}
+
 /** NPV given a vector that already includes the year-0 cash flow (negative equity). */
 function npvFromVector(allFlows: number[], r: number): number {
   let total = 0;

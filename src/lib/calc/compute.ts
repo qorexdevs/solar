@@ -10,7 +10,7 @@ import type {
 } from '@/types';
 import { simulateYield, snapToNearestCity } from '@/lib/irradiance';
 import { capexBreakdown, type CapexBreakdown } from './capex';
-import { cumulativeCF, irr, npv, yearlyCashFlows } from './cashflow';
+import { cumulativeCF, irr, npv, profitabilityIndex, yearlyCashFlows } from './cashflow';
 import { co2Tonnes } from './co2';
 import {
   annualEnergyKWh,
@@ -51,6 +51,7 @@ export type FinanceResults = {
   cumulativeCF: number[];
   npv: number;
   irr: number;
+  profitabilityIndex: number;
   paybackYears: number | null;
   discountedPaybackYears: number | null;
   breakEvenYear: number | null;
@@ -228,6 +229,7 @@ function computeFinance(
     cumulativeCF: cumCF,
     npv: npv(cashflows, basics.discountPct, equity),
     irr: irr(cashflows, equity),
+    profitabilityIndex: profitabilityIndex(cashflows, basics.discountPct, equity),
     paybackYears: paybackYears(cumCF),
     discountedPaybackYears: discountedPaybackYears(cashflows, equity, basics.discountPct),
     breakEvenYear: breakEvenYear(cumCF),

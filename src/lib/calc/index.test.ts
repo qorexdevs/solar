@@ -14,6 +14,7 @@ import {
   loanSchedule,
   npv,
   paybackYears,
+  profitabilityIndex,
   solvePPARate,
   specificYieldKWhPerKWpYr,
   tariffSchedule,
@@ -312,6 +313,19 @@ describe('irr', () => {
   });
   it('handles a textbook 10% IRR', () => {
     expect(irr([110], 100)).toBeCloseTo(0.1, 4);
+  });
+});
+
+describe('profitabilityIndex', () => {
+  it('is 1 at the NPV break-even point', () => {
+    // npv([110], 10, 100) == 0, so PV of inflows equals equity -> PI == 1
+    expect(profitabilityIndex([110], 10, 100)).toBeCloseTo(1, 6);
+  });
+  it('exceeds 1 when discounted inflows beat equity', () => {
+    expect(profitabilityIndex([100, 100, 100], 10, 200)).toBeGreaterThan(1);
+  });
+  it('is NaN without equity at risk', () => {
+    expect(profitabilityIndex([100], 10, 0)).toBeNaN();
   });
 });
 

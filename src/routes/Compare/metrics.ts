@@ -53,8 +53,7 @@ export const METRICS: Metric[] = [
     icon: 'trending_up',
     format: (r) =>
       r.finance && Number.isFinite(r.finance.irr) ? formatRate(r.finance.irr) : '—',
-    numeric: (r) =>
-      r.finance && Number.isFinite(r.finance.irr) ? r.finance.irr : null,
+    numeric: (r) => (r.finance && Number.isFinite(r.finance.irr) ? r.finance.irr : null),
     dir: 'higher',
     requiresFinance: true,
   },
@@ -77,6 +76,21 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'pi',
+    label: 'Profitability index',
+    icon: 'percent',
+    format: (r) =>
+      r.finance && Number.isFinite(r.finance.profitabilityIndex)
+        ? `${r.finance.profitabilityIndex.toFixed(2)}×`
+        : '—',
+    numeric: (r) =>
+      r.finance && Number.isFinite(r.finance.profitabilityIndex)
+        ? r.finance.profitabilityIndex
+        : null,
+    dir: 'higher',
+    requiresFinance: true,
+  },
+  {
     id: 'co2',
     label: 'Lifetime CO₂ Offset',
     icon: 'co2',
@@ -89,8 +103,7 @@ export const METRICS: Metric[] = [
     id: 'cuf',
     label: 'CUF',
     icon: 'speed',
-    format: (r) =>
-      r.finance ? formatPercent(r.finance.effectiveCufPct) : '—',
+    format: (r) => (r.finance ? formatPercent(r.finance.effectiveCufPct) : '—'),
     numeric: (r) => (r.finance ? r.finance.effectiveCufPct : null),
     dir: 'higher',
     requiresFinance: true,
