@@ -153,11 +153,14 @@ docs/
 ## Calculations
 
 All financial logic lives under [`src/lib/calc/`](src/lib/calc) and is exercised
-by [`src/lib/calc/index.test.ts`](src/lib/calc/index.test.ts) (30 tests).
+by [`src/lib/calc/index.test.ts`](src/lib/calc/index.test.ts) (40 tests).
 Highlights:
 
 - IRR uses Newton-Raphson seeded at 10% with a bisection fallback so degenerate
   cash-flow shapes (e.g. strongly-negative or non-converging) still resolve.
+- Payback comes in two flavours: simple (first year cumulative CF turns
+  positive) and discounted (same crossover on cash flows discounted at the
+  project rate), both interpolated across the sign change.
 - Loan amortisation supports a configurable grace period (interest-only)
   followed by an annuity, plus optional extra principal — either a flat per-year
   amount, an explicit per-year vector, or the **Auto-absorb** mode that
