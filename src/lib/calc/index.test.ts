@@ -4,6 +4,7 @@ import {
   annualEnergyKWhFromYield,
   breakEvenYear,
   capexBreakdown,
+  discountedPaybackYears,
   co2Equivalents,
   co2Tonnes,
   computeEstimate,
@@ -320,6 +321,24 @@ describe('paybackYears / breakEvenYear', () => {
   });
   it('payback interpolates across the sign change', () => {
     expect(paybackYears([-100, -50, 50])).toBeCloseTo(2.5, 6);
+  });
+});
+
+describe('discountedPaybackYears', () => {
+  it('matches simple payback at a 0% discount rate', () => {
+    // undiscounted cumCF would be [-50, 50] -> payback at 1.5y
+    expect(discountedPaybackYears([50, 100], 100, 0)).toBeCloseTo(1.5, 6);
+  });
+  it('pushes payback later than the undiscounted figure', () => {
+    const cf = [40, 40, 40, 40];
+    const simple = paybackYears(cumulativeCF(cf, 100));
+    const disc = discountedPaybackYears(cf, 100, 10);
+    expect(simple).not.toBeNull();
+    expect(disc).not.toBeNull();
+    expect(disc!).toBeGreaterThan(simple!);
+  });
+  it('returns null when discounted flows never recover equity', () => {
+    expect(discountedPaybackYears([5, 5, 5], 1000, 8)).toBeNull();
   });
 });
 

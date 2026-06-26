@@ -1,15 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import {
-  BOM_CATEGORY_LABELS,
-  BOM_UOM_LABELS,
-  type Estimate,
-} from '@/types';
-import {
-  computeEstimate,
-  type ComputedResults,
-  type FinanceResults,
-} from '@/lib/calc';
+import { BOM_CATEGORY_LABELS, BOM_UOM_LABELS, type Estimate } from '@/types';
+import { computeEstimate, type ComputedResults, type FinanceResults } from '@/lib/calc';
 import { safeFileName } from '@/lib/filename';
 import {
   formatINR,
@@ -67,12 +59,7 @@ export function buildPdf(estimate: Estimate, options: PdfOptions): jsPDF {
   return doc;
 }
 
-function drawCover(
-  doc: jsPDF,
-  estimate: Estimate,
-  pageWidth: number,
-  margin: number
-) {
+function drawCover(doc: jsPDF, estimate: Estimate, pageWidth: number, margin: number) {
   const pageHeight = doc.internal.pageSize.getHeight();
 
   doc.setFillColor(COLORS.primary);
@@ -160,14 +147,8 @@ function addSummaryPage(
       ['Target capacity', formatPlantCapacityKW(estimate.targetCapacityKW)],
       ['Status', estimate.status],
       ['Facet selections (JSON)', JSON.stringify(estimate.selections)],
-      [
-        'Optional line picks (JSON)',
-        JSON.stringify(estimate.selectedOptionsPerTemplate),
-      ],
-      [
-        'Compose overrides (JSON)',
-        JSON.stringify(estimate.composeOverrides ?? {}),
-      ],
+      ['Optional line picks (JSON)', JSON.stringify(estimate.selectedOptionsPerTemplate)],
+      ['Compose overrides (JSON)', JSON.stringify(estimate.composeOverrides ?? {})],
       ['Main BOM subtotal', `₹ ${formatINR(t.mainBomSubtotal)}`],
       ['Main BOM GST', `₹ ${formatINR(t.mainBomGst)}`],
       ['Other Scope subtotal', `₹ ${formatINR(t.otherScopeSubtotal)}`],
@@ -205,6 +186,7 @@ function addSummaryPage(
         ['NPV', `₹ ${formatINR(f.npv)}`],
         ['IRR', Number.isFinite(f.irr) ? formatRate(f.irr) : '—'],
         ['Payback', formatYears(f.paybackYears)],
+        ['Discounted payback', formatYears(f.discountedPaybackYears)],
         ['Annual CO₂ offset (Y1)', formatTonnes(f.co2.annualYear1)],
         ['Lifetime CO₂ offset', formatTonnes(f.co2.cumulative)],
         ['Break-even year', f.breakEvenYear === null ? '—' : `Y${f.breakEvenYear}`],
@@ -410,15 +392,7 @@ function addIrradiancePage(
   const startY = doc.lastAutoTable.finalY + 18;
   autoTable(doc, {
     startY,
-    head: [
-      [
-        'Month',
-        'GHI (kWh/m²/d)',
-        'POA (kWh/m²/d)',
-        'AC (kWh/kWp/mo)',
-        'Stdev',
-      ],
-    ],
+    head: [['Month', 'GHI (kWh/m²/d)', 'POA (kWh/m²/d)', 'AC (kWh/kWp/mo)', 'Stdev']],
     body: MONTHS_SHORT.map((m, i) => [
       m,
       y.monthlyGHI[i].toFixed(2),
@@ -550,7 +524,10 @@ function addMethodologyPage(doc: jsPDF, margin: number) {
     ['Per kW rate', 'Grand total / target capacity (kW)'],
     [],
     ['Finance (when enabled)'],
-    ['Annual energy', 'Plant kW × CUF × 8,760 hours, or POA × PR when a location is pinned'],
+    [
+      'Annual energy',
+      'Plant kW × CUF × 8,760 hours, or POA × PR when a location is pinned',
+    ],
     ['Degradation', 'Output_n = Annual × (1 - degradation)^(n-1)'],
     ['Revenue', 'Output_n × PPA × (1 + escalation)^(n-1)'],
     ['O&M', 'Base × (1 + inflation)^(n-1), with year-level overrides'],

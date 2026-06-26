@@ -37,7 +37,7 @@ export {
 export { lcoeINRPerKWh } from './lcoe';
 export { loanAmountForEstimate, loanSchedule, type LoanRow } from './loan';
 export { yearlyOM } from './om';
-export { breakEvenYear, paybackYears } from './payback';
+export { breakEvenYear, discountedPaybackYears, paybackYears } from './payback';
 export {
   type Indexation,
   type PPASolveArgs,

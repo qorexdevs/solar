@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Link,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { PillTab } from '@/components/ui/PillTab';
 import { computeEstimate } from '@/lib/calc';
 import { downloadExcel, downloadPdf } from '@/lib/exporters';
-import { formatINR, formatPlantCapacityKW, formatRate, formatTonnes, formatYears } from '@/lib/format';
+import {
+  formatINR,
+  formatPlantCapacityKW,
+  formatRate,
+  formatTonnes,
+  formatYears,
+} from '@/lib/format';
 import { getVoltageClassTemplate } from '@/lib/estimate';
 import { useEstimateStore } from '@/store/estimates';
 import { useTemplateStore } from '@/store/templates';
@@ -86,13 +87,11 @@ export function Export() {
   return (
     <div className="flex flex-col gap-xl">
       <div className="flex flex-col gap-xs">
-        <h1 className="font-headline-xl text-headline-xl text-on-background">
-          Export
-        </h1>
+        <h1 className="font-headline-xl text-headline-xl text-on-background">Export</h1>
         <p className="font-body-md text-body-md text-on-surface-variant">
-          Download PDF or Excel reports, or generate a finance-backed PPA term
-          sheet. P&amp;L and irradiance pages only appear when the estimate has
-          finance modeling enabled.
+          Download PDF or Excel reports, or generate a finance-backed PPA term sheet.
+          P&amp;L and irradiance pages only appear when the estimate has finance modeling
+          enabled.
         </p>
       </div>
 
@@ -262,18 +261,17 @@ export function Export() {
                         <PreviewRow
                           label="IRR"
                           value={
-                            Number.isFinite(finance.irr)
-                              ? formatRate(finance.irr)
-                              : '—'
+                            Number.isFinite(finance.irr) ? formatRate(finance.irr) : '—'
                           }
                         />
-                        <PreviewRow
-                          label="NPV"
-                          value={`₹ ${formatINR(finance.npv)}`}
-                        />
+                        <PreviewRow label="NPV" value={`₹ ${formatINR(finance.npv)}`} />
                         <PreviewRow
                           label="Payback"
                           value={formatYears(finance.paybackYears)}
+                        />
+                        <PreviewRow
+                          label="Disc. payback"
+                          value={formatYears(finance.discountedPaybackYears)}
                         />
                         <PreviewRow
                           label="CO₂ (lifetime)"

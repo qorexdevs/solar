@@ -20,7 +20,7 @@ import {
 } from './energy';
 import { loanAmountForEstimate, loanSchedule, type LoanRow } from './loan';
 import { yearlyOM } from './om';
-import { breakEvenYear, paybackYears } from './payback';
+import { breakEvenYear, discountedPaybackYears, paybackYears } from './payback';
 
 export type PnLRow = {
   year: number;
@@ -52,6 +52,7 @@ export type FinanceResults = {
   npv: number;
   irr: number;
   paybackYears: number | null;
+  discountedPaybackYears: number | null;
   breakEvenYear: number | null;
   co2: { annualYear1: number; cumulative: number; yearly: number[] };
   pnl: PnLRow[];
@@ -228,6 +229,7 @@ function computeFinance(
     npv: npv(cashflows, basics.discountPct, equity),
     irr: irr(cashflows, equity),
     paybackYears: paybackYears(cumCF),
+    discountedPaybackYears: discountedPaybackYears(cashflows, equity, basics.discountPct),
     breakEvenYear: breakEvenYear(cumCF),
     co2: {
       annualYear1: co2.yearly[0] ?? 0,

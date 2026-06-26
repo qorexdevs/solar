@@ -1,9 +1,5 @@
 import * as XLSX from 'xlsx';
-import {
-  BOM_CATEGORY_LABELS,
-  BOM_UOM_LABELS,
-  type Estimate,
-} from '@/types';
+import { BOM_CATEGORY_LABELS, BOM_UOM_LABELS, type Estimate } from '@/types';
 import {
   computeEstimate,
   type ComputedResults,
@@ -89,6 +85,12 @@ function summarySheet(estimate: Estimate, r: ComputedResults): XLSX.WorkSheet {
         'Payback (years)',
         f.paybackYears === null ? '—' : Number(f.paybackYears.toFixed(2)),
       ],
+      [
+        'Discounted payback (years)',
+        f.discountedPaybackYears === null
+          ? '—'
+          : Number(f.discountedPaybackYears.toFixed(2)),
+      ],
       ['Break-even year', f.breakEvenYear ?? '—'],
       ['Annual CO₂ offset (tonnes, Y1)', round(f.co2.annualYear1)],
       ['Lifetime CO₂ offset (tonnes)', round(f.co2.cumulative)]
@@ -98,9 +100,10 @@ function summarySheet(estimate: Estimate, r: ComputedResults): XLSX.WorkSheet {
 }
 
 function inputsSheet(estimate: Estimate): XLSX.WorkSheet {
-  const optionalLinePicks = Object.values(
-    estimate.selectedOptionsPerTemplate
-  ).reduce((acc, o) => acc + o.lineIds.length, 0);
+  const optionalLinePicks = Object.values(estimate.selectedOptionsPerTemplate).reduce(
+    (acc, o) => acc + o.lineIds.length,
+    0
+  );
   const rows: (string | number)[][] = [
     ['Input', 'Value'],
     ['Estimate name', estimate.name],
@@ -108,10 +111,7 @@ function inputsSheet(estimate: Estimate): XLSX.WorkSheet {
     ['Target capacity', formatPlantCapacityKW(estimate.targetCapacityKW)],
     ['Facet selections (JSON)', JSON.stringify(estimate.selections)],
     ['Optional template line picks (count)', optionalLinePicks],
-    [
-      'Compose overrides (JSON)',
-      JSON.stringify(estimate.composeOverrides ?? {}),
-    ],
+    ['Compose overrides (JSON)', JSON.stringify(estimate.composeOverrides ?? {})],
   ];
   if (estimate.location) {
     rows.push(
@@ -252,16 +252,19 @@ function otherScopeSheet(estimate: Estimate): XLSX.WorkSheet {
       item.notes ?? '',
     ]);
   }
-  rows.push([], [
-    OTHER_SCOPE_GROUP_LABEL,
-    round(estimate.totals.otherScopeSubtotal),
-    '',
-    round(estimate.totals.otherScopeGst),
-    round(estimate.totals.otherScopeSubtotal + estimate.totals.otherScopeGst),
-    '',
-    '',
-    '',
-  ]);
+  rows.push(
+    [],
+    [
+      OTHER_SCOPE_GROUP_LABEL,
+      round(estimate.totals.otherScopeSubtotal),
+      '',
+      round(estimate.totals.otherScopeGst),
+      round(estimate.totals.otherScopeSubtotal + estimate.totals.otherScopeGst),
+      '',
+      '',
+      '',
+    ]
+  );
   return XLSX.utils.aoa_to_sheet(rows);
 }
 
@@ -354,12 +357,7 @@ function irradianceSheet(estimate: Estimate, f: FinanceResults): XLSX.WorkSheet 
     ['Monsoon CV (%)', Number(y.monsoonUncertainty.cvPct.toFixed(2))],
     ['Snap distance (km)', Number(y.snapDistanceKm.toFixed(1))],
     [],
-    [
-      'Month',
-      'GHI (kWh/m²/day)',
-      'POA (kWh/m²/day)',
-      'AC (kWh/kWp/month)',
-    ],
+    ['Month', 'GHI (kWh/m²/day)', 'POA (kWh/m²/day)', 'AC (kWh/kWp/month)'],
   ];
   for (let m = 0; m < 12; m++) {
     rows.push([
@@ -406,15 +404,24 @@ function methodologySheet(): XLSX.WorkSheet {
   const rows: (string | number)[][] = [
     ['Methodology & Assumptions'],
     [],
-    ['BOM scaling', 'Each BOM line carries a scalingType (fixed / linear / step / conditional / optional) and an optional safe-DSL formula evaluated at materialization time.'],
+    [
+      'BOM scaling',
+      'Each BOM line carries a scalingType (fixed / linear / step / conditional / optional) and an optional safe-DSL formula evaluated at materialization time.',
+    ],
     ['Per-line subtotal', 'quantity × rate'],
     ['Per-line GST', 'subtotal × gstPercent / 100'],
     ['Per-line total', 'subtotal + GST'],
-    ['Grand total', 'Σ Main BOM total + Σ Other Scope total (excludes user-deselected and sync-gated lines)'],
+    [
+      'Grand total',
+      'Σ Main BOM total + Σ Other Scope total (excludes user-deselected and sync-gated lines)',
+    ],
     ['Per kW rate', 'Grand total / target capacity (kW)'],
     [],
     ['Finance (when enabled)'],
-    ['Annual energy', 'Plant kW × CUF × 8,760 hours (or POA × PR when a location is pinned)'],
+    [
+      'Annual energy',
+      'Plant kW × CUF × 8,760 hours (or POA × PR when a location is pinned)',
+    ],
     ['Degradation', 'Output_year_n = Annual Output × (1 - degradation_rate)^(n-1)'],
     ['Revenue', 'Output_year_n × PPA_rate × (1 + escalation)^(n-1)'],
     ['O&M', 'Base × (1 + inflation)^(n-1), with optional year overrides'],
