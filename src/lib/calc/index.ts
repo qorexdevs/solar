@@ -17,6 +17,7 @@ export {
   cumulativeCF,
   equityMultiple,
   irr,
+  mirr,
   npv,
   profitabilityIndex,
   yearlyCashFlows,

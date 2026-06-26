@@ -14,6 +14,7 @@ import {
   cumulativeCF,
   equityMultiple,
   irr,
+  mirr,
   npv,
   profitabilityIndex,
   yearlyCashFlows,
@@ -60,6 +61,8 @@ export type FinanceResults = {
   cumulativeCF: number[];
   npv: number;
   irr: number;
+  /** Modified IRR at the discount rate, free of IRR's reinvestment bias. */
+  mirr: number;
   profitabilityIndex: number;
   /** Total undiscounted cash returned to equity per rupee invested (MOIC). */
   equityMultiple: number;
@@ -249,6 +252,7 @@ function computeFinance(
     cumulativeCF: cumCF,
     npv: npv(cashflows, basics.discountPct, equity),
     irr: irr(cashflows, equity),
+    mirr: mirr(cashflows, equity, basics.discountPct),
     profitabilityIndex: profitabilityIndex(cashflows, basics.discountPct, equity),
     equityMultiple: equityMultiple(cashflows, equity),
     dscr: { series: dscr, min: minDSCR(dscr), avg: avgDSCR(dscr) },

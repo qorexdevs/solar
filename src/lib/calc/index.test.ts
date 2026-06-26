@@ -16,6 +16,7 @@ import {
   lcoeFromSeries,
   lcoeINRPerKWh,
   loanSchedule,
+  mirr,
   npv,
   paybackYears,
   equityMultiple,
@@ -318,6 +319,23 @@ describe('irr', () => {
   });
   it('handles a textbook 10% IRR', () => {
     expect(irr([110], 100)).toBeCloseTo(0.1, 4);
+  });
+});
+
+describe('mirr', () => {
+  it('equals the simple return over a single period', () => {
+    // one period, no interim flows -> rate-independent, just 110/100 - 1
+    expect(mirr([110], 100, 10)).toBeCloseTo(0.1, 6);
+  });
+  it('sits between the discount rate and the IRR', () => {
+    const flows = [200, 250, 300, 350];
+    const equity = 700;
+    const m = mirr(flows, equity, 10);
+    expect(m).toBeGreaterThan(0.1);
+    expect(m).toBeLessThan(irr(flows, equity));
+  });
+  it('is NaN without an inflow to span the outflow', () => {
+    expect(mirr([-50], 100, 10)).toBeNaN();
   });
 });
 

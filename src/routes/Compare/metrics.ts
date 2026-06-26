@@ -58,6 +58,17 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'mirr',
+    label: 'MIRR',
+    icon: 'trending_up',
+    format: (r) =>
+      r.finance && Number.isFinite(r.finance.mirr) ? formatRate(r.finance.mirr) : '—',
+    numeric: (r) =>
+      r.finance && Number.isFinite(r.finance.mirr) ? r.finance.mirr : null,
+    dir: 'higher',
+    requiresFinance: true,
+  },
+  {
     id: 'payback',
     label: 'Payback',
     icon: 'update',

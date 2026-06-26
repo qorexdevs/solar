@@ -542,6 +542,8 @@ function EstimateTotalsCard({
     finance && lifespanYears > 0 ? lifetimeRevenue / lifespanYears : null;
   const irrDisplay =
     finance && Number.isFinite(finance.irr) ? formatRate(finance.irr) : '—';
+  const mirrDisplay =
+    finance && Number.isFinite(finance.mirr) ? formatRate(finance.mirr) : '—';
 
   return (
     <section
@@ -614,6 +616,7 @@ function EstimateTotalsCard({
           </div>
           <div className="mt-2 pt-1.5 border-t border-outline-variant/40 flex flex-col gap-1">
             <SummaryRow dense label="Internal Rate of Return (IRR)" value={irrDisplay} />
+            <SummaryRow dense label="Modified IRR (MIRR)" value={mirrDisplay} />
             <SummaryRow
               dense
               label="Payback Period"

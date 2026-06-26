@@ -138,3 +138,30 @@ export function irr(cashflows: number[], equity: number): number {
   }
   return (lo + hi) / 2;
 }
+
+/**
+ * Modified IRR with a single rate for both financing and reinvestment (the
+ * project discount rate). Negative flows are discounted back to year 0 and
+ * positive flows compounded forward to the final year, then
+ * MIRR = (FV_positive / PV_negative)^(1/n) - 1. Unlike IRR it assumes interim
+ * cash is reinvested at the discount rate rather than at the IRR itself, so it
+ * avoids IRR's optimistic reinvestment bias and never has multiple roots.
+ * Returns NaN when there is no inflow/outflow pair to span (same guard as irr).
+ */
+export function mirr(cashflows: number[], equity: number, discountPct: number): number {
+  const r = discountPct / 100;
+  const flows = [-equity, ...cashflows];
+  const n = flows.length - 1;
+  if (n <= 0) return NaN;
+
+  let pvNeg = 0;
+  let fvPos = 0;
+  for (let t = 0; t < flows.length; t++) {
+    const cf = flows[t];
+    if (cf < 0) pvNeg += cf / Math.pow(1 + r, t);
+    else if (cf > 0) fvPos += cf * Math.pow(1 + r, n - t);
+  }
+  if (pvNeg === 0 || fvPos === 0) return NaN;
+
+  return Math.pow(fvPos / -pvNeg, 1 / n) - 1;
+}
