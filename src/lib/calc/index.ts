@@ -14,6 +14,7 @@ export {
   type CapexLineSummary,
 } from './capex';
 export { cumulativeCF, irr, npv, profitabilityIndex, yearlyCashFlows } from './cashflow';
+export { avgDSCR, dscrSeries, minDSCR } from './dscr';
 export {
   CO2_FACTOR_KG_PER_KWH,
   TONNES_CO2_PER_TREE_YEAR,

@@ -91,6 +91,18 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'minDscr',
+    label: 'Min DSCR',
+    icon: 'account_balance',
+    format: (r) =>
+      r.finance && r.finance.dscr.min !== null
+        ? `${r.finance.dscr.min.toFixed(2)}×`
+        : '—',
+    numeric: (r) => (r.finance ? r.finance.dscr.min : null),
+    dir: 'higher',
+    requiresFinance: true,
+  },
+  {
     id: 'lcoe',
     label: 'LCOE',
     icon: 'bolt',

@@ -629,6 +629,13 @@ function EstimateTotalsCard({
               label="Net Present Value (NPV)"
               value={formatINR(finance.npv)}
             />
+            {finance.dscr.min !== null && (
+              <SummaryRow
+                dense
+                label="Min DSCR"
+                value={`${finance.dscr.min.toFixed(2)}×`}
+              />
+            )}
           </div>
         </article>
       ) : null}

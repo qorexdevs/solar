@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   annualEnergyKWh,
   annualEnergyKWhFromYield,
+  avgDSCR,
   breakEvenYear,
   capexBreakdown,
   discountedPaybackYears,
+  dscrSeries,
+  minDSCR,
   co2Equivalents,
   co2Tonnes,
   computeEstimate,
@@ -327,6 +330,28 @@ describe('profitabilityIndex', () => {
   });
   it('is NaN without equity at risk', () => {
     expect(profitabilityIndex([100], 10, 0)).toBeNaN();
+  });
+});
+
+describe('dscr', () => {
+  it('divides net operating income by debt service per year', () => {
+    // (rev - om) / payment: (100-20)/40 = 2, (110-25)/50 = 1.7
+    expect(dscrSeries([100, 110], [20, 25], [40, 50])).toEqual([2, 1.7]);
+  });
+  it('reports null in years with no debt service', () => {
+    const s = dscrSeries([100, 100], [20, 20], [0, 50]);
+    expect(s[0]).toBeNull();
+    expect(s[1]).toBeCloseTo(1.6, 6);
+  });
+  it('min and avg skip the null years', () => {
+    const s = dscrSeries([100, 100, 100], [10, 10, 10], [0, 30, 90]);
+    expect(minDSCR(s)).toBeCloseTo(1, 6);
+    expect(avgDSCR(s)).toBeCloseTo(2, 6);
+  });
+  it('return null when no year carries debt service', () => {
+    const s = dscrSeries([100], [10], [0]);
+    expect(minDSCR(s)).toBeNull();
+    expect(avgDSCR(s)).toBeNull();
   });
 });
 
