@@ -34,7 +34,7 @@ export {
   yearlyEnergy,
   yearlyRevenue,
 } from './energy';
-export { lcoeINRPerKWh } from './lcoe';
+export { lcoeFromSeries, lcoeINRPerKWh } from './lcoe';
 export { loanAmountForEstimate, loanSchedule, type LoanRow } from './loan';
 export { yearlyOM } from './om';
 export { breakEvenYear, discountedPaybackYears, paybackYears } from './payback';

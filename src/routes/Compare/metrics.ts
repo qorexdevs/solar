@@ -91,6 +91,19 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'lcoe',
+    label: 'LCOE',
+    icon: 'bolt',
+    format: (r) =>
+      r.finance && Number.isFinite(r.finance.lcoe)
+        ? `₹ ${r.finance.lcoe.toFixed(2)}/kWh`
+        : '—',
+    numeric: (r) =>
+      r.finance && Number.isFinite(r.finance.lcoe) ? r.finance.lcoe : null,
+    dir: 'lower',
+    requiresFinance: true,
+  },
+  {
     id: 'co2',
     label: 'Lifetime CO₂ Offset',
     icon: 'co2',

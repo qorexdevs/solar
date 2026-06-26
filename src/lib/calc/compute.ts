@@ -11,6 +11,7 @@ import type {
 import { simulateYield, snapToNearestCity } from '@/lib/irradiance';
 import { capexBreakdown, type CapexBreakdown } from './capex';
 import { cumulativeCF, irr, npv, profitabilityIndex, yearlyCashFlows } from './cashflow';
+import { lcoeFromSeries } from './lcoe';
 import { co2Tonnes } from './co2';
 import {
   annualEnergyKWh,
@@ -52,6 +53,8 @@ export type FinanceResults = {
   npv: number;
   irr: number;
   profitabilityIndex: number;
+  /** Levelized cost of energy in ₹/kWh over the lifetime. */
+  lcoe: number;
   paybackYears: number | null;
   discountedPaybackYears: number | null;
   breakEvenYear: number | null;
@@ -230,6 +233,7 @@ function computeFinance(
     npv: npv(cashflows, basics.discountPct, equity),
     irr: irr(cashflows, equity),
     profitabilityIndex: profitabilityIndex(cashflows, basics.discountPct, equity),
+    lcoe: lcoeFromSeries(capex.total, omArr, energy, basics.discountPct),
     paybackYears: paybackYears(cumCF),
     discountedPaybackYears: discountedPaybackYears(cashflows, equity, basics.discountPct),
     breakEvenYear: breakEvenYear(cumCF),

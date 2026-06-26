@@ -10,6 +10,7 @@ import {
   computeEstimate,
   cumulativeCF,
   irr,
+  lcoeFromSeries,
   lcoeINRPerKWh,
   loanSchedule,
   npv,
@@ -459,6 +460,31 @@ describe('lcoeINRPerKWh', () => {
   it('returns 0 when finance layer is disabled', () => {
     const est = testEstimate({ targetCapacityKW: 1000 });
     expect(lcoeINRPerKWh(est)).toBe(0);
+  });
+
+  it('matches the estimate-level helper when fed the same series', () => {
+    const est = testEstimate({
+      targetCapacityKW: 1000,
+      finance: { ...defaultFinanceLayer(true) },
+    });
+    const finance = computeEstimate(est).finance!;
+    expect(finance.lcoe).toBeCloseTo(lcoeINRPerKWh(est), 6);
+  });
+});
+
+describe('lcoeFromSeries', () => {
+  it('is capex divided by discounted energy when there is no om', () => {
+    // r=0 so no discounting: 1000 / (100 + 100) = 5 per kWh
+    expect(lcoeFromSeries(1000, [0, 0], [100, 100], 0)).toBeCloseTo(5, 6);
+  });
+
+  it('folds om into the cost side', () => {
+    // r=0: (1000 + 50 + 50) / (100 + 100) = 5.5
+    expect(lcoeFromSeries(1000, [50, 50], [100, 100], 0)).toBeCloseTo(5.5, 6);
+  });
+
+  it('returns Infinity when there is no energy', () => {
+    expect(lcoeFromSeries(1000, [10], [0], 8)).toBe(Infinity);
   });
 });
 
