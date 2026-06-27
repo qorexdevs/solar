@@ -4,6 +4,20 @@ A mobile-first PWA for evaluating solar plant feasibility (0.25–5 MW projects,
 prices in ₹). Built per the spec in [`docs/prd.md`](docs/prd.md); the original
 Stitch design references live in [`docs/design/`](docs/design).
 
+## Screenshots
+
+A 1 MW HT captive plant in Hyderabad, financed at 70%.
+
+|                       Portfolio                        |                         Builder                         |                            Results                             |
+| :----------------------------------------------------: | :-----------------------------------------------------: | :------------------------------------------------------------: |
+| ![Portfolio overview](docs/screenshots/solar-list.png) | ![Estimate builder](docs/screenshots/solar-builder.png) | ![Finance metrics](docs/screenshots/solar-results-metrics.png) |
+|              Saved estimates with avg IRR              |             Facet config + live BOM totals              |                 IRR, MIRR, NPV, DSCR, payback                  |
+
+|                     Cumulative cash flow                     |                    Site irradiance & yield                     |
+| :----------------------------------------------------------: | :------------------------------------------------------------: |
+| ![Cumulative cash flow](docs/screenshots/solar-cashflow.png) | ![Irradiance and yield](docs/screenshots/solar-irradiance.png) |
+|               Break-even marker + net position               |              GHI/POA, specific yield, implied CUF              |
+
 ## New here?
 
 - **First time in the repo?** Read [`docs/onboarding.md`](docs/onboarding.md) — it's the day-1 reading path.
