@@ -95,7 +95,7 @@ A single-direction data flow:
 - **Catalog derivation** (`src/lib/catalog/`): turns `(BOM × catalog × sizeMW)`
   into materialized `Materials`, honoring per-row manual override flags. Also
   handles per-project-type `CatalogDefaults` and Excel/CSV catalog I/O.
-- **Calc engine** (`src/lib/calc/`): `computeScenario(scenario, overrides)` →
+- **Calc engine** (`src/lib/calc/`): `computeEstimate(estimate, overrides)` →
   `ComputedResults`. Split per concept: energy, O&M, capex, loan, cashflow,
   payback, CO₂ — see [`docs/architecture.md`](docs/architecture.md).
 - **Routes** (`src/routes/`): one folder per route, `index.tsx` orchestrates

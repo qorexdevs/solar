@@ -32,7 +32,7 @@ project-type **Bill of Materials (BOM)**. Together they give us:
 2. **Catalog defaults**: `applyCatalogDefaults(scenario, catalog)` patches the
    scenario's `basics`, `revenue.ppaEscalationPct`, and `om.percentOfCapex`
    from the catalog's per-project-type defaults block.
-3. **Computation**: `computeScenario(scenario, overrides?)` runs the finance
+3. **Computation**: `computeEstimate(estimate, overrides?)` runs the finance
    engine and returns `ComputedResults` for the dashboard, charts, and
    exporters.
 
@@ -45,7 +45,7 @@ catalog + BOM + sizeMW
        ▼ applyCatalogDefaults (basics, revenue, om)
    Scenario
        │
-       ▼ computeScenario(scenario, overrides?)
+       ▼ computeEstimate(estimate, overrides?)
    ComputedResults  (capex, energy, revenue, om, loan, cashflows,
                     cumulativeCF, npv, irr, payback, co2, pnl)
 ```

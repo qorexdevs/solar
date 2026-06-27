@@ -52,7 +52,7 @@ This is the most important doc. Re-read §"Override flags" twice — it's the ea
 Open `src/lib/calc/` and walk through it in this order:
 
 1. `index.ts` — the public surface
-2. `compute.ts` — `computeScenario` is the entry point everything else feeds into
+2. `compute.ts` — `computeEstimate` is the entry point everything else feeds into
 3. `energy.ts`, `om.ts`, `capex.ts` — the inputs to cash flow
 4. `loan.ts` — read this carefully; grace-period + extra-principal + auto-absorb logic is subtle
 5. `cashflow.ts` — `npv`, `irr` (Newton-Raphson + bisection fallback)
@@ -67,12 +67,12 @@ npm run test:watch -- src/lib/calc
 
 ### 6. One full route, end to end (45 min)
 
-Pick **ScenarioBuilder → Results** to see the full data flow:
+Pick **EstimateBuilder → Results** to see the full data flow:
 
 1. `src/routes/EstimateBuilder/index.tsx` — how the route reads the store, derives materials, and composes subcomponents
 2. `src/store/estimates.ts` — how the estimate is shaped and persisted, how `manualOverrides` work in practice
 3. `src/lib/catalog/derive.ts` — how `(BOM × catalog × sizeMW)` becomes Materials
-4. `src/routes/Results/index.tsx` — how the route calls `computeScenario` and feeds the dashboard
+4. `src/routes/Results/index.tsx` — how the route calls `computeEstimate` and feeds the dashboard
 5. `src/routes/Results/usePrepaymentMax.ts` — read the comment; it's the canonical example of "calc lives in lib/, route-local hooks orchestrate it"
 
 ### 7. How we work (15 min)
