@@ -10,66 +10,82 @@ report. It complements the [README](../README.md) (high-level overview) and
 +-------------------------------------------+
 |  routes/  (per-route folders, orchestrate UI + state)
 +-------------------------------------------+
-|  store/   useScenarioStore, useSettingsStore (Zustand + persist)
+|  store/   useEstimateStore, useCatalogStore, useTemplateStore,
+|           useFacetStore (Zustand + persist)
 +-------------------------------------------+
-|  lib/     Pure logic: catalog/, calc/, scenario/, exporters/, format
+|  lib/     Pure logic: composer/, templates/, calc/, estimate/,
+|           catalog/, facets/, exporters/, irradiance/, format
 +-------------------------------------------+
-|  types/   Scenario, Materials, Catalog, ProjectType (domain shapes)
+|  types/   Estimate, ScenarioTemplate, TemplateFacet,
+|           MaterialCatalog, ProjectType (domain shapes)
 +-------------------------------------------+
 ```
 
 Routes import from `lib/` and `store/`; `lib/` only depends on `types/`.
-This keeps the calc engine and catalog logic UI-agnostic and trivially
-testable.
+This keeps the composer, calc engine, and catalog logic UI-agnostic and
+trivially testable.
 
 ## Data flow
 
-Every scenario starts with the user's active **price catalog** and the
-project-type **Bill of Materials (BOM)**. Together they give us:
+An estimate is assembled from **facets**, **templates**, and the **material
+catalog**, then run through the finance engine on demand.
 
-1. **Materials**: `deriveMaterials({ sizeMW, bom, catalog })` produces a
-   normalized `Materials` map with per-row `unitCost` and `quantity`.
-2. **Catalog defaults**: `applyCatalogDefaults(scenario, catalog)` patches the
-   scenario's `basics`, `revenue.ppaEscalationPct`, and `om.percentOfCapex`
-   from the catalog's per-project-type defaults block.
-3. **Computation**: `computeEstimate(estimate, overrides?)` runs the finance
-   engine and returns `ComputedResults` for the dashboard, charts, and
-   exporters.
+1. **Facets and selections**: each `TemplateFacet` is one axis of the build
+   (voltage class, mounting, etc.). `selections` holds one chosen
+   `ScenarioTemplate` snapshot per facet (`{ templateId, selectedVersion }`,
+   or `null` for a skipped optional facet). `selectedOptionsPerTemplate`
+   records which optional template lines the user toggled on.
+2. **Composition**: `composeEstimate(args: ComposeEstimateArgs)` walks the
+   facets in sequence, expands each chosen template's lines against the
+   material catalog, scales every line by a `ScalingContext`
+   (`baseCapacityKW` -> `targetCapacityKW`, plus `syncType`/`projectType`
+   from the engine template), drops archived catalog items, and merges
+   duplicate catalog refs by their compose mode. It returns a
+   `MaterializedBOM` (`mainLines` + `otherLines`) and `EstimateTotals`. The
+   result is stored on the `Estimate`, not recomputed per render.
+3. **Computation**: `computeEstimate(estimate, overrides?)` reads the stored
+   `materialized` + `totals`, builds the capex breakdown, and - only when a
+   finance layer is enabled - runs the finance engine, returning
+   `ComputedResults` for the dashboard, charts, and exporters.
 
 ```
-catalog + BOM + sizeMW
-       │
-       ▼ deriveMaterials
-   Materials
-       │
-       ▼ applyCatalogDefaults (basics, revenue, om)
-   Scenario
-       │
-       ▼ computeEstimate(estimate, overrides?)
-   ComputedResults  (capex, energy, revenue, om, loan, cashflows,
-                    cumulativeCF, npv, irr, payback, co2, pnl)
+facets + selections + selectedOptionsPerTemplate + catalog + targetCapacityKW
+       |
+       v  composeEstimate (lib/composer)
+   MaterializedBOM + EstimateTotals  (stored on the Estimate)
+       |
+       v  computeEstimate(estimate, overrides?)  (lib/calc)
+   ComputedResults  (capex, totals, finance: energy, revenue, om, loan,
+                    cashflows, cumulativeCF, npv, irr, payback, co2, pnl)
 ```
 
-## Override flags
+The finance layer is optional: with no enabled `finance` on the estimate,
+`computeEstimate` returns `{ capex, totals, finance: null }` and the
+dashboard shows the costing view only.
 
-Two parallel "manual override" mechanisms make sure user-authored values
-survive re-derivation:
+## Override mechanisms
 
-### `manualOverrides.materials`
+Two override maps on the `Estimate` let the user steer the build without
+forking the underlying templates:
 
-Per-row flags `{ unitCost?: boolean; quantity?: boolean }` keyed by
-`MaterialKey`. When `deriveMaterials` runs (e.g. on size or project-type
-change, or on **Re-price to latest**), any flagged field on a row keeps the
-previous value rather than re-deriving. Set in `CostBreakdownPanel` whenever
-the user edits a row, cleared when the user explicitly resets a row.
+### `composeOverrides`
 
-### `manualOverrides.defaults`
+`ComposeOverridesMap` keyed by `catalogItemId`. When the same catalog item is
+pulled in by more than one template, its compose mode decides how the
+quantities combine: `sum` adds them, `max` takes the largest. The default
+comes from the catalog item (or a per-line override); `composeOverrides` lets
+the user pin a mode per item. Set via `setComposeOverride`; it survives
+recomposition because it feeds straight back into `composeEstimate`.
 
-Per-field flags for the seven `CATALOG_DEFAULT_FIELDS` (lifespan,
-degradation, inflation, discount, CUF, PPA escalation, O&M %). When
-`applyCatalogDefaults` runs (e.g. on project-type change), any flagged field
-keeps its existing value. The builder marks **all** of these as touched on
-save so a future project-type change won't quietly rewrite them.
+### `lineOverrides`
+
+`EstimateLineOverridesMap` keyed by materialized line id - transient manual
+edits to a single row's `itemName`, `uom`, `quantity`, or `rate`. Editing a
+cell calls `setLineOverride`, which runs `retotalWithOverrides`: it reapplies
+the overrides and recomputes totals **without** re-running the composer, so a
+single edit is cheap. These overrides are intentionally fragile - any path
+that recomposes the BOM (`rematerialise` on a capacity, selection, options, or
+compose-mode change) clears them, and the UI warns before triggering that.
 
 ## What-if overrides
 
@@ -87,23 +103,23 @@ search (`usePrepaymentMax`) so it lands at "no loan-active year goes
 negative" — see the comment in
 [`src/routes/Results/usePrepaymentMax.ts`](../src/routes/Results/usePrepaymentMax.ts).
 
-## Catalog migration story
+## Persistence and recompute
 
-Scenarios store a `catalogVersionId` so older work stays reproducible even
-after the active catalog changes. Behaviour:
+Estimates, catalog, templates, and facets each live in their own Zustand
+store with `persist`. `useEstimateStore` persists under
+`solar-estimates-v2` and runs a custom `merge` that re-sanitizes each saved
+estimate's location (`parseFiniteLatLng`) on rehydrate, so malformed
+coordinates from older saves drop cleanly instead of poisoning the yield
+model.
 
-- **New scenario**: `catalogVersionId` = active catalog id at creation.
-- **Active catalog changes**: existing scenarios are unaffected — they keep
-  pointing at their original catalog.
-- **Stale-catalog banner**: when a scenario's referenced catalog ≠ the
-  current active catalog, the Results dashboard shows a banner with a
-  one-click **Re-price to latest** action.
-- **Re-pricing**: re-runs `deriveMaterials` against the new catalog and
-  bumps `catalogVersionId`. Per-row manual overrides are preserved.
-
-The store also runs a one-shot migration (`ensureLegacyCatalogBootstrap`)
-that synthesizes a `LEGACY_CATALOG_ID` snapshot from any pre-v2 scenario,
-so previously-saved data continues to load.
+Because the catalog, templates, and facets are separate stores, an estimate
+keeps its own `materialized` snapshot rather than re-deriving on every read.
+When inputs that affect the BOM change - target capacity, selections, line
+options, or a compose override - the store calls `rematerialise`, which pulls
+the **current** facets/templates/catalog from their stores and re-runs
+`composeEstimate` via `recomputeMaterialization`. Selection snapshots are
+version-synced (`syncSelectionVersions`) on every recompute so an estimate
+tracks the latest template revision automatically.
 
 ## Calc engine internals (`src/lib/calc/`)
 

@@ -39,9 +39,9 @@ Read these in this order. Don't jump ahead — each one assumes the last.
 
 ### 3. The architecture (30 min)
 
-- [`docs/architecture.md`](architecture.md) — data flow (catalog + BOM → Materials → Scenario → ComputedResults), override flags (`manualOverrides.materials` and `manualOverrides.defaults`), what-if overrides, calc engine module map, catalog migration story.
+- [`docs/architecture.md`](architecture.md) — data flow (facets + selections + catalog → composeEstimate → MaterializedBOM → ComputedResults), override mechanisms (`composeOverrides` and `lineOverrides`), what-if overrides, calc engine module map, persistence and recompute.
 
-This is the most important doc. Re-read §"Override flags" twice — it's the easiest thing to break.
+This is the most important doc. Re-read §"Override mechanisms" twice — `lineOverrides` are the easiest thing to break.
 
 ### 4. The visual contract (20 min)
 
@@ -69,9 +69,9 @@ npm run test:watch -- src/lib/calc
 
 Pick **EstimateBuilder → Results** to see the full data flow:
 
-1. `src/routes/EstimateBuilder/index.tsx` — how the route reads the store, derives materials, and composes subcomponents
-2. `src/store/estimates.ts` — how the estimate is shaped and persisted, how `manualOverrides` work in practice
-3. `src/lib/catalog/derive.ts` — how `(BOM × catalog × sizeMW)` becomes Materials
+1. `src/routes/EstimateBuilder/index.tsx` — how the route reads the store, recomposes the estimate, and stitches subcomponents
+2. `src/store/estimates.ts` — how the estimate is shaped and persisted, how `composeOverrides` and `lineOverrides` work in practice
+3. `src/lib/composer/compose.ts` — how facets + selections + catalog become a `MaterializedBOM`
 4. `src/routes/Results/index.tsx` — how the route calls `computeEstimate` and feeds the dashboard
 5. `src/routes/Results/usePrepaymentMax.ts` — read the comment; it's the canonical example of "calc lives in lib/, route-local hooks orchestrate it"
 
