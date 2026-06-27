@@ -62,6 +62,23 @@ export function equityMultiple(cashflows: number[], equity: number): number {
   return total / equity;
 }
 
+/**
+ * Peak funding need: the deepest the cumulative cash position falls below zero
+ * over the life, i.e. the most capital the project ties up before it turns
+ * self-sustaining. Reads the `cumulativeCF` series (which already starts at
+ * -equity) and returns the magnitude of its lowest point, or 0 when the
+ * cumulative balance never dips negative. With leverage the trough can sit
+ * below -equity when early debt service outruns revenue, so this is not just
+ * the equity cheque — it's the worst-case exposure a financier underwrites.
+ */
+export function peakFundingNeed(cumulativeCF: number[]): number {
+  let min = 0;
+  for (const v of cumulativeCF) {
+    if (v < min) min = v;
+  }
+  return min < 0 ? -min : 0;
+}
+
 /** NPV given a vector that already includes the year-0 cash flow (negative equity). */
 function npvFromVector(allFlows: number[], r: number): number {
   let total = 0;

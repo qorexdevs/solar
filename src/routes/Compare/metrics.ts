@@ -117,6 +117,21 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'peakFundingNeed',
+    label: 'Peak funding need',
+    icon: 'savings',
+    format: (r) =>
+      r.finance && Number.isFinite(r.finance.peakFundingNeed)
+        ? `₹ ${formatINR(r.finance.peakFundingNeed)}`
+        : '—',
+    numeric: (r) =>
+      r.finance && Number.isFinite(r.finance.peakFundingNeed)
+        ? r.finance.peakFundingNeed
+        : null,
+    dir: 'lower',
+    requiresFinance: true,
+  },
+  {
     id: 'minDscr',
     label: 'Min DSCR',
     icon: 'account_balance',

@@ -646,6 +646,13 @@ function EstimateTotalsCard({
                 value={`${finance.dscr.min.toFixed(2)}×`}
               />
             )}
+            {finance.peakFundingNeed > 0 && (
+              <SummaryRow
+                dense
+                label="Peak Funding Need"
+                value={`₹ ${formatINR(finance.peakFundingNeed)}`}
+              />
+            )}
           </div>
         </article>
       ) : null}

@@ -16,6 +16,7 @@ import {
   irr,
   mirr,
   npv,
+  peakFundingNeed,
   profitabilityIndex,
   yearlyCashFlows,
 } from './cashflow';
@@ -66,6 +67,8 @@ export type FinanceResults = {
   profitabilityIndex: number;
   /** Total undiscounted cash returned to equity per rupee invested (MOIC). */
   equityMultiple: number;
+  /** Deepest cumulative cash deficit over the life — peak capital tied up. */
+  peakFundingNeed: number;
   /** Per-year debt service coverage (null in years without debt service). */
   dscr: { series: Array<number | null>; min: number | null; avg: number | null };
   /** Levelized cost of energy in ₹/kWh over the lifetime. */
@@ -255,6 +258,7 @@ function computeFinance(
     mirr: mirr(cashflows, equity, basics.discountPct),
     profitabilityIndex: profitabilityIndex(cashflows, basics.discountPct, equity),
     equityMultiple: equityMultiple(cashflows, equity),
+    peakFundingNeed: peakFundingNeed(cumCF),
     dscr: { series: dscr, min: minDSCR(dscr), avg: avgDSCR(dscr) },
     lcoe: lcoeFromSeries(capex.total, omArr, energy, basics.discountPct),
     paybackYears: paybackYears(cumCF),

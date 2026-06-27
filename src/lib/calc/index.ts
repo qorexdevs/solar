@@ -19,6 +19,7 @@ export {
   irr,
   mirr,
   npv,
+  peakFundingNeed,
   profitabilityIndex,
   yearlyCashFlows,
 } from './cashflow';

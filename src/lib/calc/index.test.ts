@@ -19,6 +19,7 @@ import {
   mirr,
   npv,
   paybackYears,
+  peakFundingNeed,
   equityMultiple,
   profitabilityIndex,
   solvePPARate,
@@ -361,6 +362,24 @@ describe('equityMultiple', () => {
   });
   it('is NaN without equity at risk', () => {
     expect(equityMultiple([100], 0)).toBeNaN();
+  });
+});
+
+describe('peakFundingNeed', () => {
+  it('is the magnitude of the deepest cumulative deficit', () => {
+    expect(peakFundingNeed([-100, -40, 20])).toBe(100);
+  });
+  it('sits below equity when early debt service deepens the trough', () => {
+    expect(peakFundingNeed([-100, -130, -50, 80])).toBe(130);
+  });
+  it('matches the cumulative series trough', () => {
+    expect(peakFundingNeed(cumulativeCF([50, 50], 100))).toBe(50);
+  });
+  it('is 0 when the cumulative balance never goes negative', () => {
+    expect(peakFundingNeed([10, 20, 30])).toBe(0);
+  });
+  it('is 0 for an empty series', () => {
+    expect(peakFundingNeed([])).toBe(0);
   });
 });
 
