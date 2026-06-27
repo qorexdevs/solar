@@ -16,19 +16,23 @@ export const TONNES_CO2_PER_TREE_YEAR = 0.06;
 export const TONNES_CO2_PER_CAR_YEAR = 4.6;
 /** Tonnes of CO2 per km driven by a petrol car (~120 g/km). */
 export const TONNES_CO2_PER_KM = 0.00012;
+/** Tonnes of CO2 per smartphone charge (EPA equivalency, ~8.22 g). */
+export const TONNES_CO2_PER_PHONE_CHARGE = 0.00000822;
 
 /** Turn offset tonnes into relatable equivalents for the UI. */
 export function co2Equivalents(tonnes: number): {
   trees: number;
   cars: number;
   kmDriven: number;
+  phonesCharged: number;
 } {
   if (!Number.isFinite(tonnes) || tonnes <= 0) {
-    return { trees: 0, cars: 0, kmDriven: 0 };
+    return { trees: 0, cars: 0, kmDriven: 0, phonesCharged: 0 };
   }
   return {
     trees: Math.round(tonnes / TONNES_CO2_PER_TREE_YEAR),
     cars: Math.round(tonnes / TONNES_CO2_PER_CAR_YEAR),
     kmDriven: Math.round(tonnes / TONNES_CO2_PER_KM),
+    phonesCharged: Math.round(tonnes / TONNES_CO2_PER_PHONE_CHARGE),
   };
 }

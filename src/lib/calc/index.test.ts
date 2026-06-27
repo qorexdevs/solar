@@ -441,16 +441,32 @@ describe('co2Tonnes', () => {
 });
 
 describe('co2Equivalents', () => {
-  it('converts tonnes to trees, cars and km', () => {
+  it('converts tonnes to trees, cars, km and phone charges', () => {
     const r = co2Equivalents(46);
     expect(r.trees).toBe(767);
     expect(r.cars).toBe(10);
     expect(r.kmDriven).toBe(383333);
+    expect(r.phonesCharged).toBe(5596107);
   });
   it('clamps non-positive and non-finite input to zero', () => {
-    expect(co2Equivalents(0)).toEqual({ trees: 0, cars: 0, kmDriven: 0 });
-    expect(co2Equivalents(-5)).toEqual({ trees: 0, cars: 0, kmDriven: 0 });
-    expect(co2Equivalents(NaN)).toEqual({ trees: 0, cars: 0, kmDriven: 0 });
+    expect(co2Equivalents(0)).toEqual({
+      trees: 0,
+      cars: 0,
+      kmDriven: 0,
+      phonesCharged: 0,
+    });
+    expect(co2Equivalents(-5)).toEqual({
+      trees: 0,
+      cars: 0,
+      kmDriven: 0,
+      phonesCharged: 0,
+    });
+    expect(co2Equivalents(NaN)).toEqual({
+      trees: 0,
+      cars: 0,
+      kmDriven: 0,
+      phonesCharged: 0,
+    });
   });
 });
 
