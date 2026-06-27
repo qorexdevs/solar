@@ -73,8 +73,8 @@ save so a future project-type change won't quietly rewrite them.
 
 ## What-if overrides
 
-`computeScenario` accepts a `ScenarioOverrides` object that the **Results**
-dashboard uses for live sliders, without mutating the saved scenario:
+`computeEstimate` accepts an `EstimateOverrides` object that the **Results**
+dashboard uses for live sliders, without mutating the saved estimate:
 
 | Override               | Effect                                                                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -107,17 +107,20 @@ so previously-saved data continues to load.
 
 ## Calc engine internals (`src/lib/calc/`)
 
-| File          | Public exports                                                      |
-| ------------- | ------------------------------------------------------------------- |
-| `energy.ts`   | `annualEnergyKWh`, `yearlyEnergy`, `yearlyRevenue`                  |
-| `om.ts`       | `yearlyOM`                                                          |
-| `capex.ts`    | `capexBreakdown`, `CapexBreakdown`                                  |
-| `loan.ts`     | `loanSchedule`, `loanAmountForScenario`, `LoanRow`                  |
-| `cashflow.ts` | `yearlyCashFlows`, `cumulativeCF`, `npv`, `irr`                     |
-| `payback.ts`  | `paybackYears`, `breakEvenYear`                                     |
-| `co2.ts`      | `co2Tonnes`, `CO2_FACTOR_KG_PER_KWH`                                |
-| `compute.ts`  | `computeScenario`, `ComputedResults`, `PnLRow`, `ScenarioOverrides` |
-| `index.ts`    | barrel — public surface for `@/lib/calc`                            |
+| File          | Public exports                                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `energy.ts`   | `annualEnergyKWh`, `annualEnergyKWhFromYield`, `specificYieldKWhPerKWpYr`, `yearlyEnergy`, `yearlyRevenue`         |
+| `om.ts`       | `yearlyOM`                                                                                                         |
+| `capex.ts`    | `capexBreakdown`, `CapexBreakdown`                                                                                 |
+| `loan.ts`     | `loanSchedule`, `loanAmountForEstimate`, `LoanRow`                                                                 |
+| `cashflow.ts` | `yearlyCashFlows`, `cumulativeCF`, `npv`, `irr`, `mirr`, `profitabilityIndex`, `equityMultiple`, `peakFundingNeed` |
+| `dscr.ts`     | `dscrSeries`, `minDSCR`, `avgDSCR`                                                                                 |
+| `payback.ts`  | `paybackYears`, `breakEvenYear`, `discountedPaybackYears`                                                          |
+| `lcoe.ts`     | `lcoeFromSeries`, `lcoeINRPerKWh`                                                                                  |
+| `ppa.ts`      | `solvePPARate`, `tariffSchedule`, `withPPARate`                                                                    |
+| `co2.ts`      | `co2Tonnes`, `co2Equivalents`, `CO2_FACTOR_KG_PER_KWH`, `TONNES_CO2_PER_TREE_YEAR`                                 |
+| `compute.ts`  | `computeEstimate`, `ComputedResults`, `FinanceResults`, `PnLRow`, `EstimateOverrides`                              |
+| `index.ts`    | barrel — public surface for `@/lib/calc`                                                                           |
 
 Each module is pure and testable in isolation; the dashboard never reaches
-into individual modules — it always goes through `computeScenario`.
+into individual modules — it always goes through `computeEstimate`.
