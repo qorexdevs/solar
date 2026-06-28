@@ -8,7 +8,7 @@ import { formatINR, formatPlantCapacityKW } from '@/lib/format';
 import { useEstimateStore } from '@/store/estimates';
 import type { Estimate } from '@/types';
 import { BestCell } from './BestCell';
-import { METRICS, SERIES_COLORS } from './metrics';
+import { bestIdsByMetric, METRICS, SERIES_COLORS } from './metrics';
 
 export function EstimatesPanel() {
   const estimates = useEstimateStore((s) => s.estimates);
@@ -31,28 +31,7 @@ export function EstimatesPanel() {
     [selected]
   );
 
-  const bestById = useMemo(() => {
-    const out: Record<string, string | undefined> = {};
-    for (const m of METRICS) {
-      let bestVal: number | null = null;
-      let bestId: string | undefined;
-      for (const { estimate, results } of computed) {
-        const v = m.numeric(results, estimate);
-        if (v === null || !Number.isFinite(v)) continue;
-        if (bestVal === null) {
-          bestVal = v;
-          bestId = estimate.id;
-          continue;
-        }
-        if ((m.dir === 'higher' && v > bestVal) || (m.dir === 'lower' && v < bestVal)) {
-          bestVal = v;
-          bestId = estimate.id;
-        }
-      }
-      out[m.id] = bestId;
-    }
-    return out;
-  }, [computed]);
+  const bestById = useMemo(() => bestIdsByMetric(METRICS, computed), [computed]);
 
   const lifespanCap = computed.reduce((acc, c) => {
     const lifespan = c.results.finance?.meta.basics.lifespanYears ?? 25;
@@ -102,7 +81,11 @@ export function EstimatesPanel() {
             Back to List
           </Button>
           {comparisonIds.length > 0 && (
-            <Button variant="ghost" onClick={clearCompare} iconLeft={<Icon name="clear_all" />}>
+            <Button
+              variant="ghost"
+              onClick={clearCompare}
+              iconLeft={<Icon name="clear_all" />}
+            >
               Clear
             </Button>
           )}
@@ -215,7 +198,7 @@ export function EstimatesPanel() {
                       </td>
                       {computed.map(({ estimate, results }) => {
                         const isBest =
-                          bestById[m.id] === estimate.id && computed.length > 1;
+                          computed.length > 1 && bestById[m.id].has(estimate.id);
                         return (
                           <td
                             key={estimate.id}
@@ -233,8 +216,8 @@ export function EstimatesPanel() {
               </table>
             </div>
             <div className="px-2 py-1.5 text-label-sm text-on-surface-variant border-t border-outline-variant bg-surface-container-low">
-              Best value for each metric is highlighted. Finance metrics are
-              only computed when an estimate has its finance layer enabled.
+              Best value for each metric is highlighted. Finance metrics are only computed
+              when an estimate has its finance layer enabled.
             </div>
           </section>
         </>

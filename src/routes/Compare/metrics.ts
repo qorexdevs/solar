@@ -176,4 +176,32 @@ export const METRICS: Metric[] = [
   },
 ];
 
+/**
+ * Estimate ids holding the winning value for each metric. Ties share the win,
+ * so two estimates with the same capacity or IRR both get highlighted.
+ */
+export function bestIdsByMetric(
+  metrics: Metric[],
+  computed: { estimate: Estimate; results: ComputedResults }[]
+): Record<string, Set<string>> {
+  const out: Record<string, Set<string>> = {};
+  for (const m of metrics) {
+    let best: number | null = null;
+    const ids = new Set<string>();
+    for (const { estimate, results } of computed) {
+      const v = m.numeric(results, estimate);
+      if (v === null || !Number.isFinite(v)) continue;
+      if (best === null || (m.dir === 'higher' ? v > best : v < best)) {
+        best = v;
+        ids.clear();
+        ids.add(estimate.id);
+      } else if (v === best) {
+        ids.add(estimate.id);
+      }
+    }
+    out[m.id] = ids;
+  }
+  return out;
+}
+
 export const SERIES_COLORS = ['#003527', '#316bf3', '#2b6954', '#ba1a1a'];
