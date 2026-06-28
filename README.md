@@ -42,7 +42,7 @@ npm install
 npm run dev            # dev server on http://localhost:5173
 npm run build          # production build (outputs to dist/)
 npm run preview        # preview a production build
-npm run test           # 172 unit tests across calc / catalog / irradiance / estimate / templates / format
+npm run test           # 179 unit tests across calc / catalog / irradiance / estimate / templates / format
 npm run lint           # eslint .
 npm run format         # prettier --write .
 npm run format:check   # prettier --check .

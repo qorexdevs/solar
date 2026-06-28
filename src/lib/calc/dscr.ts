@@ -40,3 +40,28 @@ export function avgDSCR(series: Array<number | null>): number | null {
   }
   return count > 0 ? sum / count : null;
 }
+
+/**
+ * Loan life coverage ratio: the present value of cash available for debt
+ * service (revenue minus O&M) over the loan term, discounted at the cost of
+ * debt, divided by the loan drawn at the outset. Where DSCR is one year's
+ * cushion, LLCR is the whole-loan view lenders use to test whether the project
+ * could clear the debt early if it had to — above 1 means the discounted
+ * operating cash already covers the principal. Null for an unfinanced (cash) plant.
+ */
+export function llcr(
+  revenue: number[],
+  om: number[],
+  loanAmount: number,
+  interestPct: number,
+  termYears: number
+): number | null {
+  if (loanAmount <= 1e-6) return null;
+  const r = interestPct / 100;
+  const n = Math.min(termYears, revenue.length);
+  let pv = 0;
+  for (let i = 0; i < n; i++) {
+    pv += (revenue[i] - om[i]) / Math.pow(1 + r, i + 1);
+  }
+  return pv / loanAmount;
+}

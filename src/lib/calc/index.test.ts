@@ -7,6 +7,7 @@ import {
   capexBreakdown,
   discountedPaybackYears,
   dscrSeries,
+  llcr,
   minDSCR,
   co2Equivalents,
   co2Tonnes,
@@ -402,6 +403,20 @@ describe('dscr', () => {
     const s = dscrSeries([100], [10], [0]);
     expect(minDSCR(s)).toBeNull();
     expect(avgDSCR(s)).toBeNull();
+  });
+});
+
+describe('llcr', () => {
+  it('discounts cfads over the loan term against the drawn loan', () => {
+    // cfads 80/yr, r=0.1: (80/1.1 + 80/1.21) / 100 = 1.3884
+    expect(llcr([100, 100], [20, 20], 100, 10, 2)).toBeCloseTo(1.3884, 4);
+  });
+  it('only counts years inside the loan term', () => {
+    // term 2 ignores the third year even though cash keeps coming
+    expect(llcr([100, 100, 100], [20, 20, 20], 100, 10, 2)).toBeCloseTo(1.3884, 4);
+  });
+  it('returns null for an unfinanced plant', () => {
+    expect(llcr([100, 100], [20, 20], 0, 10, 2)).toBeNull();
   });
 });
 

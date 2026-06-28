@@ -144,6 +144,16 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'llcr',
+    label: 'LLCR',
+    icon: 'account_balance',
+    format: (r) =>
+      r.finance && r.finance.llcr !== null ? `${r.finance.llcr.toFixed(2)}×` : '—',
+    numeric: (r) => (r.finance ? r.finance.llcr : null),
+    dir: 'higher',
+    requiresFinance: true,
+  },
+  {
     id: 'lcoe',
     label: 'LCOE',
     icon: 'bolt',
