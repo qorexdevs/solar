@@ -649,6 +649,9 @@ function EstimateTotalsCard({
             {finance.llcr !== null && (
               <SummaryRow dense label="LLCR" value={`${finance.llcr.toFixed(2)}×`} />
             )}
+            {finance.plcr !== null && (
+              <SummaryRow dense label="PLCR" value={`${finance.plcr.toFixed(2)}×`} />
+            )}
             {finance.peakFundingNeed > 0 && (
               <SummaryRow
                 dense

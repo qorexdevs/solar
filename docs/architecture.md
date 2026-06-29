@@ -130,7 +130,7 @@ tracks the latest template revision automatically.
 | `capex.ts`    | `capexBreakdown`, `CapexBreakdown`                                                                                 |
 | `loan.ts`     | `loanSchedule`, `loanAmountForEstimate`, `LoanRow`                                                                 |
 | `cashflow.ts` | `yearlyCashFlows`, `cumulativeCF`, `npv`, `irr`, `mirr`, `profitabilityIndex`, `equityMultiple`, `peakFundingNeed` |
-| `dscr.ts`     | `dscrSeries`, `minDSCR`, `avgDSCR`, `llcr`                                                                         |
+| `dscr.ts`     | `dscrSeries`, `minDSCR`, `avgDSCR`, `llcr`, `plcr`                                                                 |
 | `payback.ts`  | `paybackYears`, `breakEvenYear`, `discountedPaybackYears`                                                          |
 | `lcoe.ts`     | `lcoeFromSeries`, `lcoeINRPerKWh`                                                                                  |
 | `ppa.ts`      | `solvePPARate`, `tariffSchedule`, `withPPARate`                                                                    |

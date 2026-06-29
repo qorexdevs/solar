@@ -9,6 +9,7 @@ import {
   dscrSeries,
   llcr,
   minDSCR,
+  plcr,
   co2Equivalents,
   co2Tonnes,
   computeEstimate,
@@ -417,6 +418,23 @@ describe('llcr', () => {
   });
   it('returns null for an unfinanced plant', () => {
     expect(llcr([100, 100], [20, 20], 0, 10, 2)).toBeNull();
+  });
+});
+
+describe('plcr', () => {
+  it('discounts cfads over the whole life against the drawn loan', () => {
+    // cfads 80/yr over 3 years, r=0.1: (80/1.1 + 80/1.21 + 80/1.331) / 100 = 1.98947
+    expect(plcr([100, 100, 100], [20, 20, 20], 100, 10)).toBeCloseTo(1.98947, 4);
+  });
+  it('is at least llcr because it keeps the post-loan years', () => {
+    const rev = [100, 100, 100, 100];
+    const om = [20, 20, 20, 20];
+    const life = plcr(rev, om, 100, 10)!;
+    const loan = llcr(rev, om, 100, 10, 2)!;
+    expect(life).toBeGreaterThan(loan);
+  });
+  it('returns null for an unfinanced plant', () => {
+    expect(plcr([100, 100], [20, 20], 0, 10)).toBeNull();
   });
 });
 

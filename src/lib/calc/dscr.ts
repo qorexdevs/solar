@@ -65,3 +65,26 @@ export function llcr(
   }
   return pv / loanAmount;
 }
+
+/**
+ * Project life coverage ratio: the LLCR view stretched over the whole project
+ * life rather than just the loan term. Cash available for debt service is
+ * discounted across every operating year and divided by the loan drawn. Because
+ * it counts the post-loan years LLCR ignores, PLCR is always at least LLCR, and
+ * lenders read the gap as the cushion left once the debt is paid off. Null for
+ * an unfinanced (cash) plant.
+ */
+export function plcr(
+  revenue: number[],
+  om: number[],
+  loanAmount: number,
+  interestPct: number
+): number | null {
+  if (loanAmount <= 1e-6) return null;
+  const r = interestPct / 100;
+  let pv = 0;
+  for (let i = 0; i < revenue.length; i++) {
+    pv += (revenue[i] - om[i]) / Math.pow(1 + r, i + 1);
+  }
+  return pv / loanAmount;
+}

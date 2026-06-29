@@ -20,7 +20,7 @@ import {
   profitabilityIndex,
   yearlyCashFlows,
 } from './cashflow';
-import { avgDSCR, dscrSeries, llcr, minDSCR } from './dscr';
+import { avgDSCR, dscrSeries, llcr, minDSCR, plcr } from './dscr';
 import { lcoeFromSeries } from './lcoe';
 import { co2Tonnes } from './co2';
 import {
@@ -73,6 +73,8 @@ export type FinanceResults = {
   dscr: { series: Array<number | null>; min: number | null; avg: number | null };
   /** Loan life coverage ratio over the whole loan (null when unfinanced). */
   llcr: number | null;
+  /** Project life coverage ratio over the full plant life (null when unfinanced). */
+  plcr: number | null;
   /** Levelized cost of energy in ₹/kWh over the lifetime. */
   lcoe: number;
   paybackYears: number | null;
@@ -269,6 +271,7 @@ function computeFinance(
       effectiveFinancing.interestPct,
       effectiveFinancing.termYears
     ),
+    plcr: plcr(revenueArr, omArr, loanAmount, effectiveFinancing.interestPct),
     lcoe: lcoeFromSeries(capex.total, omArr, energy, basics.discountPct),
     paybackYears: paybackYears(cumCF),
     discountedPaybackYears: discountedPaybackYears(cashflows, equity, basics.discountPct),
