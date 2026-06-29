@@ -27,6 +27,18 @@ export function specificYieldKWhPerKWpYr(sizeMW: number, annualKWh: number): num
   return annualKWh / (sizeMW * 1000);
 }
 
+/**
+ * Average annual electricity use of an Indian household (~100 kWh/month).
+ * Used to phrase generation as "homes powered" for a relatable headline.
+ */
+export const AVG_HOME_ANNUAL_KWH = 1200;
+
+/** Number of average Indian homes a year of generation could power. */
+export function homesPowered(annualKWh: number): number {
+  if (!Number.isFinite(annualKWh) || annualKWh <= 0) return 0;
+  return Math.round(annualKWh / AVG_HOME_ANNUAL_KWH);
+}
+
 /** Yearly energy with geometric panel degradation, length = lifespanYears. */
 export function yearlyEnergy(
   lifespanYears: number,

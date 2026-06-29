@@ -13,6 +13,7 @@ import {
   plcr,
   co2Equivalents,
   co2Tonnes,
+  homesPowered,
   computeEstimate,
   cumulativeCF,
   irr,
@@ -84,6 +85,20 @@ describe('specificYieldKWhPerKWpYr', () => {
   });
   it('returns 0 for non-positive size', () => {
     expect(specificYieldKWhPerKWpYr(0, 1000)).toBe(0);
+  });
+});
+
+describe('homesPowered', () => {
+  it('divides by the average household consumption', () => {
+    expect(homesPowered(12000)).toBe(10);
+  });
+  it('rounds to whole homes', () => {
+    expect(homesPowered(1800)).toBe(2);
+  });
+  it('returns 0 for zero, negative or non-finite input', () => {
+    expect(homesPowered(0)).toBe(0);
+    expect(homesPowered(-500)).toBe(0);
+    expect(homesPowered(NaN)).toBe(0);
   });
 });
 

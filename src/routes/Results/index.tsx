@@ -489,6 +489,7 @@ export function Results() {
             annualYear1={finance.co2.annualYear1}
             cumulative={finance.co2.cumulative}
             lifespanYears={finance.meta.basics.lifespanYears}
+            annualEnergyKWh={finance.energy[0]}
           />
         </>
       )}

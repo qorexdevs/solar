@@ -1,16 +1,23 @@
 import { Icon } from '@/components/ui/Icon';
-import { co2Equivalents } from '@/lib/calc';
+import { co2Equivalents, homesPowered } from '@/lib/calc';
 import { formatTonnes } from '@/lib/format';
 
 type Props = {
   annualYear1: number;
   cumulative: number;
   lifespanYears: number;
+  annualEnergyKWh: number;
 };
 
-export function Co2Card({ annualYear1, cumulative, lifespanYears }: Props) {
+export function Co2Card({
+  annualYear1,
+  cumulative,
+  lifespanYears,
+  annualEnergyKWh,
+}: Props) {
   const treesPerYear = co2Equivalents(annualYear1).trees;
   const cars = co2Equivalents(cumulative).cars;
+  const homes = homesPowered(annualEnergyKWh);
   return (
     <section className="bg-primary-container rounded-xl p-lg text-on-primary shadow-card relative overflow-hidden">
       <div aria-hidden className="absolute right-[-20px] top-[-20px] opacity-10">
@@ -30,6 +37,11 @@ export function Co2Card({ annualYear1, cumulative, lifespanYears }: Props) {
             <span className="font-semibold">{formatTonnes(cumulative)}</span>
             {' · '}≈ {treesPerYear.toLocaleString('en-IN')} trees planted annually
             {' · '}like {cars.toLocaleString('en-IN')} cars off the road
+            {homes > 0 && (
+              <>
+                {' · '}powers ~{homes.toLocaleString('en-IN')} homes for a year
+              </>
+            )}
           </p>
         </div>
       </div>

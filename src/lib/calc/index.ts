@@ -40,6 +40,8 @@ export {
 export {
   annualEnergyKWh,
   annualEnergyKWhFromYield,
+  AVG_HOME_ANNUAL_KWH,
+  homesPowered,
   specificYieldKWhPerKWpYr,
   yearlyEnergy,
   yearlyRevenue,
