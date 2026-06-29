@@ -20,7 +20,7 @@ import {
   profitabilityIndex,
   yearlyCashFlows,
 } from './cashflow';
-import { avgDSCR, dscrSeries, llcr, minDSCR, plcr } from './dscr';
+import { avgDSCR, dscrBreaches, dscrSeries, llcr, minDSCR, plcr } from './dscr';
 import { lcoeFromSeries } from './lcoe';
 import { co2Tonnes } from './co2';
 import {
@@ -69,8 +69,18 @@ export type FinanceResults = {
   equityMultiple: number;
   /** Deepest cumulative cash deficit over the life — peak capital tied up. */
   peakFundingNeed: number;
-  /** Per-year debt service coverage (null in years without debt service). */
-  dscr: { series: Array<number | null>; min: number | null; avg: number | null };
+  /**
+   * Per-year debt service coverage (null in years without debt service).
+   * `breachYear`/`breachCount` flag years where DSCR drops below 1 — operations
+   * short of that year's loan payment.
+   */
+  dscr: {
+    series: Array<number | null>;
+    min: number | null;
+    avg: number | null;
+    breachYear: number | null;
+    breachCount: number;
+  };
   /** Loan life coverage ratio over the whole loan (null when unfinanced). */
   llcr: number | null;
   /** Project life coverage ratio over the full plant life (null when unfinanced). */
@@ -263,7 +273,16 @@ function computeFinance(
     profitabilityIndex: profitabilityIndex(cashflows, basics.discountPct, equity),
     equityMultiple: equityMultiple(cashflows, equity),
     peakFundingNeed: peakFundingNeed(cumCF),
-    dscr: { series: dscr, min: minDSCR(dscr), avg: avgDSCR(dscr) },
+    dscr: (() => {
+      const breaches = dscrBreaches(dscr, 1);
+      return {
+        series: dscr,
+        min: minDSCR(dscr),
+        avg: avgDSCR(dscr),
+        breachYear: breaches.first,
+        breachCount: breaches.count,
+      };
+    })(),
     llcr: llcr(
       revenueArr,
       omArr,

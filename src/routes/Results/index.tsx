@@ -646,6 +646,17 @@ function EstimateTotalsCard({
                 value={`${finance.dscr.min.toFixed(2)}×`}
               />
             )}
+            {finance.dscr.breachYear !== null && (
+              <SummaryRow
+                dense
+                label="DSCR < 1"
+                value={
+                  finance.dscr.breachCount > 1
+                    ? `from yr ${finance.dscr.breachYear} (${finance.dscr.breachCount} yrs)`
+                    : `yr ${finance.dscr.breachYear}`
+                }
+              />
+            )}
             {finance.llcr !== null && (
               <SummaryRow dense label="LLCR" value={`${finance.llcr.toFixed(2)}×`} />
             )}

@@ -42,6 +42,31 @@ export function avgDSCR(series: Array<number | null>): number | null {
 }
 
 /**
+ * Years where DSCR falls below a covenant — the lender's tripwire. A year at or
+ * above the covenant clears it; below means that year's operations cannot cover
+ * the loan payment at the agreed cushion, which is what triggers reserve sweeps
+ * or default clauses. Years without debt service carry no covenant and are
+ * skipped. Returns the first breaching year (1-indexed) and how many years
+ * breach in total; `first` is null when nothing breaches.
+ */
+export function dscrBreaches(
+  series: Array<number | null>,
+  covenant: number
+): { first: number | null; count: number } {
+  let first: number | null = null;
+  let count = 0;
+  for (let i = 0; i < series.length; i++) {
+    const v = series[i];
+    if (v === null) continue;
+    if (v < covenant) {
+      if (first === null) first = i + 1;
+      count++;
+    }
+  }
+  return { first, count };
+}
+
+/**
  * Loan life coverage ratio: the present value of cash available for debt
  * service (revenue minus O&M) over the loan term, discounted at the cost of
  * debt, divided by the loan drawn at the outset. Where DSCR is one year's

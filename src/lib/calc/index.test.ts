@@ -3,6 +3,7 @@ import {
   annualEnergyKWh,
   annualEnergyKWhFromYield,
   avgDSCR,
+  dscrBreaches,
   breakEvenYear,
   capexBreakdown,
   discountedPaybackYears,
@@ -404,6 +405,20 @@ describe('dscr', () => {
     const s = dscrSeries([100], [10], [0]);
     expect(minDSCR(s)).toBeNull();
     expect(avgDSCR(s)).toBeNull();
+  });
+  it('flags the first and total years below the covenant', () => {
+    // dscr: [2, 0.85, 0.9] against a covenant of 1 -> breaches in years 2 and 3
+    const s = dscrSeries([100, 27, 28], [20, 10, 10], [40, 20, 20]);
+    expect(dscrBreaches(s, 1)).toEqual({ first: 2, count: 2 });
+  });
+  it('clears the covenant when every serviced year is above it', () => {
+    const s = dscrSeries([100, 110], [20, 25], [40, 50]);
+    expect(dscrBreaches(s, 1.2)).toEqual({ first: null, count: 0 });
+  });
+  it('skips years without debt service when counting breaches', () => {
+    // year 1 has no service (null), year 2 dscr 0.8 breaches
+    const s = dscrSeries([100, 90], [20, 10], [0, 100]);
+    expect(dscrBreaches(s, 1)).toEqual({ first: 2, count: 1 });
   });
 });
 
