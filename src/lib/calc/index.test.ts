@@ -8,6 +8,7 @@ import {
   capexBreakdown,
   discountedPaybackYears,
   dscrSeries,
+  levelizedTariff,
   llcr,
   minDSCR,
   plcr,
@@ -593,6 +594,47 @@ describe('tariffSchedule', () => {
       inflationPct: 6,
     });
     expect(out[1]).toBeCloseTo(4 * 1.02 * 1.03, 4);
+  });
+});
+
+/* ------------------------------------------------------------------------ */
+/* levelizedTariff                                                           */
+/* ------------------------------------------------------------------------ */
+
+describe('levelizedTariff', () => {
+  it('equals a flat rate when the schedule never escalates', () => {
+    const schedule = [3, 3, 3];
+    const energy = [100, 95, 90];
+    expect(levelizedTariff(schedule, energy, 8)).toBeCloseTo(3, 6);
+  });
+
+  it('lands between the first and last year of an escalating schedule', () => {
+    const schedule = [3, 3.3, 3.63];
+    const energy = [100, 100, 100];
+    const lev = levelizedTariff(schedule, energy, 8);
+    expect(lev).toBeGreaterThan(schedule[0]);
+    expect(lev).toBeLessThan(schedule[schedule.length - 1]);
+  });
+
+  it('weights by discounted energy, not a plain average', () => {
+    const schedule = [2, 6];
+    const energy = [100, 100];
+    // discounting front-loads year 1, so the levelized rate sits below the 4 mean
+    const pvRev = (2 * 100) / 1.1 + (6 * 100) / 1.1 ** 2;
+    const pvEnergy = 100 / 1.1 + 100 / 1.1 ** 2;
+    expect(levelizedTariff(schedule, energy, 10)).toBeCloseTo(pvRev / pvEnergy, 6);
+    expect(levelizedTariff(schedule, energy, 10)).toBeLessThan(4);
+  });
+
+  it('pairs term-by-term up to the shorter series', () => {
+    const schedule = [4, 4, 4, 4, 4];
+    const energy = [100, 100];
+    expect(levelizedTariff(schedule, energy, 7)).toBeCloseTo(4, 6);
+  });
+
+  it('returns 0 when there is no generation to weight', () => {
+    expect(levelizedTariff([4, 4], [], 8)).toBe(0);
+    expect(levelizedTariff([4, 4], [0, 0], 8)).toBe(0);
   });
 });
 

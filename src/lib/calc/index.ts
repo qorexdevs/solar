@@ -52,6 +52,7 @@ export { yearlyOM } from './om';
 export { breakEvenYear, discountedPaybackYears, paybackYears } from './payback';
 export {
   type Indexation,
+  levelizedTariff,
   type PPASolveArgs,
   type PPASolveResult,
   solvePPARate,

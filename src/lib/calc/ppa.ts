@@ -8,9 +8,7 @@ import { computeEstimate } from './compute';
  * - `cpi`: A simple consumer-price-index pass-through, used as a partial hedge
  *   against inflation.
  */
-export type Indexation =
-  | { kind: 'none' }
-  | { kind: 'cpi'; cpiFraction: number };
+export type Indexation = { kind: 'none' } | { kind: 'cpi'; cpiFraction: number };
 
 export type PPASolveArgs = {
   estimate: Estimate;
@@ -125,6 +123,36 @@ export function tariffSchedule(args: {
 }
 
 /**
+ * Levelized PPA tariff — the single ₹/kWh that, charged flat, yields the same
+ * discounted revenue as the escalating `schedule` does against the same
+ * generation. The revenue-side mirror of LCOE: where LCOE levelizes cost,
+ * this levelizes the tariff, so an offtaker can compare one escalating PPA
+ * against grid or against LCOE on equal footing instead of eyeballing year 1.
+ *
+ *   levelized = Σ rate_t · energy_t / (1+r)^t  /  Σ energy_t / (1+r)^t
+ *
+ * Pairs term-by-term up to the shorter of the two series. Returns 0 when there
+ * is no discounted generation to weight against.
+ */
+export function levelizedTariff(
+  schedule: number[],
+  energy: number[],
+  discountPct: number
+): number {
+  const r = discountPct / 100;
+  const n = Math.min(schedule.length, energy.length);
+  let pvRevenue = 0;
+  let pvEnergy = 0;
+  for (let i = 0; i < n; i++) {
+    const denom = Math.pow(1 + r, i + 1);
+    pvRevenue += (schedule[i] * energy[i]) / denom;
+    pvEnergy += energy[i] / denom;
+  }
+  if (pvEnergy === 0) return 0;
+  return pvRevenue / pvEnergy;
+}
+
+/**
  * Clone an estimate with a different year-1 PPA tariff and (optionally) a
  * different annual escalation. Useful for what-if PPA analyses without
  * mutating the saved estimate.
@@ -145,8 +173,7 @@ export function withPPARate(
   const inflationPct = estimate.finance.basics.inflationPct;
   const combined =
     indexation.kind === 'cpi'
-      ? (1 + escalationPct / 100) *
-          (1 + (indexation.cpiFraction * inflationPct) / 100) -
+      ? (1 + escalationPct / 100) * (1 + (indexation.cpiFraction * inflationPct) / 100) -
         1
       : escalationPct / 100;
   const effectiveEscalationPct = combined * 100;
