@@ -164,6 +164,18 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'debt-tail',
+    label: 'Debt Tail',
+    icon: 'more_time',
+    format: (r) =>
+      r.finance && r.finance.debtTail !== null
+        ? formatYears(r.finance.debtTail.tailYears)
+        : '—',
+    numeric: (r) => r.finance?.debtTail?.tailYears ?? null,
+    dir: 'higher',
+    requiresFinance: true,
+  },
+  {
     id: 'lcoe',
     label: 'LCOE',
     icon: 'bolt',
