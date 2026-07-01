@@ -8,6 +8,7 @@ import {
   capexBreakdown,
   discountedPaybackYears,
   dscrSeries,
+  icrSeries,
   levelizedTariff,
   llcr,
   minDSCR,
@@ -435,6 +436,24 @@ describe('dscr', () => {
     // year 1 has no service (null), year 2 dscr 0.8 breaches
     const s = dscrSeries([100, 90], [20, 10], [0, 100]);
     expect(dscrBreaches(s, 1)).toEqual({ first: 2, count: 1 });
+  });
+});
+
+describe('icrSeries', () => {
+  it('divides net operating income by interest per year', () => {
+    // (rev - om) / interest: (100-20)/10 = 8, (110-25)/17 = 5
+    expect(icrSeries([100, 110], [20, 25], [10, 17])).toEqual([8, 5]);
+  });
+  it('reports null once interest drops to zero', () => {
+    const s = icrSeries([100, 100], [20, 20], [40, 0]);
+    expect(s[0]).toBeCloseTo(2, 6);
+    expect(s[1]).toBeNull();
+  });
+  it('reuses the dscr summaries against the interest floor', () => {
+    // icr: [null, 3, 1], covenant 1.5 -> min 1, breaches in the last serviced year
+    const s = icrSeries([100, 100, 40], [10, 10, 10], [0, 30, 30]);
+    expect(minDSCR(s)).toBeCloseTo(1, 6);
+    expect(dscrBreaches(s, 1.5)).toEqual({ first: 3, count: 1 });
   });
 });
 

@@ -20,7 +20,15 @@ import {
   profitabilityIndex,
   yearlyCashFlows,
 } from './cashflow';
-import { avgDSCR, dscrBreaches, dscrSeries, llcr, minDSCR, plcr } from './dscr';
+import {
+  avgDSCR,
+  dscrBreaches,
+  dscrSeries,
+  icrSeries,
+  llcr,
+  minDSCR,
+  plcr,
+} from './dscr';
 import { lcoeFromSeries } from './lcoe';
 import { co2Tonnes } from './co2';
 import {
@@ -80,6 +88,14 @@ export type FinanceResults = {
     avg: number | null;
     breachYear: number | null;
     breachCount: number;
+  };
+  /**
+   * Per-year interest coverage (null once interest stops). `min` is the tightest
+   * year — the interest-only floor lenders read alongside DSCR.
+   */
+  icr: {
+    series: Array<number | null>;
+    min: number | null;
   };
   /** Loan life coverage ratio over the whole loan (null when unfinanced). */
   llcr: number | null;
@@ -282,6 +298,14 @@ function computeFinance(
         breachYear: breaches.first,
         breachCount: breaches.count,
       };
+    })(),
+    icr: (() => {
+      const series = icrSeries(
+        revenueArr,
+        omArr,
+        loan.map((r) => r.interest)
+      );
+      return { series, min: minDSCR(series) };
     })(),
     llcr: llcr(
       revenueArr,

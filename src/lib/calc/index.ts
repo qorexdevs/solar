@@ -23,7 +23,15 @@ export {
   profitabilityIndex,
   yearlyCashFlows,
 } from './cashflow';
-export { avgDSCR, dscrBreaches, dscrSeries, llcr, minDSCR, plcr } from './dscr';
+export {
+  avgDSCR,
+  dscrBreaches,
+  dscrSeries,
+  icrSeries,
+  llcr,
+  minDSCR,
+  plcr,
+} from './dscr';
 export {
   CO2_FACTOR_KG_PER_KWH,
   TONNES_CO2_PER_TREE_YEAR,

@@ -19,6 +19,31 @@ export function dscrSeries(
   return out;
 }
 
+/**
+ * Interest coverage ratio: net operating income (revenue minus O&M) per rupee
+ * of interest for a year. Where DSCR measures the cushion over the whole loan
+ * payment, ICR isolates the interest bill — the harder floor, since principal
+ * can be rescheduled but interest cannot. Lenders often set an ICR covenant
+ * alongside the DSCR one, and the gap between the two shows how much of the
+ * coverage leans on the amortising principal. Years with no interest (after the
+ * loan is retired) carry no constraint and are reported as null. Reuse
+ * {@link minDSCR}/{@link avgDSCR} and {@link dscrBreaches} to summarise the
+ * series against a covenant.
+ */
+export function icrSeries(
+  revenue: number[],
+  om: number[],
+  interest: number[]
+): Array<number | null> {
+  const n = revenue.length;
+  const out: Array<number | null> = new Array(n);
+  for (let i = 0; i < n; i++) {
+    const int = interest[i] ?? 0;
+    out[i] = int > 1e-6 ? (revenue[i] - om[i]) / int : null;
+  }
+  return out;
+}
+
 /** Lowest DSCR across years that carry debt service, or null when none do. */
 export function minDSCR(series: Array<number | null>): number | null {
   let min: number | null = null;
