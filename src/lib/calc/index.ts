@@ -25,6 +25,7 @@ export {
 } from './cashflow';
 export {
   avgDSCR,
+  debtTail,
   dscrBreaches,
   dscrSeries,
   icrSeries,

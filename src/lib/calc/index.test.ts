@@ -3,6 +3,7 @@ import {
   annualEnergyKWh,
   annualEnergyKWhFromYield,
   avgDSCR,
+  debtTail,
   dscrBreaches,
   breakEvenYear,
   capexBreakdown,
@@ -454,6 +455,30 @@ describe('icrSeries', () => {
     const s = icrSeries([100, 100, 40], [10, 10, 10], [0, 30, 30]);
     expect(minDSCR(s)).toBeCloseTo(1, 6);
     expect(dscrBreaches(s, 1.5)).toEqual({ first: 3, count: 1 });
+  });
+});
+
+describe('debtTail', () => {
+  it('counts the operating years after the last serviced year', () => {
+    // last payment in year 3, life of 8 -> 5 tail years, 5/3 fraction
+    const r = debtTail([50, 50, 50, 0, 0, 0, 0, 0], 8)!;
+    expect(r.lastDebtYear).toBe(3);
+    expect(r.tailYears).toBe(5);
+    expect(r.fraction).toBeCloseTo(5 / 3, 6);
+  });
+  it('picks the last serviced year when a prepayment retires the loan early', () => {
+    // payments stop after year 2 even though the array runs longer
+    const r = debtTail([80, 80, 0, 0, 0], 5)!;
+    expect(r.lastDebtYear).toBe(2);
+    expect(r.tailYears).toBe(3);
+  });
+  it('has no tail when debt service runs to the final year', () => {
+    const r = debtTail([50, 50, 50], 3)!;
+    expect(r.tailYears).toBe(0);
+    expect(r.fraction).toBe(0);
+  });
+  it('returns null for an unfinanced plant', () => {
+    expect(debtTail([0, 0, 0], 3)).toBeNull();
   });
 });
 

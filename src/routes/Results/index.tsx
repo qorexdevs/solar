@@ -664,6 +664,17 @@ function EstimateTotalsCard({
             {finance.plcr !== null && (
               <SummaryRow dense label="PLCR" value={`${finance.plcr.toFixed(2)}×`} />
             )}
+            {finance.debtTail !== null && (
+              <SummaryRow
+                dense
+                label="Debt Tail"
+                value={
+                  finance.debtTail.tailYears === 1
+                    ? '1 yr'
+                    : `${finance.debtTail.tailYears} yrs (${finance.debtTail.fraction.toFixed(2)}×)`
+                }
+              />
+            )}
             {finance.peakFundingNeed > 0 && (
               <SummaryRow
                 dense

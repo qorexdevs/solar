@@ -92,6 +92,29 @@ export function dscrBreaches(
 }
 
 /**
+ * Debt tail: the operating years left once the loan is fully repaid. Lenders
+ * want a cushion of unencumbered years at the end of the plant life — if a late
+ * year underperforms, the tail is the room to reschedule without running past
+ * the asset itself. `lastDebtYear` is the final year that still carries debt
+ * service, which moves earlier when prepayments retire the loan ahead of the
+ * tenor; `tailYears` is what remains of the life after it; `fraction` states the
+ * tail as a share of the years actually spent repaying. Null for an unfinanced
+ * (cash) plant that never carries debt service.
+ */
+export function debtTail(
+  loanPayments: number[],
+  lifespanYears: number
+): { lastDebtYear: number; tailYears: number; fraction: number } | null {
+  let lastDebtYear = 0;
+  for (let i = 0; i < loanPayments.length; i++) {
+    if ((loanPayments[i] ?? 0) > 1e-6) lastDebtYear = i + 1;
+  }
+  if (lastDebtYear === 0) return null;
+  const tailYears = Math.max(0, lifespanYears - lastDebtYear);
+  return { lastDebtYear, tailYears, fraction: tailYears / lastDebtYear };
+}
+
+/**
  * Loan life coverage ratio: the present value of cash available for debt
  * service (revenue minus O&M) over the loan term, discounted at the cost of
  * debt, divided by the loan drawn at the outset. Where DSCR is one year's

@@ -22,6 +22,7 @@ import {
 } from './cashflow';
 import {
   avgDSCR,
+  debtTail,
   dscrBreaches,
   dscrSeries,
   icrSeries,
@@ -97,6 +98,11 @@ export type FinanceResults = {
     series: Array<number | null>;
     min: number | null;
   };
+  /**
+   * Operating years left after the loan retires (null when unfinanced).
+   * `lastDebtYear` moves earlier when prepayments clear the loan ahead of tenor.
+   */
+  debtTail: { lastDebtYear: number; tailYears: number; fraction: number } | null;
   /** Loan life coverage ratio over the whole loan (null when unfinanced). */
   llcr: number | null;
   /** Project life coverage ratio over the full plant life (null when unfinanced). */
@@ -307,6 +313,10 @@ function computeFinance(
       );
       return { series, min: minDSCR(series) };
     })(),
+    debtTail: debtTail(
+      loan.map((r) => r.payment),
+      basics.lifespanYears
+    ),
     llcr: llcr(
       revenueArr,
       omArr,
