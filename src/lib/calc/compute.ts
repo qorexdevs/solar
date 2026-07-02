@@ -29,6 +29,7 @@ import {
   llcr,
   minDSCR,
   plcr,
+  weightedAvgLife,
 } from './dscr';
 import { lcoeFromSeries } from './lcoe';
 import { co2Tonnes } from './co2';
@@ -103,6 +104,11 @@ export type FinanceResults = {
    * `lastDebtYear` moves earlier when prepayments clear the loan ahead of tenor.
    */
   debtTail: { lastDebtYear: number; tailYears: number; fraction: number } | null;
+  /**
+   * Principal-weighted average years the debt stays outstanding (null when
+   * unfinanced). Shortens below the tenor when prepayments retire it early.
+   */
+  weightedAvgLife: number | null;
   /** Loan life coverage ratio over the whole loan (null when unfinanced). */
   llcr: number | null;
   /** Project life coverage ratio over the full plant life (null when unfinanced). */
@@ -317,6 +323,7 @@ function computeFinance(
       loan.map((r) => r.payment),
       basics.lifespanYears
     ),
+    weightedAvgLife: weightedAvgLife(loan.map((r) => r.principal)),
     llcr: llcr(
       revenueArr,
       omArr,

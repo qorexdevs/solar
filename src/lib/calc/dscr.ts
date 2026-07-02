@@ -115,6 +115,29 @@ export function debtTail(
 }
 
 /**
+ * Weighted average life of the debt: the principal-weighted mean time to
+ * repayment, in years. Where {@link debtTail} looks at the cushion left after
+ * the loan retires, WAL measures how long capital is actually outstanding on
+ * average — each year's principal repayment weighted by the year it lands.
+ * Sculpting or extra prepayments pull principal forward and shorten the WAL,
+ * which lenders read as their real exposure window rather than the nominal
+ * tenor. Takes the per-year principal component of debt service; grace years
+ * contribute nothing since no principal moves. Null when no principal is ever
+ * repaid (an unfinanced plant).
+ */
+export function weightedAvgLife(principal: number[]): number | null {
+  let repaid = 0;
+  let weighted = 0;
+  for (let i = 0; i < principal.length; i++) {
+    const p = principal[i] ?? 0;
+    if (p <= 1e-6) continue;
+    repaid += p;
+    weighted += p * (i + 1);
+  }
+  return repaid > 1e-6 ? weighted / repaid : null;
+}
+
+/**
  * Loan life coverage ratio: the present value of cash available for debt
  * service (revenue minus O&M) over the loan term, discounted at the cost of
  * debt, divided by the loan drawn at the outset. Where DSCR is one year's

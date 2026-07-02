@@ -176,6 +176,18 @@ export const METRICS: Metric[] = [
     requiresFinance: true,
   },
   {
+    id: 'wal',
+    label: 'Debt WAL',
+    icon: 'hourglass_bottom',
+    format: (r) =>
+      r.finance && r.finance.weightedAvgLife !== null
+        ? formatYears(r.finance.weightedAvgLife)
+        : '—',
+    numeric: (r) => (r.finance ? r.finance.weightedAvgLife : null),
+    dir: 'lower',
+    requiresFinance: true,
+  },
+  {
     id: 'lcoe',
     label: 'LCOE',
     icon: 'bolt',

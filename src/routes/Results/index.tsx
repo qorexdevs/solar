@@ -675,6 +675,13 @@ function EstimateTotalsCard({
                 }
               />
             )}
+            {finance.weightedAvgLife !== null && (
+              <SummaryRow
+                dense
+                label="Debt WAL"
+                value={`${finance.weightedAvgLife.toFixed(1)} yrs`}
+              />
+            )}
             {finance.peakFundingNeed > 0 && (
               <SummaryRow
                 dense

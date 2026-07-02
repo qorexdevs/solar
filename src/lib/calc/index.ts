@@ -32,6 +32,7 @@ export {
   llcr,
   minDSCR,
   plcr,
+  weightedAvgLife,
 } from './dscr';
 export {
   CO2_FACTOR_KG_PER_KWH,

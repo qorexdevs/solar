@@ -14,6 +14,7 @@ import {
   llcr,
   minDSCR,
   plcr,
+  weightedAvgLife,
   co2Equivalents,
   co2Tonnes,
   homesPowered,
@@ -479,6 +480,24 @@ describe('debtTail', () => {
   });
   it('returns null for an unfinanced plant', () => {
     expect(debtTail([0, 0, 0], 3)).toBeNull();
+  });
+});
+
+describe('weightedAvgLife', () => {
+  it('weights each principal repayment by the year it lands', () => {
+    // (10*1 + 10*2 + 10*3) / 30 = 2
+    expect(weightedAvgLife([10, 10, 10])).toBeCloseTo(2, 6);
+  });
+  it('ignores grace years that repay no principal', () => {
+    // year 1 is interest-only: (60*2 + 60*3) / 120 = 2.5
+    expect(weightedAvgLife([0, 60, 60])).toBeCloseTo(2.5, 6);
+  });
+  it('shortens when prepayments front-load principal', () => {
+    // 80 in year 1, 20 in year 2: (80 + 40) / 100 = 1.2
+    expect(weightedAvgLife([80, 20, 0, 0])).toBeCloseTo(1.2, 6);
+  });
+  it('returns null when no principal is ever repaid', () => {
+    expect(weightedAvgLife([0, 0, 0])).toBeNull();
   });
 });
 
